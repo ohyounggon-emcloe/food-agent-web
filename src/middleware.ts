@@ -34,8 +34,8 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // /admin/* — 비로그인이면 로그인 페이지로
-  if (pathname.startsWith("/admin")) {
+  // /admin/*, /user/* — 비로그인이면 로그인 페이지로
+  if (pathname.startsWith("/admin") || pathname.startsWith("/user")) {
     if (!session) {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/login";
@@ -43,11 +43,11 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // /auth/login, /auth/signup — 이미 로그인이면 대시보드로
+  // /auth/login, /auth/signup — 이미 로그인이면 사용자 대시보드로
   if (pathname === "/auth/login" || pathname === "/auth/signup") {
     if (session) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin/dashboard";
+      url.pathname = "/user/dashboard";
       return NextResponse.redirect(url);
     }
   }
@@ -56,5 +56,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/auth/login", "/auth/signup"],
+  matcher: ["/admin/:path*", "/user/:path*", "/auth/login", "/auth/signup"],
 };
