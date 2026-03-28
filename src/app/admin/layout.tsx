@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { UserMenu } from "@/components/user-menu";
 
 const navItems = [
   { href: "/admin/dashboard", label: "대시보드", icon: "📊" },
@@ -26,7 +27,7 @@ export default function AdminLayout({
           <h1 className="text-lg font-bold text-gray-900">
             Food Safety Agent
           </h1>
-          <p className="text-xs text-gray-500 mt-1">관리자 시스템</p>
+          <p className="text-xs text-gray-500 mt-1">{"관리자 시스템"}</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -51,8 +52,8 @@ export default function AdminLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t text-xs text-gray-400">
-          v0.1.0 Prototype
+        <div className="p-4 border-t">
+          <UserMenu />
         </div>
       </aside>
 
