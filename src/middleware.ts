@@ -25,50 +25,36 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+  // 세션 갱신 (모든 요청)
+  await supabase.auth.getUser();
+
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    data: { session },
+  } = await supabase.auth.getSession();
 
   const pathname = request.nextUrl.pathname;
 
-  // /auth/* - 세션 갱신만 (로그인 상태여도 접근 허용)
-  if (pathname.startsWith("/auth")) {
-    return supabaseResponse;
+  // /admin/* — 비로그인이면 로그인 페이지로
+  if (pathname.startsWith("/admin")) {
+    if (!session) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/login";
+      return NextResponse.redirect(url);
+    }
   }
 
-  // /admin/* - 비로그인이면 로그인으로
-  if (pathname.startsWith("/admin")) {
-    if (!user) {
+  // /auth/login, /auth/signup — 이미 로그인이면 대시보드로
+  if (pathname === "/auth/login" || pathname === "/auth/signup") {
+    if (session) {
       const url = request.nextUrl.clone();
-      url.pathname = "/auth/login";
+      url.pathname = "/admin/dashboard";
       return NextResponse.redirect(url);
     }
-
-    // 역할 체크
-    const { data: profile, error } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", user.id)
-      .single();
-
-    // RLS 에러 또는 프로필 없으면 로그 출력용으로 쿠키에 저장
-    const role = profile?.role || "regular";
-
-    if (!["admin", "super_admin"].includes(role)) {
-      // 로그아웃 처리 후 로그인 페이지로
-      await supabase.auth.signOut();
-      const url = request.nextUrl.clone();
-      url.pathname = "/auth/login";
-      url.searchParams.set("error", "unauthorized");
-      return NextResponse.redirect(url);
-    }
-
-    return supabaseResponse;
   }
 
   return supabaseResponse;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/auth/:path*"],
+  matcher: ["/admin/:path*", "/auth/login", "/auth/signup"],
 };
