@@ -112,6 +112,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, [supabase, fetchProfile]);
 
+  // 비활동 10분 타임아웃
+  useEffect(() => {
+    if (!user) return;
+
+    const TIMEOUT_MS = 10 * 60 * 1000; // 10분
+    let timer: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(timer);
+      timer = setTimeout(async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        window.location.href = "/auth/login?expired=true";
+      }, TIMEOUT_MS);
+    };
+
+    const events = ["mousedown", "keydown", "scroll", "touchstart"];
+    events.forEach((e) => window.addEventListener(e, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timer);
+      events.forEach((e) => window.removeEventListener(e, resetTimer));
+    };
+  }, [user, supabase]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
