@@ -7,8 +7,22 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (data?.user) {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single();
+
+      const role = profile?.role || "regular";
+      if (["admin", "super_admin"].includes(role)) {
+        return NextResponse.redirect(`${origin}/admin/dashboard`);
+      }
+    }
   }
 
-  return NextResponse.redirect(`${origin}/admin/dashboard`);
+  // regular/premium 또는 인증 실패 시
+  return NextResponse.redirect(`${origin}/auth/login?verified=true`);
 }
