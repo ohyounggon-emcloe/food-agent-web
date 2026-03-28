@@ -54,6 +54,20 @@ function LoginForm() {
       return;
     }
 
+    // 역할 체크: 관리자인지 먼저 확인
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .single();
+
+    const role = profile?.role || "regular";
+    if (!["admin", "super_admin"].includes(role)) {
+      setError("관리자 권한이 없습니다. 관리자에게 문의하세요.");
+      await supabase.auth.signOut();
+      setLoading(false);
+      return;
+    }
+
     router.push("/admin/dashboard");
     router.refresh();
   };
