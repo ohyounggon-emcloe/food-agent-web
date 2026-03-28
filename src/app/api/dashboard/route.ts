@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { requireAuth, isAuthError } from "@/lib/api-auth";
 
 export async function GET() {
   try {
     const supabase = await createClient();
+  const authResult = await requireAuth(supabase);
+  if (isAuthError(authResult)) return authResult;
+
     const today = new Date().toISOString().split("T")[0];
 
     const [

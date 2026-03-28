@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 export async function POST() {
   const supabase = await createClient();
+  const authResult = await requireAdmin(supabase);
+  if (isAuthError(authResult)) return authResult;
+
   const { data: suggestions, error } = await supabase
     .from("keyword_suggestions")
     .select("*")

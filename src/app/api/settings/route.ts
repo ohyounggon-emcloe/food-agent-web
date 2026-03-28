@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
 const DEFAULT_SETTINGS = {
   schedule_morning: "08:00",
@@ -14,6 +15,9 @@ const DEFAULT_SETTINGS = {
 
 export async function GET() {
   const supabase = await createClient();
+  const authResult = await requireAdmin(supabase);
+  if (isAuthError(authResult)) return authResult;
+
   const { data, error } = await supabase
     .from("system_config")
     .select("*");
