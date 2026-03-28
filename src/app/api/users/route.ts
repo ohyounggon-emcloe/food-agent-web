@@ -4,9 +4,8 @@ import { createClient } from "@/lib/supabase-server";
 export async function GET() {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("keyword_suggestions")
+    .from("user_profiles")
     .select("*")
-    .eq("status", "pending")
     .order("created_at", { ascending: false });
 
   if (error) {

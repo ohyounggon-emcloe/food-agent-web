@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function GET() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("compliance_data")
     .select("*")
@@ -24,6 +25,8 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
+  const supabase = await createClient();
 
   if (action === "approve") {
     const { data: site } = await supabase

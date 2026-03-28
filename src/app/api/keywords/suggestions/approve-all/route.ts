@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function POST() {
+  const supabase = await createClient();
   const { data: suggestions, error } = await supabase
     .from("keyword_suggestions")
     .select("*")

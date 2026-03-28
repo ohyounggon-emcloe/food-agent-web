@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
+  const supabase = await createClient();
   const riskLevel = searchParams.get("risk_level");
   const search = searchParams.get("search");
 
@@ -38,7 +39,8 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase
+  const supabase2 = await createClient();
+  const { data, error } = await supabase2
     .from("keywords_meta")
     .insert({
       keyword,

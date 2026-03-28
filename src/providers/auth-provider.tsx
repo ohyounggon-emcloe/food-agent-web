@@ -23,6 +23,7 @@ interface AuthContextType {
   role: string;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -31,47 +32,77 @@ const AuthContext = createContext<AuthContextType>({
   role: "regular",
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
   const supabase = createClient();
 
   const fetchProfile = useCallback(
-    async (userId: string) => {
-      const { data } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("id", userId)
-        .single();
-      setProfile(data);
+    async (currentUser: User) => {
+      try {
+        const { data, error } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("id", currentUser.id)
+          .single();
+
+        if (error || !data) {
+          console.error("Profile fetch failed, creating:", error?.message);
+          // 프로필이 없으면 자동 생성
+          const { data: newProfile } = await supabase
+            .from("user_profiles")
+            .upsert({
+              id: currentUser.id,
+              email: currentUser.email || "",
+              role: "regular",
+            })
+            .select()
+            .single();
+          setProfile(newProfile);
+          return;
+        }
+
+        setProfile(data);
+      } catch (err) {
+        console.error("Profile fetch exception:", err);
+        setProfile(null);
+      }
     },
     [supabase]
   );
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        await fetchProfile(user.id);
+    const init = async () => {
+      try {
+        const {
+          data: { user: currentUser },
+        } = await supabase.auth.getUser();
+
+        setUser(currentUser);
+        if (currentUser) {
+          await fetchProfile(currentUser);
+        }
+      } catch (err) {
+        console.error("Auth init error:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
-    getUser();
+    init();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
-        await fetchProfile(currentUser.id);
+        await fetchProfile(currentUser);
       } else {
         setProfile(null);
       }
@@ -88,6 +119,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = "/auth/login";
   };
 
+  const refreshProfile = async () => {
+    if (user) {
+      await fetchProfile(user);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -96,6 +133,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         role: profile?.role || "regular",
         loading,
         signOut,
+        refreshProfile,
       }}
     >
       {children}

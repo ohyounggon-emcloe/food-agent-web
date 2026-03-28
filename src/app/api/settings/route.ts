@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 const DEFAULT_SETTINGS = {
   schedule_morning: "08:00",
@@ -13,6 +13,7 @@ const DEFAULT_SETTINGS = {
 };
 
 export async function GET() {
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("system_config")
     .select("*");
@@ -30,6 +31,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  const supabase = await createClient();
   const body = await request.json();
 
   for (const [key, value] of Object.entries(body)) {

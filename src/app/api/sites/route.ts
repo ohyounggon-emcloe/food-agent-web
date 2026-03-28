@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
   const search = searchParams.get("search");
 
+  const supabase = await createClient();
   let query = supabase
     .from("compliance_data")
     .select("*")
@@ -44,6 +45,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("compliance_data")
     .insert({
