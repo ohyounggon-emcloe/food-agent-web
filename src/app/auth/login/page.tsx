@@ -55,21 +55,34 @@ function LoginForm() {
     }
 
     // 역할 체크: 관리자인지 먼저 확인
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .single();
+    try {
+      const { data: profile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .single();
 
-    const role = profile?.role || "regular";
-    if (!["admin", "super_admin"].includes(role)) {
-      setError("관리자 권한이 없습니다. 관리자에게 문의하세요.");
-      await supabase.auth.signOut();
+      if (profileError) {
+        console.error("Profile fetch error:", profileError);
+        setError("프로필 조회 실패. 관리자에게 문의하세요.");
+        setLoading(false);
+        return;
+      }
+
+      const role = profile?.role || "regular";
+      if (!["admin", "super_admin"].includes(role)) {
+        setError("관리자 권한이 없습니다. 관리자에게 문의하세요.");
+        await supabase.auth.signOut();
+        setLoading(false);
+        return;
+      }
+
+      router.push("/admin/dashboard");
+      router.refresh();
+    } catch (err) {
+      console.error("Login check error:", err);
+      setError("로그인 처리 중 오류가 발생했습니다.");
       setLoading(false);
-      return;
     }
-
-    router.push("/admin/dashboard");
-    router.refresh();
   };
 
   return (
@@ -92,6 +105,7 @@ function LoginForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="email@example.com"
               required
+              disabled={loading}
             />
           </div>
           <div>
@@ -102,6 +116,7 @@ function LoginForm() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="********"
               required
+              disabled={loading}
             />
           </div>
           <Button type="submit" className="w-full" disabled={loading}>
