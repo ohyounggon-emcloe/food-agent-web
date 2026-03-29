@@ -12,7 +12,19 @@ export function UserMenu() {
   }
 
   if (!profile) {
-    return null;
+    return (
+      <div className="space-y-2">
+        <p className="text-xs text-slate-500">세션 만료</p>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full text-xs h-7 text-slate-400 hover:text-red-400 hover:bg-slate-800"
+          onClick={signOut}
+        >
+          {"로그아웃"}
+        </Button>
+      </div>
+    );
   }
 
   return (

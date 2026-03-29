@@ -94,12 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // 5초 안에 init이 완료되지 않으면 강제로 loading 해제
-    const timeout = setTimeout(() => {
-      setLoading(false);
-    }, 5000);
-
-    init().finally(() => clearTimeout(timeout));
+    init();
 
     const {
       data: { subscription },
