@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const navItems = [
   { href: "/admin/dashboard", label: "대시보드", icon: "📊" },
+  { href: "/admin/monitoring", label: "모니터링", icon: "🛡️" },
   { href: "/admin/sites", label: "사이트 관리", icon: "🌐" },
   { href: "/admin/keywords", label: "키워드 관리", icon: "🔑" },
   { href: "/admin/users", label: "사용자 관리", icon: "👥" },
