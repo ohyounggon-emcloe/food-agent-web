@@ -128,7 +128,7 @@ function NewsFeed() {
             {paged.map((article) => (
               <div
                 key={article.id}
-                className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-start gap-3">
                   <Badge
@@ -142,7 +142,7 @@ function NewsFeed() {
                       href={article.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm font-medium hover:text-blue-600"
+                      className="text-sm font-medium hover:text-teal-600"
                     >
                       {article.title}
                     </a>

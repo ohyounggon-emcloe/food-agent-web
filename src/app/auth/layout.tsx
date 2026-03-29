@@ -4,13 +4,16 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">
-            Food Safety Agent
+          <h1 className="text-2xl font-bold text-teal-400">
+            FOOD SAFETY
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs text-slate-500 tracking-[0.2em] mt-1">
+            {"INTELLIGENCE"}
+          </p>
+          <p className="text-sm text-slate-400 mt-3">
             {"식품 안전 지능형 에이전트 시스템"}
           </p>
         </div>

@@ -8,10 +8,10 @@ import type { DashboardData } from "@/lib/types";
 
 const RISK_COLORS: Record<string, string> = {
   Level1: "bg-red-500",
-  Level2: "bg-orange-500",
-  Level3: "bg-yellow-500",
-  "해당없음": "bg-gray-400",
-  "미분류": "bg-blue-400",
+  Level2: "bg-amber-500",
+  Level3: "bg-blue-500",
+  "해당없음": "bg-slate-400",
+  "미분류": "bg-slate-300",
 };
 
 const RISK_LABELS: Record<string, string> = {

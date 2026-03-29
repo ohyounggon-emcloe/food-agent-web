@@ -31,12 +31,13 @@ export default function UserLayout({
 
   return (
     <div className="flex h-screen">
-      <aside className="w-64 border-r bg-gray-50 flex flex-col">
-        <div className="p-6 border-b">
-          <h1 className="text-lg font-bold text-gray-900">
-            Food Safety Agent
+      <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
+        <div className="p-6 border-b border-slate-800">
+          <h1 className="text-lg font-bold text-teal-400">
+            FOOD SAFETY
           </h1>
-          <p className="text-xs text-gray-500 mt-1">{"식품 안전 정보"}</p>
+          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"INTELLIGENCE"}</p>
+          <p className="text-xs text-slate-400 mt-1">{"식품 안전 정보"}</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -51,17 +52,17 @@ export default function UserLayout({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-gray-900 text-white"
+                    ? "bg-teal-500/15 text-teal-400 border-l-2 border-teal-400"
                     : locked
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-gray-200"
+                      ? "text-slate-600 cursor-not-allowed"
+                      : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 )}
                 onClick={(e) => locked && e.preventDefault()}
               >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
                 {item.pro && locked && (
-                  <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded ml-auto">
+                  <span className="text-xs bg-amber-900/30 text-amber-400 px-1.5 py-0.5 rounded ml-auto">
                     PRO
                   </span>
                 )}
@@ -71,10 +72,10 @@ export default function UserLayout({
 
           {["admin", "super_admin"].includes(role) && (
             <>
-              <div className="border-t my-3" />
+              <div className="border-t border-slate-800 my-3" />
               <Link
                 href="/admin/dashboard"
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50"
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-teal-400 hover:bg-slate-800"
               >
                 <span>{"⚙️"}</span>
                 <span>{"관리자 페이지"}</span>
@@ -83,12 +84,12 @@ export default function UserLayout({
           )}
         </nav>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-slate-800">
           <UserMenu />
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto bg-white">
+      <main className="flex-1 overflow-auto bg-slate-50">
         <div className="p-8">{children}</div>
       </main>
     </div>

@@ -14,8 +14,8 @@ interface DashboardData {
 
 const RISK_COLORS: Record<string, string> = {
   Level1: "bg-red-500",
-  Level2: "bg-orange-500",
-  Level3: "bg-yellow-500",
+  Level2: "bg-amber-500",
+  Level3: "bg-blue-500",
 };
 
 export default function UserDashboard() {
@@ -95,7 +95,7 @@ export default function UserDashboard() {
         <CardHeader>
           <CardTitle className="text-base flex items-center justify-between">
             <span>{"최근 게시글"}</span>
-            <Link href="/user/news" className="text-sm text-blue-600 font-normal hover:underline">
+            <Link href="/user/news" className="text-sm text-teal-600 font-normal hover:underline">
               {"전체 보기 →"}
             </Link>
           </CardTitle>
@@ -124,7 +124,7 @@ export default function UserDashboard() {
                       href={news.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm font-medium hover:text-blue-600 line-clamp-1"
+                      className="text-sm font-medium hover:text-teal-600 line-clamp-1"
                     >
                       {news.title}
                     </a>

@@ -7,7 +7,7 @@ const ROLE_CONFIG: Record<string, { label: string; className: string }> = {
   },
   admin: {
     label: "관리자",
-    className: "bg-blue-100 text-blue-800 border-blue-300",
+    className: "bg-teal-100 text-teal-800 border-teal-300",
   },
   premium: {
     label: "PRO",

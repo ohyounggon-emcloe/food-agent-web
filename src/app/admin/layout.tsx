@@ -63,12 +63,13 @@ export default function AdminLayout({
 
   return (
     <div className="flex h-screen">
-      <aside className="w-64 border-r bg-gray-50 flex flex-col">
-        <div className="p-6 border-b">
-          <h1 className="text-lg font-bold text-gray-900">
-            Food Safety Agent
+      <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
+        <div className="p-6 border-b border-slate-800">
+          <h1 className="text-lg font-bold text-teal-400">
+            FOOD SAFETY
           </h1>
-          <p className="text-xs text-gray-500 mt-1">{"관리자 시스템"}</p>
+          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"INTELLIGENCE"}</p>
+          <p className="text-xs text-slate-400 mt-1">{"관리자 시스템"}</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
@@ -82,8 +83,8 @@ export default function AdminLayout({
                 className={cn(
                   "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                   isActive
-                    ? "bg-gray-900 text-white"
-                    : "text-gray-700 hover:bg-gray-200"
+                    ? "bg-teal-500/15 text-teal-400 border-l-2 border-teal-400"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 )}
               >
                 <span>{item.icon}</span>
@@ -93,12 +94,12 @@ export default function AdminLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t">
+        <div className="p-4 border-t border-slate-800">
           <UserMenu />
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto bg-white">
+      <main className="flex-1 overflow-auto bg-slate-50">
         <div className="p-8">{children}</div>
       </main>
     </div>
