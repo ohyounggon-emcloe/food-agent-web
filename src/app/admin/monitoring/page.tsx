@@ -70,10 +70,22 @@ export default function MonitoringPage() {
 
   const fetchData = useCallback(() => {
     fetch("/api/monitoring")
-      .then((res) => res.json())
+      .then((res) => {
+        if (res.status === 401) {
+          window.location.href = "/auth/login";
+          return null;
+        }
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        return res.json();
+      })
       .then((d) => {
-        setData(d);
-        setLastUpdated(new Date().toLocaleTimeString("ko-KR"));
+        if (d && !d.error) {
+          setData(d);
+          setLastUpdated(new Date().toLocaleTimeString("ko-KR"));
+        }
+      })
+      .catch((err) => {
+        console.error("모니터링 데이터 로드 실패:", err);
       })
       .finally(() => setLoading(false));
   }, []);
