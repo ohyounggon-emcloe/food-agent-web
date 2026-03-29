@@ -8,7 +8,7 @@ export default function AuthLayout({
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-teal-400">
-            AI-FX
+            AI-FX(Food Next)
           </h1>
           <p className="text-xs text-slate-400 tracking-[0.15em] mt-1">
             {"차세대 식품AI 서비스"}

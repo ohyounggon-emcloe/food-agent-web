@@ -34,7 +34,7 @@ export default function UserLayout({
       <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-lg font-bold text-teal-400">
-            AI-FX
+            AI-FX(Food Next)
           </h1>
           <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"위생법규 정보서비스"}</p>
           <p className="text-xs text-slate-400 mt-1">{"사용자"}</p>
