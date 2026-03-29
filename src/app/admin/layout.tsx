@@ -66,9 +66,9 @@ export default function AdminLayout({
       <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-lg font-bold text-teal-400">
-            FOOD SAFETY
+            AI-FX
           </h1>
-          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"INTELLIGENCE"}</p>
+          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"식품위생법규서비스"}</p>
           <p className="text-xs text-slate-400 mt-1">{"관리자 시스템"}</p>
         </div>
 
@@ -94,7 +94,14 @@ export default function AdminLayout({
           })}
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
+        <div className="p-4 border-t border-slate-800 space-y-2">
+          <Link
+            href="/user/dashboard"
+            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-slate-400 hover:bg-slate-800 hover:text-teal-400 transition-colors"
+          >
+            <span>←</span>
+            <span>사용자 페이지</span>
+          </Link>
           <UserMenu />
         </div>
       </aside>

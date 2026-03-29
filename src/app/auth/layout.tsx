@@ -8,13 +8,10 @@ export default function AuthLayout({
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-teal-400">
-            FOOD SAFETY
+            AI-FX
           </h1>
           <p className="text-xs text-slate-500 tracking-[0.2em] mt-1">
-            {"INTELLIGENCE"}
-          </p>
-          <p className="text-sm text-slate-400 mt-3">
-            {"식품 안전 지능형 에이전트 시스템"}
+            {"식품위생법규서비스"}
           </p>
         </div>
         {children}

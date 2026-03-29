@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Food Safety Agent",
-  description: "식품 안전 지능형 에이전트 시스템",
+  title: "AI-FX | 식품위생법규서비스",
+  description: "AI-FX | 식품위생법규서비스",
 };
 
 export default function RootLayout({

@@ -48,7 +48,7 @@ export default function DashboardPage() {
       <div>
         <h2 className="text-2xl font-bold">대시보드</h2>
         <p className="text-gray-500 text-sm mt-1">
-          식품 안전 에이전트 시스템 현황
+          AI-FX 시스템 현황
         </p>
       </div>
 

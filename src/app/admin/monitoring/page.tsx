@@ -116,7 +116,7 @@ export default function MonitoringPage() {
         <div>
           <h2 className="text-2xl font-bold">모니터링</h2>
           <p className="text-gray-500 text-sm mt-1">
-            실시간 식품 안전 모니터링 · 위험 알림 · 에이전트 상태
+            실시간 AI-FX 모니터링 · 위험 알림 · 에이전트 상태
           </p>
         </div>
         <div className="flex items-center gap-3">
