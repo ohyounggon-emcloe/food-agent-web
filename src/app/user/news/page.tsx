@@ -46,7 +46,7 @@ function NewsFeed() {
   const [riskFilter, setRiskFilter] = useState(
     searchParams.get("risk_level") || "all"
   );
-  const [daysFilter, setDaysFilter] = useState("7");
+  const [daysFilter, setDaysFilter] = useState("3");
   const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -79,7 +79,7 @@ function NewsFeed() {
       <div>
         <h2 className="text-2xl font-bold">{"뉴스 피드"}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {`수집된 식품 안전 게시글 (${articles.length}건)`}
+          {`${riskFilter === "all" ? "전체" : riskFilter} · 최근 ${daysFilter}일 · ${articles.length}건`}
         </p>
       </div>
 
