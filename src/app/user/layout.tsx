@@ -5,12 +5,19 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/user-menu";
+import {
+  LayoutDashboard,
+  Rss,
+  BrainCircuit,
+  UserCircle,
+  type LucideIcon,
+} from "lucide-react";
 
-const navItems = [
-  { href: "/user/dashboard", label: "대시보드", icon: "📊" },
-  { href: "/user/news", label: "뉴스 피드", icon: "📰" },
-  { href: "/user/analysis", label: "상세 분석", icon: "📈", pro: true },
-  { href: "/user/profile", label: "내 정보", icon: "👤" },
+const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }[] = [
+  { href: "/user/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/user/news", label: "뉴스 피드", icon: Rss },
+  { href: "/user/analysis", label: "상세 분석", icon: BrainCircuit, pro: true },
+  { href: "/user/profile", label: "내 정보", icon: UserCircle },
 ];
 
 export default function UserLayout({
@@ -58,7 +65,7 @@ export default function UserLayout({
                 )}
                 onClick={(e) => locked && e.preventDefault()}
               >
-                <span>{item.icon}</span>
+                <item.icon className="w-4 h-4" />
                 <span>{item.label}</span>
                 {item.pro && locked && (
                   <span className="text-xs bg-amber-900/30 text-amber-400 px-1.5 py-0.5 rounded ml-auto">

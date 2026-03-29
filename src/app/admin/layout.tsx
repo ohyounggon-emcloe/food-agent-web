@@ -7,15 +7,25 @@ import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/user-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  LayoutDashboard,
+  Activity,
+  Globe,
+  ScanSearch,
+  Users,
+  ScrollText,
+  SlidersHorizontal,
+  type LucideIcon,
+} from "lucide-react";
 
-const navItems = [
-  { href: "/admin/dashboard", label: "대시보드", icon: "📊" },
-  { href: "/admin/monitoring", label: "모니터링", icon: "🛡️" },
-  { href: "/admin/sites", label: "사이트 관리", icon: "🌐" },
-  { href: "/admin/keywords", label: "키워드 관리", icon: "🔑" },
-  { href: "/admin/users", label: "사용자 관리", icon: "👥" },
-  { href: "/admin/logs", label: "시스템 로그", icon: "📋" },
-  { href: "/admin/settings", label: "설정", icon: "⚙️" },
+const navItems: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: "/admin/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/admin/monitoring", label: "모니터링", icon: Activity },
+  { href: "/admin/sites", label: "사이트 관리", icon: Globe },
+  { href: "/admin/keywords", label: "키워드 관리", icon: ScanSearch },
+  { href: "/admin/users", label: "사용자 관리", icon: Users },
+  { href: "/admin/logs", label: "시스템 로그", icon: ScrollText },
+  { href: "/admin/settings", label: "설정", icon: SlidersHorizontal },
 ];
 
 export default function AdminLayout({
@@ -87,7 +97,7 @@ export default function AdminLayout({
                     : "text-slate-400 hover:bg-slate-800 hover:text-slate-200"
                 )}
               >
-                <span>{item.icon}</span>
+                <item.icon className="w-4 h-4" />
                 <span>{item.label}</span>
               </Link>
             );
