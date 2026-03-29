@@ -44,17 +44,34 @@ function NewsFeed() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [riskFilter, setRiskFilter] = useState(
-    searchParams.get("risk_level") || "all"
+    searchParams.get("risk_level") || "전체"
   );
-  const [daysFilter, setDaysFilter] = useState("3");
+  const [daysFilter, setDaysFilter] = useState("3일");
+
+  const RISK_VALUE_MAP: Record<string, string> = {
+    "전체": "all",
+    "Level1 (긴급)": "Level1",
+    "Level2 (주의)": "Level2",
+    "Level3 (참고)": "Level3",
+    "해당없음": "해당없음",
+    "미분류": "미분류",
+  };
+  const DAYS_VALUE_MAP: Record<string, string> = {
+    "오늘": "1",
+    "3일": "3",
+    "7일": "7",
+    "30일": "30",
+  };
   const [pageSize, setPageSize] = useState(20);
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchNews = useCallback(async () => {
     const params = new URLSearchParams();
-    if (riskFilter !== "all") params.set("risk_level", riskFilter);
+    const riskValue = RISK_VALUE_MAP[riskFilter] || "all";
+    const daysValue = DAYS_VALUE_MAP[daysFilter] || "3";
+    if (riskValue !== "all") params.set("risk_level", riskValue);
     if (search) params.set("search", search);
-    params.set("days", daysFilter);
+    params.set("days", daysValue);
     params.set("limit", "500");
 
     const res = await fetch(`/api/news?${params}`);
@@ -79,7 +96,7 @@ function NewsFeed() {
       <div>
         <h2 className="text-2xl font-bold">{"뉴스 피드"}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {`${riskFilter === "all" ? "전체" : riskFilter} · 최근 ${daysFilter}일 · ${articles.length}건`}
+          {`${riskFilter} · ${daysFilter === "오늘" ? "오늘" : `최근 ${daysFilter}`} · ${articles.length}건`}
         </p>
       </div>
 
@@ -90,28 +107,28 @@ function NewsFeed() {
           onChange={(e) => setSearch(e.target.value)}
           className="max-w-xs"
         />
-        <Select value={riskFilter} onValueChange={(v) => setRiskFilter(v || "all")}>
-          <SelectTrigger className="w-36">
+        <Select value={riskFilter} onValueChange={(v) => setRiskFilter(v || "전체")}>
+          <SelectTrigger className="w-40">
             <SelectValue placeholder="위험등급" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">{"전체"}</SelectItem>
-            <SelectItem value="Level1">{"Level1 (긴급)"}</SelectItem>
-            <SelectItem value="Level2">{"Level2 (주의)"}</SelectItem>
-            <SelectItem value="Level3">{"Level3 (참고)"}</SelectItem>
-            <SelectItem value="해당없음">{"해당없음"}</SelectItem>
-            <SelectItem value="미분류">{"미분류"}</SelectItem>
+            <SelectItem value="전체">전체</SelectItem>
+            <SelectItem value="Level1 (긴급)">Level1 (긴급)</SelectItem>
+            <SelectItem value="Level2 (주의)">Level2 (주의)</SelectItem>
+            <SelectItem value="Level3 (참고)">Level3 (참고)</SelectItem>
+            <SelectItem value="해당없음">해당없음</SelectItem>
+            <SelectItem value="미분류">미분류</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={daysFilter} onValueChange={(v) => setDaysFilter(v || "7")}>
+        <Select value={daysFilter} onValueChange={(v) => setDaysFilter(v || "3일")}>
           <SelectTrigger className="w-28">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="1">{"오늘"}</SelectItem>
-            <SelectItem value="3">{"3일"}</SelectItem>
-            <SelectItem value="7">{"7일"}</SelectItem>
-            <SelectItem value="30">{"30일"}</SelectItem>
+            <SelectItem value="오늘">오늘</SelectItem>
+            <SelectItem value="3일">3일</SelectItem>
+            <SelectItem value="7일">7일</SelectItem>
+            <SelectItem value="30일">30일</SelectItem>
           </SelectContent>
         </Select>
       </div>
