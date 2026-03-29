@@ -68,7 +68,7 @@ export default function AdminLayout({
           <h1 className="text-lg font-bold text-teal-400">
             AI-FX
           </h1>
-          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"식품위생법규서비스"}</p>
+          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"위생법규 정보서비스"}</p>
           <p className="text-xs text-slate-400 mt-1">{"관리자 시스템"}</p>
         </div>
 

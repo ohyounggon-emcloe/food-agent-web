@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI-FX | 식품위생법규서비스",
-  description: "AI-FX | 식품위생법규서비스",
+  title: "AI-FX | 위생법규 정보서비스",
+  description: "AI-FX | 위생법규 정보서비스",
 };
 
 export default function RootLayout({
