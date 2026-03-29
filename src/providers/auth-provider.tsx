@@ -51,38 +51,59 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           .eq("id", currentUser.id)
           .single();
 
-        if (error || !data) {
-          console.error("Profile fetch failed, creating:", error?.message);
-          // 프로필이 없으면 자동 생성
-          const { data: newProfile } = await supabase
-            .from("user_profiles")
-            .upsert({
-              id: currentUser.id,
-              email: currentUser.email || "",
-              role: "regular",
-            })
-            .select()
-            .single();
-          setProfile(newProfile);
+        if (data && !error) {
+          setProfile(data);
           return;
         }
 
-        setProfile(data);
+        // 프로필이 없으면 자동 생성
+        console.warn("Profile not found, creating:", error?.message);
+        const { data: newProfile, error: upsertError } = await supabase
+          .from("user_profiles")
+          .upsert({
+            id: currentUser.id,
+            email: currentUser.email || "",
+            role: "regular",
+          })
+          .select()
+          .single();
+
+        if (newProfile && !upsertError) {
+          setProfile(newProfile);
+        } else {
+          // upsert도 실패하면 임시 프로필로 동작 (로그아웃은 가능하게)
+          console.error("Profile upsert failed:", upsertError?.message);
+          setProfile({
+            id: currentUser.id,
+            email: currentUser.email || "",
+            nickname: null,
+            role: "regular",
+          });
+        }
       } catch (err) {
         console.error("Profile fetch exception:", err);
-        setProfile(null);
+        // 에러 시에도 임시 프로필 (로그아웃 가능하게)
+        setProfile({
+          id: currentUser.id,
+          email: currentUser.email || "",
+          nickname: null,
+          role: "regular",
+        });
       }
     },
     [supabase]
   );
 
   useEffect(() => {
+    let mounted = true;
+
     const init = async () => {
       try {
         const {
           data: { user: currentUser },
         } = await supabase.auth.getUser();
 
+        if (!mounted) return;
         setUser(currentUser);
         if (currentUser) {
           await fetchProfile(currentUser);
@@ -90,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (err) {
         console.error("Auth init error:", err);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
@@ -99,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!mounted) return;
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
@@ -109,14 +131,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [supabase, fetchProfile]);
 
-  // 비활동 10분 타임아웃
+  // 비활동 30분 타임아웃
   useEffect(() => {
     if (!user) return;
 
-    const TIMEOUT_MS = 10 * 60 * 1000; // 10분
+    const TIMEOUT_MS = 30 * 60 * 1000;
     let timer: ReturnType<typeof setTimeout>;
 
     const resetTimer = () => {
