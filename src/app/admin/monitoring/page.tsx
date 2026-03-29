@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-const STREAMLIT_URL = "http://localhost:8501";
+const STREAMLIT_URL =
+  "https://food-agent-master-xn3tw2cek8y29vpthvpctn.streamlit.app";
 
 export default function MonitoringPage() {
   const [isLoading, setIsLoading] = useState(true);
