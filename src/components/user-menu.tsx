@@ -16,9 +16,9 @@ export function UserMenu() {
       <div className="space-y-2">
         <p className="text-xs text-slate-500">세션 만료</p>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
-          className="w-full text-xs h-7 text-slate-400 hover:text-red-400 hover:bg-slate-800"
+          className="w-full text-sm h-8 mt-1 border-slate-600 text-slate-200 hover:text-white hover:bg-red-600 hover:border-red-600"
           onClick={signOut}
         >
           {"로그아웃"}
@@ -37,9 +37,9 @@ export function UserMenu() {
       </div>
       <p className="text-xs text-slate-500 truncate">{profile.email}</p>
       <Button
-        variant="ghost"
+        variant="outline"
         size="sm"
-        className="w-full text-xs h-7 text-slate-400 hover:text-red-400 hover:bg-slate-800"
+        className="w-full text-sm h-8 mt-1 border-slate-600 text-slate-200 hover:text-white hover:bg-red-600 hover:border-red-600"
         onClick={signOut}
       >
         {"로그아웃"}
