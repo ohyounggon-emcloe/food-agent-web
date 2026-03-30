@@ -110,6 +110,12 @@ export default function ReviewPage() {
           <p className="text-sm text-gray-500 mt-1">
             {"자동 분류 결과를 확인하고 위험등급을 조정합니다."}
           </p>
+          <div className="flex gap-3 mt-2 text-xs text-gray-500">
+            <span><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />{"L1: 즉시 대응 (식중독, 긴급회수)"}</span>
+            <span><span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1" />{"L2: 주의 관찰 (행정처분, 부적합)"}</span>
+            <span><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />{"L3: 참고 정보 (법규개정, 공지)"}</span>
+            <span><span className="inline-block w-2 h-2 rounded-full bg-gray-300 mr-1" />{"제외: 식품안전 무관"}</span>
+          </div>
         </div>
         <div className="flex items-center gap-3">
           <select

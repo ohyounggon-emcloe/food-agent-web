@@ -142,6 +142,11 @@ function NewsFeed() {
         <p className="text-gray-500 text-sm mt-1">
           {`${riskFilter} · ${daysFilter === "오늘" ? "오늘" : `최근 ${daysFilter}`} · ${filtered.length}건${search ? ` (검색: "${search}")` : ""}`}
         </p>
+        <div className="flex gap-3 mt-2 text-xs text-gray-500">
+          <span><span className="inline-block w-2 h-2 rounded-full bg-red-500 mr-1" />{"Level1: 즉시 대응 (식중독, 긴급회수)"}</span>
+          <span><span className="inline-block w-2 h-2 rounded-full bg-amber-500 mr-1" />{"Level2: 주의 관찰 (행정처분, 부적합)"}</span>
+          <span><span className="inline-block w-2 h-2 rounded-full bg-blue-500 mr-1" />{"Level3: 참고 정보 (법규개정, 공지)"}</span>
+        </div>
       </div>
 
       <div className="flex gap-3 flex-wrap">
