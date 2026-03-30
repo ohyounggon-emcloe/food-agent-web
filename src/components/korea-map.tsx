@@ -32,87 +32,111 @@ const RISK_COLORS: Record<string, string> = {
   Level3: "#3b82f6",
 };
 
-/* ── Props ── */
-
 interface KoreaMapProps {
   className?: string;
 }
 
-/* ── 컴포넌트 ── */
-
 export function KoreaMap({ className }: KoreaMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const [mapLoaded, setMapLoaded] = useState(false);
+  const mapInstanceRef = useRef<any>(null);
+  const markersRef = useRef<any[]>([]);
+  const [mapReady, setMapReady] = useState(false);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [selectedAlert, setSelectedAlert] = useState<any>(null);
 
-  // 단속 데이터 로드
+  // 1. 단속 데이터 로드 (한 번만)
   useEffect(() => {
     fetch("/api/crackdown?days=30")
-      .then((res) => res.ok ? res.json() : [])
+      .then((res) => (res.ok ? res.json() : []))
       .then((data) => setAlerts(Array.isArray(data) ? data : []))
       .catch(() => setAlerts([]));
   }, []);
 
-  // 지역별 집계
-  const regionCounts: Record<string, { count: number; maxRisk: string; alerts: any[] }> = {};
-  for (const alert of alerts) {
-    const region = alert.region || "전국";
-    if (!REGION_COORDS[region]) continue;
-    if (!regionCounts[region]) {
-      regionCounts[region] = { count: 0, maxRisk: "Level3", alerts: [] };
-    }
-    regionCounts[region].count++;
-    regionCounts[region].alerts.push(alert);
-    if (alert.risk_level === "Level1") regionCounts[region].maxRisk = "Level1";
-    else if (alert.risk_level === "Level2" && regionCounts[region].maxRisk !== "Level1") {
-      regionCounts[region].maxRisk = "Level2";
-    }
-  }
-
-  // 네이버 맵 스크립트 로드
+  // 2. 네이버 맵 스크립트 로드 (한 번만)
   useEffect(() => {
     const clientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
     if (!clientId) return;
 
     if (typeof window !== "undefined" && (window as any).naver?.maps) {
-      setMapLoaded(true);
+      setMapReady(true);
       return;
     }
 
-    const existing = document.querySelector('script[src*="oapi.map.naver.com"]');
+    const existing = document.querySelector(
+      'script[src*="oapi.map.naver.com"]'
+    );
     if (existing) {
-      existing.addEventListener("load", () => setMapLoaded(true));
-      return;
+      const check = setInterval(() => {
+        if ((window as any).naver?.maps) {
+          setMapReady(true);
+          clearInterval(check);
+        }
+      }, 200);
+      return () => clearInterval(check);
     }
 
     const script = document.createElement("script");
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}`;
     script.async = true;
-    script.onload = () => setMapLoaded(true);
+    script.onload = () => {
+      setTimeout(() => setMapReady(true), 100);
+    };
     document.head.appendChild(script);
   }, []);
 
-  // 지도 초기화
+  // 3. 지도 인스턴스 생성 (한 번만)
   useEffect(() => {
-    if (!mapLoaded || !mapRef.current || alerts.length === 0) return;
+    if (!mapReady || !mapRef.current || mapInstanceRef.current) return;
     const naver = (window as any).naver;
     if (!naver?.maps) return;
 
-    const map = new naver.maps.Map(mapRef.current, {
+    mapInstanceRef.current = new naver.maps.Map(mapRef.current, {
       center: new naver.maps.LatLng(36.0, 127.5),
       zoom: 7,
     });
+  }, [mapReady]);
 
-    // 지역별 마커
+  // 4. 마커 업데이트 (alerts 변경 시만)
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || alerts.length === 0) return;
+    const naver = (window as any).naver;
+    if (!naver?.maps) return;
+
+    // 기존 마커 제거
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+
+    // 지역별 집계
+    const regionCounts: Record<
+      string,
+      { count: number; maxRisk: string; alerts: any[] }
+    > = {};
+    for (const alert of alerts) {
+      const region = alert.region || "전국";
+      if (!REGION_COORDS[region]) continue;
+      if (!regionCounts[region]) {
+        regionCounts[region] = { count: 0, maxRisk: "Level3", alerts: [] };
+      }
+      regionCounts[region].count++;
+      regionCounts[region].alerts.push(alert);
+      if (alert.risk_level === "Level1")
+        regionCounts[region].maxRisk = "Level1";
+      else if (
+        alert.risk_level === "Level2" &&
+        regionCounts[region].maxRisk !== "Level1"
+      )
+        regionCounts[region].maxRisk = "Level2";
+    }
+
+    // 마커 생성
     Object.entries(regionCounts).forEach(([region, data]) => {
       const coords = REGION_COORDS[region];
       if (!coords) return;
       const color = RISK_COLORS[data.maxRisk] || "#94a3b8";
       const size = Math.min(24 + data.count * 4, 48);
 
-      // Heatmap 원형
-      new naver.maps.Circle({
+      const circle = new naver.maps.Circle({
         map,
         center: new naver.maps.LatLng(coords.lat, coords.lng),
         radius: data.count * 3000 + 5000,
@@ -120,8 +144,8 @@ export function KoreaMap({ className }: KoreaMapProps) {
         fillOpacity: 0.25,
         strokeWeight: 0,
       });
+      markersRef.current.push(circle);
 
-      // 숫자 마커
       const marker = new naver.maps.Marker({
         map,
         position: new naver.maps.LatLng(coords.lat, coords.lng),
@@ -137,48 +161,67 @@ export function KoreaMap({ className }: KoreaMapProps) {
           anchor: new naver.maps.Point(size / 2, size / 2),
         },
       });
+      markersRef.current.push(marker);
 
       naver.maps.Event.addListener(marker, "click", () => {
         setSelectedAlert(data.alerts[0]);
       });
     });
-  }, [mapLoaded, alerts]);
+  }, [alerts]);
 
   return (
     <Card className={className}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center justify-between">
           <span>전국 단속 현황</span>
-          <span className="text-xs text-gray-400 font-normal">{alerts.length}건</span>
+          <span className="text-xs text-gray-400 font-normal">
+            {alerts.length}건
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 overflow-hidden rounded-b-xl">
-        <div ref={mapRef} style={{ width: "100%", height: "320px" }} className="bg-gray-100">
-          {!mapLoaded && (
+        <div
+          ref={mapRef}
+          style={{ width: "100%", height: "320px" }}
+          className="bg-gray-100"
+        >
+          {!mapReady && (
             <div className="flex items-center justify-center h-full text-gray-400 text-sm">
               지도 로딩 중...
             </div>
           )}
         </div>
 
-        {/* 선택된 알림 팝업 */}
         {selectedAlert && (
           <div className="p-3 border-t bg-white">
             <div className="flex items-center gap-2 mb-1">
-              <Badge className={
-                selectedAlert.risk_level === "Level1" ? "bg-red-500 text-white" :
-                selectedAlert.risk_level === "Level2" ? "bg-amber-500 text-white" :
-                "bg-blue-100 text-blue-700"
-              }>
+              <Badge
+                className={
+                  selectedAlert.risk_level === "Level1"
+                    ? "bg-red-500 text-white"
+                    : selectedAlert.risk_level === "Level2"
+                    ? "bg-amber-500 text-white"
+                    : "bg-blue-100 text-blue-700"
+                }
+              >
                 {selectedAlert.risk_level}
               </Badge>
-              <span className="text-xs text-gray-400">{selectedAlert.alert_type}</span>
-              {selectedAlert.region && <span className="text-xs text-gray-400">📍{selectedAlert.region}</span>}
+              <span className="text-xs text-gray-400">
+                {selectedAlert.alert_type}
+              </span>
+              {selectedAlert.region && (
+                <span className="text-xs text-gray-400">
+                  📍{selectedAlert.region}
+                </span>
+              )}
             </div>
-            <p className="text-sm font-medium line-clamp-2">{selectedAlert.title}</p>
+            <p className="text-sm font-medium line-clamp-2">
+              {selectedAlert.title}
+            </p>
             {selectedAlert.summary && (
               <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                <span className="text-emerald-600">AI: </span>{selectedAlert.summary}
+                <span className="text-emerald-600">AI: </span>
+                {selectedAlert.summary}
               </p>
             )}
           </div>
