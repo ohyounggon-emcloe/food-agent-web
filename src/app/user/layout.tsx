@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -30,16 +29,8 @@ export default function UserLayout({
 }) {
   const pathname = usePathname();
   const { role, loading, user } = useAuth();
-  const [authTimeout, setAuthTimeout] = useState(false);
 
-  useEffect(() => {
-    if (loading) {
-      const timer = setTimeout(() => setAuthTimeout(true), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [loading]);
-
-  if (loading && !authTimeout) {
+  if (loading) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-gray-500">{"로딩 중..."}</p>
@@ -47,7 +38,7 @@ export default function UserLayout({
     );
   }
 
-  if ((loading && authTimeout) || (!loading && !user)) {
+  if (!user) {
     if (typeof window !== "undefined") {
       window.location.href = "/auth/login";
     }

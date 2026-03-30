@@ -32,12 +32,15 @@ function LoginForm() {
       setInfo("비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.");
     } else if (searchParams.get("verified") === "true") {
       setInfo("이메일 인증이 완료되었습니다. 로그인해주세요.");
+    } else if (searchParams.get("error") === "expired") {
+      setError("인증 링크가 만료되었습니다. 다시 요청해주세요.");
     }
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setInfo("");
     setLoading(true);
 
     try {
@@ -60,20 +63,9 @@ function LoginForm() {
         return;
       }
 
-      // 로그인 성공 → 역할에 따라 적절한 대시보드로 이동
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", (await supabase.auth.getUser()).data.user?.id)
-        .single();
-
-      const role = profile?.role || "regular";
-      if (false) {
-        // 관리자도 사용자 대시보드로 이동 (관리자 페이지는 사이드바에서 접근)
-        router.push("/admin/dashboard");
-      } else {
-        router.push("/user/dashboard");
-      }
+      // 로그인 성공 → 항상 사용자 대시보드로 이동 (관리자 페이지는 사이드바에서 접근)
+      // 프로필 조회 실패해도 리다이렉트 (AuthProvider가 재조회)
+      router.push("/user/dashboard");
       router.refresh();
     } catch {
       setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");

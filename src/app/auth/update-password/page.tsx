@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ export default function UpdatePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +33,6 @@ export default function UpdatePasswordPage() {
     try {
       const supabase = createClient();
 
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        setError("세션이 만료되었습니다. 비밀번호 재설정을 다시 요청해주세요.");
-        setLoading(false);
-        return;
-      }
-
       const { error: updateError } = await supabase.auth.updateUser({
         password,
       });
@@ -51,13 +43,32 @@ export default function UpdatePasswordPage() {
         return;
       }
 
+      // 비밀번호 변경 성공
+      setSuccess(true);
       await supabase.auth.signOut();
-      router.push("/auth/login?reset=true");
     } catch (err) {
       setError(`오류: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
     }
   };
+
+  if (success) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-center">{"비밀번호 변경 완료"}</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center space-y-4">
+          <p className="text-sm text-gray-600">
+            {"비밀번호가 성공적으로 변경되었습니다."}
+          </p>
+          <Link href="/auth/login?reset=true">
+            <Button className="mt-2">{"로그인 페이지로"}</Button>
+          </Link>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -74,17 +85,9 @@ export default function UpdatePasswordPage() {
                   {"재설정 링크 재발송"}
                 </Link>
                 <span className="text-xs text-gray-300">|</span>
-                <button
-                  type="button"
-                  className="text-xs text-teal-600 hover:underline"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signOut();
-                    window.location.replace("/auth/login");
-                  }}
-                >
+                <Link href="/auth/login" className="text-xs text-teal-600 hover:underline">
                   {"로그인 페이지로"}
-                </button>
+                </Link>
               </div>
             </div>
           )}

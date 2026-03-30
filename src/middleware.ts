@@ -25,12 +25,10 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // 세션 갱신 (모든 요청)
-  await supabase.auth.getUser();
-
+  // 세션 갱신 — getUser() 단일 호출 (이중 호출 제거)
   const {
-    data: { session },
-  } = await supabase.auth.getSession();
+    data: { user },
+  } = await supabase.auth.getUser();
 
   const pathname = request.nextUrl.pathname;
 
@@ -46,18 +44,25 @@ export async function middleware(request: NextRequest) {
 
   // /admin/*, /user/* — 비로그인이면 로그인 페이지로
   if (pathname.startsWith("/admin") || pathname.startsWith("/user")) {
-    if (!session) {
+    if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/login";
       return NextResponse.redirect(url);
     }
   }
 
-  // /auth/login, /auth/signup — 이미 로그인이면 사용자 대시보드로
-  // 단, logout 파라미터가 있으면 리다이렉트하지 않음 (로그아웃 직후)
+  // /auth/login, /auth/signup — 이미 로그인이면 대시보드로
+  // 단, logout/expired/verified/reset/error 파라미터가 있으면 리다이렉트하지 않음
   if (pathname === "/auth/login" || pathname === "/auth/signup") {
-    const isLogout = request.nextUrl.searchParams.get("logout") === "true";
-    if (session && !isLogout) {
+    const sp = request.nextUrl.searchParams;
+    const bypassRedirect =
+      sp.has("logout") ||
+      sp.has("expired") ||
+      sp.has("verified") ||
+      sp.has("reset") ||
+      sp.has("error");
+
+    if (user && !bypassRedirect) {
       const url = request.nextUrl.clone();
       url.pathname = "/user/dashboard";
       return NextResponse.redirect(url);

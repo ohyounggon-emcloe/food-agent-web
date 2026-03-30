@@ -5,6 +5,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase-browser";
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const initDone = useRef(false);
 
   const supabase = createClient();
 
@@ -56,7 +58,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        // 프로필이 없으면 자동 생성
         console.warn("Profile not found, creating:", error?.message);
         const { data: newProfile, error: upsertError } = await supabase
           .from("user_profiles")
@@ -71,7 +72,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (newProfile && !upsertError) {
           setProfile(newProfile);
         } else {
-          // upsert도 실패하면 임시 프로필로 동작 (로그아웃은 가능하게)
           console.error("Profile upsert failed:", upsertError?.message);
           setProfile({
             id: currentUser.id,
@@ -82,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (err) {
         console.error("Profile fetch exception:", err);
-        // 에러 시에도 임시 프로필 (로그아웃 가능하게)
         setProfile({
           id: currentUser.id,
           email: currentUser.email || "",
@@ -94,17 +93,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase]
   );
 
+  // 초기화: 모든 페이지에서 실행 (auth 페이지 포함)
   useEffect(() => {
     let mounted = true;
 
-    // /auth/* 경로에서는 auth 초기화를 건너뛰어 토큰 락 충돌 방지
-    const isAuthPage = typeof window !== "undefined" && window.location.pathname.startsWith("/auth/");
-
     const init = async () => {
-      if (isAuthPage) {
-        if (mounted) setLoading(false);
-        return;
-      }
+      // 중복 실행 방지
+      if (initDone.current) return;
+      initDone.current = true;
 
       try {
         const {
@@ -125,15 +121,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     init();
 
-    // auth 페이지에서는 상태 변경 리스너도 건너뛰기
-    if (isAuthPage) {
-      return () => { mounted = false; };
-    }
-
+    // onAuthStateChange 리스너: init 완료 후에만 프로필 재조회
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event: string, session: { user: User } | null) => {
+    } = supabase.auth.onAuthStateChange(async (event: string, session: { user: User } | null) => {
       if (!mounted) return;
+
+      // INITIAL_SESSION 이벤트는 init()과 중복되므로 무시
+      if (event === "INITIAL_SESSION") return;
+
       const currentUser = session?.user ?? null;
       setUser(currentUser);
       if (currentUser) {
@@ -160,7 +156,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const resetTimer = () => {
       clearTimeout(timer);
       timer = setTimeout(async () => {
-        await supabase.auth.signOut();
+        try {
+          await supabase.auth.signOut();
+        } catch { /* ignore */ }
         setUser(null);
         setProfile(null);
         window.location.href = "/auth/login?expired=true";
@@ -185,7 +183,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     setUser(null);
     setProfile(null);
-    // 쿠키 삭제 후 강제 full reload
     window.location.href = "/auth/login?logout=true";
   };
 
