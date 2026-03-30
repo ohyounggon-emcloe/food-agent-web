@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { CrackdownCalendar } from "@/components/crackdown-calendar";
+import { KoreaMap } from "@/components/korea-map";
 
 interface DashboardData {
   totalArticles: number;
@@ -89,6 +91,12 @@ export default function UserDashboard() {
             )}
           </CardContent>
         </Card>
+      </div>
+
+      {/* 달력 + 지도 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <CrackdownCalendar />
+        <KoreaMap />
       </div>
 
       <Card>
