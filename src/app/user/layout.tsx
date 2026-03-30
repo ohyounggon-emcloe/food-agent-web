@@ -98,7 +98,7 @@ export default function UserLayout({
       </aside>
 
       <main className="flex-1 overflow-auto bg-slate-50">
-        <div className="p-8">{children}</div>
+        <div className="max-w-6xl mx-auto p-6 lg:p-8">{children}</div>
       </main>
     </div>
   );

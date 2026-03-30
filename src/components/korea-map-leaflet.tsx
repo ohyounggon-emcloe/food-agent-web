@@ -132,7 +132,7 @@ export default function LeafletMapComponent({
     <MapContainer
       center={[36.5, 127.8]}
       zoom={7}
-      style={{ width: "100%", height: "400px" }}
+      style={{ width: "100%", height: "320px" }}
       scrollWheelZoom={false}
       zoomControl={true}
     >
