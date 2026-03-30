@@ -91,6 +91,13 @@ export async function PATCH(request: NextRequest) {
   }
 
   if (risk_level) {
+    // 변경 전 데이터 조회 (조정 이력용)
+    const { data: before } = await supabase
+      .from("collected_info")
+      .select("risk_level, title, site_name")
+      .eq("id", id)
+      .single();
+
     const { error } = await supabase
       .from("collected_info")
       .update({ risk_level })
@@ -99,6 +106,21 @@ export async function PATCH(request: NextRequest) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    // 조정 이력 기록
+    const oldLevel = before?.risk_level || "미분류";
+    if (oldLevel !== risk_level) {
+      await supabase.from("level_adjustments").insert({
+        article_id: id,
+        article_title: before?.title || "",
+        site_name: before?.site_name || "",
+        old_level: oldLevel,
+        new_level: risk_level,
+        adjusted_by: authResult.user.id,
+        reason: body.reason || null,
+      });
+    }
+
     return NextResponse.json({ success: true, action: "updated" });
   }
 
