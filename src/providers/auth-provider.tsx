@@ -59,11 +59,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         console.warn("Profile not found, creating:", error?.message);
+        const nickname = currentUser.user_metadata?.nickname || null;
         const { data: newProfile, error: upsertError } = await supabase
           .from("user_profiles")
           .upsert({
             id: currentUser.id,
             email: currentUser.email || "",
+            nickname,
             role: "regular",
           })
           .select()

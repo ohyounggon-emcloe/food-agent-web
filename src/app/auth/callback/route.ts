@@ -27,16 +27,19 @@ export async function GET(request: Request) {
     }
 
     if (data?.user) {
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single();
+      const nickname = data.user.user_metadata?.nickname || null;
 
-      const role = profile?.role || "regular";
-      if (["admin", "super_admin"].includes(role)) {
-        return NextResponse.redirect(`${origin}/admin/dashboard`);
-      }
+      // 프로필이 없으면 생성, 있으면 닉네임 업데이트
+      await supabase
+        .from("user_profiles")
+        .upsert({
+          id: data.user.id,
+          email: data.user.email || "",
+          nickname,
+          role: "regular",
+        }, { onConflict: "id", ignoreDuplicates: false })
+        .select();
+
       return NextResponse.redirect(`${origin}/user/dashboard`);
     }
   }
