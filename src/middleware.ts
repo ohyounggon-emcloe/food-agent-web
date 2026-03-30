@@ -54,8 +54,10 @@ export async function middleware(request: NextRequest) {
   }
 
   // /auth/login, /auth/signup — 이미 로그인이면 사용자 대시보드로
+  // 단, logout 파라미터가 있으면 리다이렉트하지 않음 (로그아웃 직후)
   if (pathname === "/auth/login" || pathname === "/auth/signup") {
-    if (session) {
+    const isLogout = request.nextUrl.searchParams.get("logout") === "true";
+    if (session && !isLogout) {
       const url = request.nextUrl.clone();
       url.pathname = "/user/dashboard";
       return NextResponse.redirect(url);

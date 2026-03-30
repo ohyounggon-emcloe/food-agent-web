@@ -74,9 +74,17 @@ export default function UpdatePasswordPage() {
                   {"재설정 링크 재발송"}
                 </Link>
                 <span className="text-xs text-gray-300">|</span>
-                <Link href="/auth/login" className="text-xs text-teal-600 hover:underline">
+                <button
+                  type="button"
+                  className="text-xs text-teal-600 hover:underline"
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    window.location.replace("/auth/login");
+                  }}
+                >
                   {"로그인 페이지로"}
-                </Link>
+                </button>
               </div>
             </div>
           )}

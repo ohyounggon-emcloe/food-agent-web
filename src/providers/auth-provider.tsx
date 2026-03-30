@@ -97,7 +97,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // /auth/* 경로에서는 auth 초기화를 건너뛰어 토큰 락 충돌 방지
+    const isAuthPage = typeof window !== "undefined" && window.location.pathname.startsWith("/auth/");
+
     const init = async () => {
+      if (isAuthPage) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
       try {
         const {
           data: { user: currentUser },
@@ -116,6 +124,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     init();
+
+    // auth 페이지에서는 상태 변경 리스너도 건너뛰기
+    if (isAuthPage) {
+      return () => { mounted = false; };
+    }
 
     const {
       data: { subscription },
@@ -169,12 +182,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Sign out error:", err);
-    } finally {
-      setUser(null);
-      setProfile(null);
-      // 강제 리다이렉트 (에러 여부 무관)
-      window.location.replace("/auth/login");
     }
+    setUser(null);
+    setProfile(null);
+    // 쿠키 삭제 후 강제 full reload
+    window.location.href = "/auth/login?logout=true";
   };
 
   const refreshProfile = async () => {
