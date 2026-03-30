@@ -105,7 +105,7 @@ export function KoreaMap({ className }: KoreaMapProps) {
         <CardTitle className="text-sm flex items-center justify-between">
           <span>전국 단속 현황</span>
           <span className="text-xs text-gray-400 font-normal">
-            최근 90일 · {alerts.length}건
+            최근 90일 · {markers.reduce((s, m) => s + m.count, 0)}건 ({markers.length}개 지역)
           </span>
         </CardTitle>
       </CardHeader>
