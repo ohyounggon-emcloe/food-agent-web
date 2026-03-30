@@ -24,10 +24,23 @@ interface Article {
   has_attachments: boolean;
 }
 
-const RISK_VARIANT: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
-  Level1: "destructive",
-  Level2: "secondary",
-  Level3: "outline",
+const RISK_STYLE: Record<string, string> = {
+  Level1: "bg-red-500 text-white border-red-500",
+  Level2: "bg-amber-500 text-white border-amber-500",
+  Level3: "bg-blue-100 text-blue-700 border-blue-200",
+  "해당없음": "bg-gray-100 text-gray-500 border-gray-200",
+  "미분류": "bg-gray-50 text-gray-400 border-gray-200",
+};
+
+const RISK_ICON: Record<string, string> = {
+  Level1: "🚨",
+  Level2: "⚠️",
+  Level3: "ℹ️",
+};
+
+const CARD_BORDER: Record<string, string> = {
+  Level1: "border-l-4 border-l-red-500 bg-red-50/30",
+  Level2: "border-l-4 border-l-amber-400 bg-amber-50/20",
 };
 
 export default function NewsPage() {
@@ -85,8 +98,18 @@ function NewsFeed() {
     fetchNews();
   }, [fetchNews]);
 
-  const totalPages = Math.ceil(articles.length / pageSize);
-  const paged = articles.slice(
+  // 클라이언트 검색 필터 (제목 + 사이트명)
+  const filtered = articles.filter((a) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      a.title.toLowerCase().includes(q) ||
+      (a.site_name || "").toLowerCase().includes(q)
+    );
+  });
+
+  const totalPages = Math.ceil(filtered.length / pageSize);
+  const paged = filtered.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
@@ -96,7 +119,7 @@ function NewsFeed() {
       <div>
         <h2 className="text-2xl font-bold">{"뉴스 피드"}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {`${riskFilter} · ${daysFilter === "오늘" ? "오늘" : `최근 ${daysFilter}`} · ${articles.length}건`}
+          {`${riskFilter} · ${daysFilter === "오늘" ? "오늘" : `최근 ${daysFilter}`} · ${filtered.length}건${search ? ` (검색: "${search}")` : ""}`}
         </p>
       </div>
 
@@ -145,12 +168,14 @@ function NewsFeed() {
             {paged.map((article) => (
               <div
                 key={article.id}
-                className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                className={`border rounded-xl p-4 hover:shadow-md transition-all ${
+                  CARD_BORDER[article.risk_level] || "hover:bg-slate-50"
+                }`}
               >
                 <div className="flex items-start gap-3">
+                  <span className="text-base shrink-0">{RISK_ICON[article.risk_level] || ""}</span>
                   <Badge
-                    variant={RISK_VARIANT[article.risk_level] || "outline"}
-                    className="text-xs shrink-0 mt-0.5"
+                    className={`text-xs shrink-0 mt-0.5 ${RISK_STYLE[article.risk_level] || "bg-gray-100 text-gray-500"}`}
                   >
                     {article.risk_level || "-"}
                   </Badge>
@@ -159,7 +184,7 @@ function NewsFeed() {
                       href={article.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm font-medium hover:text-teal-600"
+                      className="text-sm font-medium hover:text-emerald-600"
                     >
                       {article.title}
                     </a>
@@ -176,9 +201,14 @@ function NewsFeed() {
                       )}
                     </div>
                     {article.summary && (
-                      <p className="text-xs text-gray-500 mt-2 line-clamp-2">
-                        {article.summary}
-                      </p>
+                      <details className="mt-2">
+                        <summary className="text-xs text-emerald-600 cursor-pointer hover:text-emerald-700">
+                          AI 요약 보기
+                        </summary>
+                        <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                          {article.summary}
+                        </p>
+                      </details>
                     )}
                   </div>
                 </div>
