@@ -85,36 +85,24 @@ export default function UserDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              {"총 수집 게시글"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{data.totalArticles}</div>
+        <Card className="py-3">
+          <CardContent className="pb-0 pt-0">
+            <p className="text-xs font-medium text-gray-500">{"총 수집 게시글"}</p>
+            <div className="text-2xl font-bold mt-1">{data.totalArticles}</div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              {"오늘 수집"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{data.todayArticles}</div>
+        <Card className="py-3">
+          <CardContent className="pb-0 pt-0">
+            <p className="text-xs font-medium text-gray-500">{"오늘 수집"}</p>
+            <div className="text-2xl font-bold mt-1">{data.todayArticles}</div>
           </CardContent>
         </Card>
 
-        <Card className={highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-500">
-              {"고위험 게시글"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-3xl font-bold ${highRiskCount > 0 ? "text-red-600" : ""}`}>
+        <Card className={`py-3 ${highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}`}>
+          <CardContent className="pb-0 pt-0">
+            <p className="text-xs font-medium text-gray-500">{"고위험 게시글"}</p>
+            <div className={`text-2xl font-bold mt-1 ${highRiskCount > 0 ? "text-red-600" : ""}`}>
               {highRiskCount}
             </div>
             {highRiskCount > 0 && (
