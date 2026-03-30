@@ -78,7 +78,7 @@ export default function UserDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold">{"오늘의 AI-FX 현황"}</h2>
+        <h2 className="text-2xl font-bold">{"오늘의 식품위생법규 정보 현황"}</h2>
         <p className="text-gray-500 text-sm mt-1">
           {"AI 자동 수집을 통한 최신 식품 안전 정보"}
         </p>
