@@ -26,14 +26,16 @@ export async function GET(request: NextRequest) {
       "id, title, url, site_name, publish_date, risk_level, summary, has_attachments, region, industry_tags"
     )
     .gte("publish_date", cutoffStr)
+    .order("risk_level", { ascending: true })
     .order("publish_date", { ascending: false })
     .limit(limit);
 
   if (riskLevel && riskLevel !== "all") {
     query = query.eq("risk_level", riskLevel);
   } else {
-    // 기본: '해당없음' 제외 (사용자 페이지에서는 보이지 않음)
-    query = query.neq("risk_level", "해당없음");
+    // 기본: '해당없음', '미분류' 제외 (사용자 페이지에서는 보이지 않음)
+    query = query.not("risk_level", "in", '("해당없음","미분류")');
+    query = query.not("risk_level", "is", "null");
   }
   if (search) {
     query = query.or(`title.ilike.%${search}%,site_name.ilike.%${search}%`);
