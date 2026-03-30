@@ -83,11 +83,12 @@ export default function AdminLayout({
     <div className="flex h-screen">
       <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
         <div className="p-6 border-b border-slate-800">
-          <h1 className="text-lg font-bold text-emerald-400">
-            AI-FX(Food Next)
+          <h1 className="text-xl font-extrabold tracking-tight">
+            <span className="text-white">AI</span>
+            <span className="text-emerald-400">-FX</span>
           </h1>
-          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"식품 AI 정보서비스"}</p>
-          <p className="text-xs text-slate-400 mt-1">{"관리자 시스템"}</p>
+          <p className="text-xs text-slate-300 tracking-[0.15em] mt-1">{"Food Intelligence Platform"}</p>
+          <p className="text-xs text-amber-400 font-medium mt-0.5">{"Admin System"}</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
