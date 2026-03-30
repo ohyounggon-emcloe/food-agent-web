@@ -24,6 +24,29 @@ interface Article {
   has_attachments: boolean;
 }
 
+// 위험 근거 핵심 키워드
+const HIGHLIGHT_KEYWORDS = [
+  "식중독", "이물", "부적합", "회수", "판매중지", "행정처분", "영업정지",
+  "과징금", "과태료", "위반", "단속", "적발", "시정명령", "불시점검",
+  "원산지", "유통기한", "알러젠", "살모넬라", "노로바이러스", "대장균",
+  "리스테리아", "곰팡이", "중금속", "잔류농약", "항생제",
+];
+
+function highlightText(text: string): React.ReactNode {
+  if (!text) return text;
+  const regex = new RegExp(`(${HIGHLIGHT_KEYWORDS.join("|")})`, "gi");
+  const parts = text.split(regex);
+  return parts.map((part, i) =>
+    HIGHLIGHT_KEYWORDS.some((kw) => kw.toLowerCase() === part.toLowerCase()) ? (
+      <mark key={i} className="bg-red-100 text-red-700 px-0.5 rounded font-medium">
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+}
+
 const RISK_STYLE: Record<string, string> = {
   Level1: "bg-red-500 text-white border-red-500",
   Level2: "bg-amber-500 text-white border-amber-500",
@@ -186,7 +209,7 @@ function NewsFeed() {
                       rel="noreferrer"
                       className="text-sm font-medium hover:text-emerald-600"
                     >
-                      {article.title}
+                      {highlightText(article.title)}
                     </a>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-gray-500">
@@ -206,7 +229,7 @@ function NewsFeed() {
                           AI 요약 보기
                         </summary>
                         <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-                          {article.summary}
+                          {highlightText(article.summary || "")}
                         </p>
                       </details>
                     )}
