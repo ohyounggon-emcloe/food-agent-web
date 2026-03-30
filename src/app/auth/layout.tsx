@@ -17,11 +17,11 @@ export default function AuthLayout({
         quality={85}
       />
 
-      {/* 다크 오버레이 (이미지 위에 어둡게) */}
-      <div className="absolute inset-0 bg-slate-900/75" />
+      {/* 다크 오버레이 (이미지가 보이도록 50%) */}
+      <div className="absolute inset-0 bg-slate-900/50" />
 
-      {/* 에메랄드 그라데이션 오버레이 */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/60 via-transparent to-emerald-950/40" />
+      {/* 에메랄드 그라데이션 오버레이 (가볍게) */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900/30 via-transparent to-emerald-950/20" />
 
       {/* 컨텐츠 */}
       <div className="relative z-10 w-full max-w-md px-6">
