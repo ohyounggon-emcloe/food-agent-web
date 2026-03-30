@@ -1,215 +1,186 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-interface RegionStat {
-  region: string;
-  count: number;
-  level1: number;
-  level2: number;
-  level3: number;
+/* ── 지역별 좌표 ── */
+
+const REGION_COORDS: Record<string, { lat: number; lng: number }> = {
+  서울: { lat: 37.5665, lng: 126.978 },
+  경기: { lat: 37.275, lng: 127.01 },
+  인천: { lat: 37.4563, lng: 126.7052 },
+  부산: { lat: 35.1796, lng: 129.0756 },
+  대구: { lat: 35.8714, lng: 128.6014 },
+  광주: { lat: 35.1595, lng: 126.8526 },
+  대전: { lat: 36.3504, lng: 127.3845 },
+  울산: { lat: 35.5384, lng: 129.3114 },
+  세종: { lat: 36.48, lng: 127.0 },
+  강원: { lat: 37.8228, lng: 128.1555 },
+  충북: { lat: 36.6357, lng: 127.4913 },
+  충남: { lat: 36.5184, lng: 126.8 },
+  전북: { lat: 35.82, lng: 127.15 },
+  전남: { lat: 34.816, lng: 126.463 },
+  경북: { lat: 36.576, lng: 128.506 },
+  경남: { lat: 35.46, lng: 128.2132 },
+  제주: { lat: 33.4996, lng: 126.5312 },
+};
+
+const RISK_COLORS: Record<string, string> = {
+  Level1: "#ef4444",
+  Level2: "#f59e0b",
+  Level3: "#3b82f6",
+};
+
+/* ── Props ── */
+
+interface KoreaMapProps {
+  className?: string;
 }
 
-/*
- * 대한민국 17개 시도 중심 좌표.
- * 경도(x)·위도(y)를 SVG viewBox 0~500 기준으로 변환.
- * 변환식: x = (lng - 125) * 70,  y = (39 - lat) * 85
- */
-const REGIONS: { name: string; x: number; y: number }[] = [
-  { name: "서울",   x: 182, y: 148 },
-  { name: "인천",   x: 155, y: 156 },
-  { name: "경기",   x: 192, y: 175 },
-  { name: "강원",   x: 270, y: 130 },
-  { name: "충북",   x: 228, y: 230 },
-  { name: "세종",   x: 190, y: 252 },
-  { name: "충남",   x: 155, y: 260 },
-  { name: "대전",   x: 200, y: 272 },
-  { name: "전북",   x: 168, y: 325 },
-  { name: "광주",   x: 148, y: 380 },
-  { name: "전남",   x: 160, y: 415 },
-  { name: "경북",   x: 310, y: 250 },
-  { name: "대구",   x: 295, y: 310 },
-  { name: "울산",   x: 340, y: 340 },
-  { name: "경남",   x: 275, y: 370 },
-  { name: "부산",   x: 325, y: 380 },
-  { name: "제주",   x: 155, y: 510 },
-];
+/* ── 컴포넌트 ── */
 
-/* 한반도 외곽 실루엣 (간략화) */
-const KOREA_OUTLINE =
-  "M160,80 L195,75 L230,60 L280,55 L340,50 L370,70 L355,110 " +
-  "L340,140 L360,170 L370,200 L355,240 L365,270 L350,310 " +
-  "L360,350 L340,390 L310,400 L290,395 L260,410 L230,435 " +
-  "L195,445 L170,430 L140,440 L120,420 L105,385 L110,345 " +
-  "L95,310 L100,270 L110,235 L100,200 L110,170 L125,140 L140,110 Z";
+export function KoreaMap({ className }: KoreaMapProps) {
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [selectedAlert, setSelectedAlert] = useState<any>(null);
 
-const JEJU_OUTLINE =
-  "M115,490 L200,488 L210,510 L195,530 L120,532 L105,510 Z";
-
-function getBubbleRadius(count: number, maxCount: number): number {
-  if (count === 0) return 6;
-  const ratio = count / Math.max(maxCount, 1);
-  return 8 + ratio * 20;
-}
-
-function getBubbleColor(count: number, maxCount: number): string {
-  if (count === 0) return "#e2e8f0";
-  const ratio = count / Math.max(maxCount, 1);
-  if (ratio < 0.25) return "#6ee7b7";
-  if (ratio < 0.5) return "#34d399";
-  if (ratio < 0.75) return "#10b981";
-  return "#059669";
-}
-
-export function KoreaMap() {
-  const [stats, setStats] = useState<RegionStat[]>([]);
-  const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
-  const router = useRouter();
-
+  // 단속 데이터 로드
   useEffect(() => {
-    fetch("/api/crackdown/stats")
-      .then((r) => r.json())
-      .then((d) => setStats(Array.isArray(d) ? d : []))
-      .catch(() => setStats([]));
+    fetch("/api/crackdown?days=30")
+      .then((res) => res.ok ? res.json() : [])
+      .then((data) => setAlerts(Array.isArray(data) ? data : []))
+      .catch(() => setAlerts([]));
   }, []);
 
-  const statMap: Record<string, RegionStat> = {};
-  for (const s of stats) {
-    statMap[s.region] = s;
+  // 지역별 집계
+  const regionCounts: Record<string, { count: number; maxRisk: string; alerts: any[] }> = {};
+  for (const alert of alerts) {
+    const region = alert.region || "전국";
+    if (!REGION_COORDS[region]) continue;
+    if (!regionCounts[region]) {
+      regionCounts[region] = { count: 0, maxRisk: "Level3", alerts: [] };
+    }
+    regionCounts[region].count++;
+    regionCounts[region].alerts.push(alert);
+    if (alert.risk_level === "Level1") regionCounts[region].maxRisk = "Level1";
+    else if (alert.risk_level === "Level2" && regionCounts[region].maxRisk !== "Level1") {
+      regionCounts[region].maxRisk = "Level2";
+    }
   }
-  const maxCount = Math.max(...stats.map((s) => s.count), 1);
 
-  const hoveredStat = hoveredRegion ? statMap[hoveredRegion] : null;
+  // 네이버 맵 스크립트 로드
+  useEffect(() => {
+    const clientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID;
+    if (!clientId) return;
+
+    if (typeof window !== "undefined" && (window as any).naver?.maps) {
+      setMapLoaded(true);
+      return;
+    }
+
+    const existing = document.querySelector('script[src*="oapi.map.naver.com"]');
+    if (existing) {
+      existing.addEventListener("load", () => setMapLoaded(true));
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpClientId=${clientId}`;
+    script.async = true;
+    script.onload = () => setMapLoaded(true);
+    document.head.appendChild(script);
+  }, []);
+
+  // 지도 초기화
+  useEffect(() => {
+    if (!mapLoaded || !mapRef.current || alerts.length === 0) return;
+    const naver = (window as any).naver;
+    if (!naver?.maps) return;
+
+    const map = new naver.maps.Map(mapRef.current, {
+      center: new naver.maps.LatLng(36.0, 127.5),
+      zoom: 7,
+    });
+
+    // 지역별 마커
+    Object.entries(regionCounts).forEach(([region, data]) => {
+      const coords = REGION_COORDS[region];
+      if (!coords) return;
+      const color = RISK_COLORS[data.maxRisk] || "#94a3b8";
+      const size = Math.min(24 + data.count * 4, 48);
+
+      // Heatmap 원형
+      new naver.maps.Circle({
+        map,
+        center: new naver.maps.LatLng(coords.lat, coords.lng),
+        radius: data.count * 3000 + 5000,
+        fillColor: color,
+        fillOpacity: 0.25,
+        strokeWeight: 0,
+      });
+
+      // 숫자 마커
+      const marker = new naver.maps.Marker({
+        map,
+        position: new naver.maps.LatLng(coords.lat, coords.lng),
+        icon: {
+          content: `<div style="
+            background:${color};color:white;border-radius:50%;
+            width:${size}px;height:${size}px;
+            display:flex;align-items:center;justify-content:center;
+            font-size:11px;font-weight:700;
+            box-shadow:0 2px 8px ${color}80;cursor:pointer;
+            border:2px solid white;
+          ">${data.count}</div>`,
+          anchor: new naver.maps.Point(size / 2, size / 2),
+        },
+      });
+
+      naver.maps.Event.addListener(marker, "click", () => {
+        setSelectedAlert(data.alerts[0]);
+      });
+    });
+  }, [mapLoaded, alerts]);
 
   return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base">{"지역별 단속 현황"}</CardTitle>
+    <Card className={className}>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center justify-between">
+          <span>전국 단속 현황</span>
+          <span className="text-xs text-gray-400 font-normal">{alerts.length}건</span>
+        </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="relative">
-          <svg viewBox="60 30 340 530" className="w-full h-auto max-h-[280px]">
-            {/* 한반도 실루엣 */}
-            <path
-              d={KOREA_OUTLINE}
-              fill="#f8fafc"
-              stroke="#cbd5e1"
-              strokeWidth={1.5}
-            />
-            <path
-              d={JEJU_OUTLINE}
-              fill="#f8fafc"
-              stroke="#cbd5e1"
-              strokeWidth={1.5}
-            />
-
-            {/* 지역 버블 */}
-            {REGIONS.map((region) => {
-              const stat = statMap[region.name];
-              const count = stat?.count || 0;
-              const r = getBubbleRadius(count, maxCount);
-              const fill = getBubbleColor(count, maxCount);
-              const isHovered = hoveredRegion === region.name;
-
-              return (
-                <g key={region.name}>
-                  <circle
-                    cx={region.x}
-                    cy={region.y}
-                    r={isHovered ? r + 3 : r}
-                    fill={fill}
-                    fillOpacity={isHovered ? 0.95 : 0.8}
-                    stroke={isHovered ? "#047857" : "#fff"}
-                    strokeWidth={isHovered ? 2.5 : 1.5}
-                    className="cursor-pointer transition-all duration-150"
-                    onMouseEnter={() => setHoveredRegion(region.name)}
-                    onMouseLeave={() => setHoveredRegion(null)}
-                    onClick={() =>
-                      router.push(`/user/crackdown?region=${region.name}`)
-                    }
-                  />
-                  <text
-                    x={region.x}
-                    y={region.y + 1}
-                    textAnchor="middle"
-                    dominantBaseline="central"
-                    className="pointer-events-none select-none"
-                    fontSize={9}
-                    fontWeight={600}
-                    fill={count > 0 ? "#fff" : "#64748b"}
-                  >
-                    {region.name}
-                  </text>
-                  {count > 0 && (
-                    <text
-                      x={region.x}
-                      y={region.y + r + 10}
-                      textAnchor="middle"
-                      className="pointer-events-none select-none"
-                      fontSize={8}
-                      fill="#475569"
-                      fontWeight={500}
-                    >
-                      {count}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* 호버 툴팁 */}
-          {hoveredStat && (
-            <div className="absolute top-2 right-2 bg-white border border-slate-200 rounded-lg shadow-md px-3 py-2 text-xs">
-              <p className="font-semibold text-slate-800">{hoveredStat.region}</p>
-              <p className="text-slate-500">
-                {"총 "}
-                <span className="font-bold text-emerald-600">{hoveredStat.count}</span>
-                {"건"}
-              </p>
-              {hoveredStat.level1 > 0 && (
-                <p className="text-red-500">{"긴급 "}{hoveredStat.level1}{"건"}</p>
-              )}
-              {hoveredStat.level2 > 0 && (
-                <p className="text-amber-500">{"주의 "}{hoveredStat.level2}{"건"}</p>
-              )}
+      <CardContent className="p-0 overflow-hidden rounded-b-xl">
+        <div ref={mapRef} style={{ width: "100%", height: "320px" }} className="bg-gray-100">
+          {!mapLoaded && (
+            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              지도 로딩 중...
             </div>
           )}
         </div>
 
-        {/* 범례 */}
-        <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
-          <span>{"건수:"}</span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300" />
-            {"0"}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-emerald-300" />
-            {"소"}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-emerald-500" />
-            {"중"}
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded-full bg-emerald-700" />
-            {"다"}
-          </span>
-        </div>
-
-        {/* 전체 통계 */}
-        {stats.length > 0 && (
-          <div className="mt-3 pt-3 border-t text-xs text-slate-500">
-            {"최근 90일 총 "}
-            <span className="font-bold text-emerald-600">
-              {stats.reduce((s, r) => s + r.count, 0)}
-            </span>
-            {"건 ("}
-            {stats.filter((s) => s.count > 0).length}
-            {"개 지역)"}
+        {/* 선택된 알림 팝업 */}
+        {selectedAlert && (
+          <div className="p-3 border-t bg-white">
+            <div className="flex items-center gap-2 mb-1">
+              <Badge className={
+                selectedAlert.risk_level === "Level1" ? "bg-red-500 text-white" :
+                selectedAlert.risk_level === "Level2" ? "bg-amber-500 text-white" :
+                "bg-blue-100 text-blue-700"
+              }>
+                {selectedAlert.risk_level}
+              </Badge>
+              <span className="text-xs text-gray-400">{selectedAlert.alert_type}</span>
+              {selectedAlert.region && <span className="text-xs text-gray-400">📍{selectedAlert.region}</span>}
+            </div>
+            <p className="text-sm font-medium line-clamp-2">{selectedAlert.title}</p>
+            {selectedAlert.summary && (
+              <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                <span className="text-emerald-600">AI: </span>{selectedAlert.summary}
+              </p>
+            )}
           </div>
         )}
       </CardContent>
