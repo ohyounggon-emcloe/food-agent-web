@@ -88,6 +88,15 @@ function HomeContent() {
 
     try {
       const supabase = createClient();
+
+      // 세션 확인
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError("세션이 만료되었습니다. 비밀번호 재설정 링크를 다시 요청해주세요.");
+        setLoading(false);
+        return;
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({
         password,
       });
@@ -116,8 +125,23 @@ function HomeContent() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
-                  {error}
+                <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md space-y-2">
+                  <p>{error}</p>
+                  <div className="flex gap-2">
+                    <a
+                      href="/auth/reset-password"
+                      className="text-xs text-teal-600 hover:underline"
+                    >
+                      {"재설정 링크 재발송"}
+                    </a>
+                    <span className="text-xs text-gray-300">|</span>
+                    <a
+                      href="/auth/login"
+                      className="text-xs text-teal-600 hover:underline"
+                    >
+                      {"로그인 페이지로"}
+                    </a>
+                  </div>
                 </div>
               )}
               <div>
