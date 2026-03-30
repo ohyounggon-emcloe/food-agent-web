@@ -80,7 +80,7 @@ export default function UserDashboard() {
       <div>
         <h2 className="text-2xl font-bold">{"오늘의 AI-FX 현황"}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {"AI 자동 수집을 통한 최신 위생법규 정보"}
+          {"AI 자동 수집을 통한 최신 식품 안전 정보"}
         </p>
       </div>
 

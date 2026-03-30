@@ -61,7 +61,7 @@ export default function UserLayout({
           <h1 className="text-lg font-bold text-emerald-400">
             AI-FX(Food Next)
           </h1>
-          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"위생법규 정보서비스"}</p>
+          <p className="text-xs text-slate-500 tracking-widest mt-0.5">{"식품 AI 정보서비스"}</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
