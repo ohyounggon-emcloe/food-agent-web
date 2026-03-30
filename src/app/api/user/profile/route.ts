@@ -31,12 +31,27 @@ export async function PATCH(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { nickname, password } = body;
+  const { nickname, password, preferred_regions, preferred_industries } = body;
+
+  const profileUpdate: Record<string, unknown> = {};
 
   if (nickname !== undefined) {
+    profileUpdate.nickname = nickname;
+  }
+
+  if (preferred_regions !== undefined) {
+    profileUpdate.preferred_regions = preferred_regions;
+  }
+
+  if (preferred_industries !== undefined) {
+    profileUpdate.preferred_industries = preferred_industries;
+  }
+
+  if (Object.keys(profileUpdate).length > 0) {
+    profileUpdate.updated_at = new Date().toISOString();
     await supabase
       .from("user_profiles")
-      .update({ nickname })
+      .update(profileUpdate)
       .eq("id", user.id);
   }
 
