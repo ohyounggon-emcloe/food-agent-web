@@ -169,10 +169,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await supabase.auth.signOut();
     } catch (err) {
       console.error("Sign out error:", err);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      // 강제 리다이렉트 (에러 여부 무관)
+      window.location.replace("/auth/login");
     }
-    setUser(null);
-    setProfile(null);
-    window.location.href = "/auth/login";
   };
 
   const refreshProfile = async () => {
