@@ -65,14 +65,14 @@ const REGIONS = [
 export default function CrackdownPage() {
   const [alerts, setAlerts] = useState<CrackdownAlert[]>([]);
   const [loading, setLoading] = useState(true);
-  const [typeFilter, setTypeFilter] = useState("전체");
+  const [typeFilter, setTypeFilter] = useState("전체 유형");
   const [regionFilter, setRegionFilter] = useState("전체");
   const [selectedAlert, setSelectedAlert] = useState<CrackdownAlert | null>(null);
 
   const fetchAlerts = useCallback(async () => {
     const params = new URLSearchParams();
     params.set("days", "30");
-    if (typeFilter !== "전체") params.set("alert_type", typeFilter);
+    if (typeFilter !== "전체 유형") params.set("alert_type", typeFilter);
     if (regionFilter !== "전체") params.set("region", regionFilter);
 
     try {
@@ -107,24 +107,28 @@ export default function CrackdownPage() {
       <div>
         <h2 className="text-2xl font-bold">식품 단속정보</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {`${typeFilter} · ${regionFilter} · 최근 30일 · ${alerts.length}건`}
+          {`${typeFilter} · ${regionFilter} · ${alerts.length}건`}
         </p>
       </div>
 
       {/* 필터 */}
-      <div className="flex gap-3 flex-wrap">
-        <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v || "전체")}>
+      <div className="flex gap-3 flex-wrap items-center">
+        <span className="text-sm text-gray-500">유형</span>
+        <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v || "전체 유형")}>
           <SelectTrigger className="w-36">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="전체">전체 유형</SelectItem>
-            {Object.keys(TYPE_LABELS).map((t) => (
-              <SelectItem key={t} value={t}>{t}</SelectItem>
-            ))}
+            <SelectItem value="전체 유형">전체 유형</SelectItem>
+            <SelectItem value="단속예고">단속예고</SelectItem>
+            <SelectItem value="점검공지">점검공지</SelectItem>
+            <SelectItem value="행정처분">행정처분</SelectItem>
+            <SelectItem value="회수명령">회수명령</SelectItem>
+            <SelectItem value="판매중지">판매중지</SelectItem>
           </SelectContent>
         </Select>
 
+        <span className="text-sm text-gray-500">지역</span>
         <Select value={regionFilter} onValueChange={(v) => setRegionFilter(v || "전체")}>
           <SelectTrigger className="w-28">
             <SelectValue />
