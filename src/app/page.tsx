@@ -19,8 +19,14 @@ export default function Home() {
   }, [user, loading, router]);
 
   return (
-    <div className="flex h-screen items-center justify-center">
+    <div className="flex h-screen items-center justify-center flex-col gap-4">
       <p className="text-gray-500">{"로딩 중..."}</p>
+      <a
+        href="/auth/login?logout=true"
+        className="text-xs text-gray-400 hover:text-teal-500 hover:underline mt-4"
+      >
+        {"오래 걸리면 여기를 클릭하세요"}
+      </a>
     </div>
   );
 }

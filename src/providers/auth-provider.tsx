@@ -103,9 +103,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       initDone.current = true;
 
       try {
-        const {
-          data: { user: currentUser },
-        } = await supabase.auth.getUser();
+        // 10초 타임아웃: getUser()가 응답하지 않으면 강제로 loading 해제
+        const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { user: null } }), 10000)
+        );
+
+        const { data: { user: currentUser } } = await Promise.race([
+          supabase.auth.getUser(),
+          timeoutPromise,
+        ]);
 
         if (!mounted) return;
         setUser(currentUser);
