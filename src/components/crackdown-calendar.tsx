@@ -40,7 +40,9 @@ function getFirstDayOfWeek(year: number, month: number): number {
 export function CrackdownCalendar() {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    new Date().toISOString().split("T")[0]
+  );
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
