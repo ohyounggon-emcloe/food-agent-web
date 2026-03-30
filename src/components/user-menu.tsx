@@ -18,7 +18,7 @@ export function UserMenu() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full text-sm h-8 mt-1 border-slate-600 text-slate-200 hover:text-white hover:bg-red-600 hover:border-red-600"
+          className="w-full text-sm h-8 mt-1 bg-red-600 text-white border-red-600 hover:bg-red-700 hover:border-red-700"
           onClick={signOut}
         >
           {"로그아웃"}
@@ -39,7 +39,7 @@ export function UserMenu() {
       <Button
         variant="outline"
         size="sm"
-        className="w-full text-sm h-8 mt-1 border-slate-600 text-slate-200 hover:text-white hover:bg-red-600 hover:border-red-600"
+        className="w-full text-sm h-8 mt-1 bg-red-600 text-white border-red-600 hover:bg-red-700 hover:border-red-700"
         onClick={signOut}
       >
         {"로그아웃"}
