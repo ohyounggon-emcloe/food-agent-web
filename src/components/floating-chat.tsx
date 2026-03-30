@@ -70,7 +70,7 @@ export function FloatingChat() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition-all hover:scale-105 flex items-center justify-center"
+          className="fixed bottom-6 right-6 z-[9999] w-14 h-14 rounded-full bg-emerald-600 text-white shadow-lg hover:bg-emerald-700 transition-all hover:scale-105 flex items-center justify-center"
         >
           <MessageCircle className="w-6 h-6" />
         </button>
@@ -78,7 +78,7 @@ export function FloatingChat() {
 
       {/* 채팅 패널 */}
       {open && (
-        <div className="fixed top-0 right-0 z-50 w-96 h-full bg-white shadow-2xl border-l flex flex-col">
+        <div className="fixed top-0 right-0 z-[9999] w-96 h-full bg-white shadow-2xl border-l flex flex-col">
           {/* 헤더 */}
           <div className="flex items-center justify-between px-4 py-3 bg-emerald-600 text-white">
             <div className="flex items-center gap-2">
