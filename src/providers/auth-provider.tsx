@@ -177,12 +177,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const resetTimer = () => {
       clearTimeout(timer);
-      timer = setTimeout(async () => {
-        try {
-          await supabase.auth.signOut();
-        } catch { /* ignore */ }
+      timer = setTimeout(() => {
         setUser(null);
         setProfile(null);
+        document.cookie.split(";").forEach((c) => {
+          const name = c.trim().split("=")[0];
+          if (name.startsWith("sb-")) {
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}`;
+            document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+          }
+        });
+        supabase.auth.signOut().catch(() => {});
         window.location.href = "/auth/login?expired=true";
       }, TIMEOUT_MS);
     };
@@ -198,9 +203,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, supabase]);
 
   const signOut = async () => {
-    // 즉시 리다이렉트 (signOut 응답을 기다리지 않음 — 콜드스타트 대응)
     setUser(null);
     setProfile(null);
+
+    // Supabase 세션 쿠키 직접 삭제 (signOut 미완료 시에도 쿠키 정리)
+    document.cookie.split(";").forEach((c) => {
+      const name = c.trim().split("=")[0];
+      if (name.startsWith("sb-")) {
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}`;
+        document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+      }
+    });
+
     supabase.auth.signOut().catch(() => {});
     window.location.href = "/auth/login?logout=true";
   };
