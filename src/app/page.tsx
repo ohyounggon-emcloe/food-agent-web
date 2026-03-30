@@ -68,15 +68,15 @@ export default function Home() {
       });
 
       if (updateError) {
-        setError(updateError.message);
+        setError(`변경 실패: ${updateError.message} (${updateError.status || ""})`);
         setLoading(false);
         return;
       }
 
       await supabase.auth.signOut();
       router.push("/auth/login?reset=true");
-    } catch {
-      setError("비밀번호 변경 중 오류가 발생했습니다.");
+    } catch (err) {
+      setError(`비밀번호 변경 중 오류: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
     }
   };
