@@ -31,6 +31,9 @@ export async function GET(request: NextRequest) {
 
   if (riskLevel && riskLevel !== "all") {
     query = query.eq("risk_level", riskLevel);
+  } else {
+    // 기본: '해당없음' 제외 (사용자 페이지에서는 보이지 않음)
+    query = query.neq("risk_level", "해당없음");
   }
   if (search) {
     query = query.or(`title.ilike.%${search}%,site_name.ilike.%${search}%`);

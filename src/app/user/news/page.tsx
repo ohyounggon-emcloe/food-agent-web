@@ -89,8 +89,6 @@ function NewsFeed() {
     "Level1 (긴급)": "Level1",
     "Level2 (주의)": "Level2",
     "Level3 (참고)": "Level3",
-    "해당없음": "해당없음",
-    "미분류": "미분류",
   };
   const DAYS_VALUE_MAP: Record<string, string> = {
     "오늘": "1",
@@ -162,8 +160,6 @@ function NewsFeed() {
             <SelectItem value="Level1 (긴급)">Level1 (긴급)</SelectItem>
             <SelectItem value="Level2 (주의)">Level2 (주의)</SelectItem>
             <SelectItem value="Level3 (참고)">Level3 (참고)</SelectItem>
-            <SelectItem value="해당없음">해당없음</SelectItem>
-            <SelectItem value="미분류">미분류</SelectItem>
           </SelectContent>
         </Select>
         <Select value={daysFilter} onValueChange={(v) => setDaysFilter(v || "3일")}>
