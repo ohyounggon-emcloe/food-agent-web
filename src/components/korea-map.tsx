@@ -90,7 +90,7 @@ export function KoreaMap() {
       </CardHeader>
       <CardContent>
         <div className="relative">
-          <svg viewBox="60 30 340 530" className="w-full h-auto max-h-[400px]">
+          <svg viewBox="60 30 340 530" className="w-full h-auto max-h-[280px]">
             {/* 한반도 실루엣 */}
             <path
               d={KOREA_OUTLINE}

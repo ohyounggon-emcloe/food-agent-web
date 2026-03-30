@@ -114,7 +114,7 @@ export function CrackdownCalendar() {
         {/* 날짜 그리드 */}
         <div className="grid grid-cols-7">
           {Array.from({ length: firstDay }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-10" />
+            <div key={`empty-${i}`} className="h-8" />
           ))}
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1;
@@ -130,7 +130,7 @@ export function CrackdownCalendar() {
               <button
                 key={day}
                 onClick={() => setSelectedDate(dateStr === selectedDate ? null : dateStr)}
-                className={`h-10 flex flex-col items-center justify-center rounded-md text-sm transition-colors relative ${
+                className={`h-8 flex flex-col items-center justify-center rounded text-xs transition-colors relative ${
                   isSelected
                     ? "bg-teal-500 text-white"
                     : isToday
@@ -177,7 +177,7 @@ export function CrackdownCalendar() {
               {selectedDate} — {selectedEvents.length}건
             </p>
             {selectedEvents.length > 0 ? (
-              <div className="space-y-2 max-h-40 overflow-y-auto">
+              <div className="space-y-1.5 max-h-28 overflow-y-auto">
                 {selectedEvents.map((e) => (
                   <div
                     key={e.id}
