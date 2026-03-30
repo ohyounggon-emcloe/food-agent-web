@@ -8,6 +8,7 @@ import { UserMenu } from "@/components/user-menu";
 import {
   LayoutDashboard,
   Rss,
+  ShieldAlert,
   BrainCircuit,
   UserCircle,
   type LucideIcon,
@@ -16,6 +17,7 @@ import {
 const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }[] = [
   { href: "/user/dashboard", label: "대시보드", icon: LayoutDashboard },
   { href: "/user/news", label: "뉴스 피드", icon: Rss },
+  { href: "/user/crackdown", label: "단속정보", icon: ShieldAlert },
   { href: "/user/analysis", label: "상세 분석", icon: BrainCircuit, pro: true },
   { href: "/user/profile", label: "내 정보", icon: UserCircle },
 ];
