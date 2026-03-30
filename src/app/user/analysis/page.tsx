@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/providers/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 interface AnalysisData {
   totalArticles: number;
@@ -20,39 +17,11 @@ const RISK_COLORS: Record<string, string> = {
 };
 
 export default function AnalysisPage() {
-  const { role } = useAuth();
   const [data, setData] = useState<AnalysisData | null>(null);
 
-  const isPro = ["premium", "admin", "super_admin"].includes(role);
-
   useEffect(() => {
-    if (isPro) {
-      fetch("/api/analysis?days=30").then((r) => r.json()).then(setData);
-    }
-  }, [isPro]);
-
-  if (!isPro) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="text-center">{"PRO 전용 기능"}</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-gray-600">
-              {"상세 분석 대시보드는 PRO 회원 전용입니다."}
-            </p>
-            <Badge className="bg-amber-100 text-amber-800 border-amber-300">
-              PRO
-            </Badge>
-            <p className="text-sm text-gray-400">
-              {"관리자에게 PRO 등급 전환을 요청하세요."}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+    fetch("/api/analysis?days=30").then((r) => r.json()).then(setData);
+  }, []);
 
   if (!data) {
     return <p className="text-gray-500">{"로딩 중..."}</p>;
