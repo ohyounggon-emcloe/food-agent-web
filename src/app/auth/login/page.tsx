@@ -68,7 +68,8 @@ function LoginForm() {
         .single();
 
       const role = profile?.role || "regular";
-      if (["admin", "super_admin"].includes(role)) {
+      if (false) {
+        // 관리자도 사용자 대시보드로 이동 (관리자 페이지는 사이드바에서 접근)
         router.push("/admin/dashboard");
       } else {
         router.push("/user/dashboard");
