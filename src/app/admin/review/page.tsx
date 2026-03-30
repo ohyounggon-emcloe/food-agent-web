@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { ExternalLink, Trash2, RefreshCw } from "lucide-react";
+import { ExternalLink, Trash2, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Article {
   id: number;
@@ -30,25 +30,43 @@ const FILTER_OPTIONS = [
   { value: "pending", label: "미분류 + 해당없음" },
   { value: "미분류", label: "미분류만" },
   { value: "해당없음", label: "해당없음만" },
+  { value: "Level1", label: "Level1 (긴급)" },
+  { value: "Level2", label: "Level2 (주의)" },
+  { value: "Level3", label: "Level3 (참고)" },
+  { value: "all", label: "전체" },
 ];
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50];
 
 export default function ReviewPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [filter, setFilter] = useState("pending");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/review?filter=${filter}&limit=50`);
+    const res = await fetch(`/api/review?filter=${filter}&page=${page}&pageSize=${pageSize}`);
     if (res.ok) {
-      setArticles(await res.json());
+      const result = await res.json();
+      setArticles(result.data || []);
+      setTotal(result.total || 0);
+      setTotalPages(result.totalPages || 0);
     }
     setLoading(false);
-  }, [filter]);
+  }, [filter, page, pageSize]);
 
   useEffect(() => {
     fetchArticles();
   }, [fetchArticles]);
+
+  // 필터 변경 시 1페이지로 리셋
+  useEffect(() => {
+    setPage(1);
+  }, [filter, pageSize]);
 
   const handleReclassify = async (id: number, risk_level: string) => {
     const res = await fetch("/api/review", {
@@ -60,6 +78,7 @@ export default function ReviewPage() {
     if (res.ok) {
       toast.success(`ID ${id}: ${risk_level}로 변경`);
       setArticles((prev) => prev.filter((a) => a.id !== id));
+      setTotal((prev) => prev - 1);
     } else {
       toast.error("변경 실패");
     }
@@ -77,6 +96,7 @@ export default function ReviewPage() {
     if (res.ok) {
       toast.success("삭제 완료");
       setArticles((prev) => prev.filter((a) => a.id !== id));
+      setTotal((prev) => prev - 1);
     } else {
       toast.error("삭제 실패");
     }
@@ -103,6 +123,17 @@ export default function ReviewPage() {
               </option>
             ))}
           </select>
+          <select
+            value={pageSize}
+            onChange={(e) => setPageSize(Number(e.target.value))}
+            className="h-9 px-3 rounded-md border border-gray-300 text-sm"
+          >
+            {PAGE_SIZE_OPTIONS.map((size) => (
+              <option key={size} value={size}>
+                {size}건
+              </option>
+            ))}
+          </select>
           <Button variant="outline" size="sm" onClick={fetchArticles}>
             <RefreshCw className="w-4 h-4 mr-1" />
             {"새로고침"}
@@ -110,9 +141,79 @@ export default function ReviewPage() {
         </div>
       </div>
 
-      <p className="text-sm text-gray-400">
-        {loading ? "로딩 중..." : `총 ${articles.length}건`}
-      </p>
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-400">
+          {loading ? "로딩 중..." : `총 ${total}건 (${page}/${totalPages} 페이지)`}
+        </p>
+
+        {/* 페이지네이션 */}
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="h-8 px-2"
+            >
+              {"처음"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-8 px-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+
+            {/* 페이지 번호 */}
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let pageNum: number;
+              if (totalPages <= 5) {
+                pageNum = i + 1;
+              } else if (page <= 3) {
+                pageNum = i + 1;
+              } else if (page >= totalPages - 2) {
+                pageNum = totalPages - 4 + i;
+              } else {
+                pageNum = page - 2 + i;
+              }
+              return (
+                <Button
+                  key={pageNum}
+                  variant={page === pageNum ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setPage(pageNum)}
+                  className="h-8 w-8 px-0"
+                >
+                  {pageNum}
+                </Button>
+              );
+            })}
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="h-8 px-2"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              className="h-8 px-2"
+            >
+              {"끝"}
+            </Button>
+          </div>
+        )}
+      </div>
 
       <div className="space-y-3">
         {articles.map((article) => (
@@ -189,6 +290,37 @@ export default function ReviewPage() {
           </Card>
         )}
       </div>
+
+      {/* 하단 페이지네이션 */}
+      {totalPages > 1 && (
+        <div className="flex justify-center">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="h-8 px-2"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              {"이전"}
+            </Button>
+            <span className="text-sm text-gray-500 px-3">
+              {page} / {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="h-8 px-2"
+            >
+              {"다음"}
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -9,22 +9,47 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const filter = searchParams.get("filter") || "pending";
-  const limit = Number(searchParams.get("limit")) || 50;
+  const page = Number(searchParams.get("page")) || 1;
+  const pageSize = Number(searchParams.get("pageSize")) || 20;
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
 
-  let query = supabase
+  // 총 건수
+  let countQuery = supabase
     .from("collected_info")
-    .select("id, title, url, site_name, publish_date, risk_level, summary, region, industry_tags")
-    .order("publish_date", { ascending: false })
-    .limit(limit);
+    .select("id", { count: "exact", head: true });
 
   if (filter === "pending") {
-    // 미분류 + 해당없음
+    countQuery = countQuery.or("risk_level.eq.미분류,risk_level.eq.해당없음,risk_level.is.null");
+  } else if (filter === "해당없음") {
+    countQuery = countQuery.eq("risk_level", "해당없음");
+  } else if (filter === "미분류") {
+    countQuery = countQuery.or("risk_level.eq.미분류,risk_level.is.null");
+  } else if (filter === "Level1" || filter === "Level2" || filter === "Level3") {
+    countQuery = countQuery.eq("risk_level", filter);
+  }
+  // filter === "all" → 필터 없음
+
+  const { count } = await countQuery;
+
+  // 데이터 조회
+  let query = supabase
+    .from("collected_info")
+    .select("id, title, url, site_name, publish_date, risk_level, summary, region, industry_tags");
+
+  if (filter === "pending") {
     query = query.or("risk_level.eq.미분류,risk_level.eq.해당없음,risk_level.is.null");
   } else if (filter === "해당없음") {
     query = query.eq("risk_level", "해당없음");
   } else if (filter === "미분류") {
     query = query.or("risk_level.eq.미분류,risk_level.is.null");
+  } else if (filter === "Level1" || filter === "Level2" || filter === "Level3") {
+    query = query.eq("risk_level", filter);
   }
+
+  query = query
+    .order("publish_date", { ascending: false })
+    .range(from, to);
 
   const { data, error } = await query;
 
@@ -32,7 +57,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data);
+  return NextResponse.json({
+    data: data || [],
+    total: count || 0,
+    page,
+    pageSize,
+    totalPages: Math.ceil((count || 0) / pageSize),
+  });
 }
 
 export async function PATCH(request: NextRequest) {
