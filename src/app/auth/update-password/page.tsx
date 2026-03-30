@@ -45,7 +45,7 @@ export default function UpdatePasswordPage() {
 
       // 비밀번호 변경 성공
       setSuccess(true);
-      await supabase.auth.signOut();
+      supabase.auth.signOut().catch(() => {});
     } catch (err) {
       setError(`오류: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);

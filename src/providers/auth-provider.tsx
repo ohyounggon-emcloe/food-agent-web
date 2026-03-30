@@ -97,10 +97,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
+    // 비밀번호 재설정 페이지에서는 auth init 건너뛰기 (토큰 락 충돌 방지)
+    const isUpdatePassword = typeof window !== "undefined" &&
+      window.location.pathname === "/auth/update-password";
+
     const init = async () => {
       // 중복 실행 방지
       if (initDone.current) return;
       initDone.current = true;
+
+      if (isUpdatePassword) {
+        if (mounted) setLoading(false);
+        return;
+      }
 
       try {
         // 10초 타임아웃: getUser()가 응답하지 않으면 강제로 loading 해제
@@ -126,6 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     init();
+
+    // 비밀번호 재설정 페이지에서는 리스너도 건너뛰기
+    if (isUpdatePassword) {
+      return () => { mounted = false; };
+    }
 
     // onAuthStateChange 리스너: init 완료 후에만 프로필 재조회
     const {
