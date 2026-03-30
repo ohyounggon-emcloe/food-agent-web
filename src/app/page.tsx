@@ -1,14 +1,24 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Home() {
+  return (
+    <Suspense>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+function HomeContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mode, setMode] = useState<"loading" | "recovery" | "redirect">("loading");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -17,33 +27,48 @@ export default function Home() {
 
   useEffect(() => {
     const supabase = createClient();
+    const code = searchParams.get("code");
 
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setMode("recovery");
-        return;
-      }
-    });
-
-    // 3초 후에도 recovery가 아니면 일반 리다이렉트
-    const timer = setTimeout(() => {
-      setMode((prev) => {
-        if (prev === "loading") {
-          supabase.auth.getSession().then(({ data }) => {
-            if (data.session) {
-              router.replace("/user/dashboard");
-            } else {
-              router.replace("/auth/login");
-            }
-          });
-          return "redirect";
+    const handleAuth = async () => {
+      // PKCE: code 파라미터가 있으면 세션으로 교환
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          console.error("Code exchange error:", exchangeError);
+          setError("인증 링크가 만료되었습니다. 다시 시도해주세요.");
+          setMode("recovery");
+          return;
         }
-        return prev;
-      });
-    }, 3000);
+      }
 
-    return () => clearTimeout(timer);
-  }, [router]);
+      // auth state 변경 감지
+      supabase.auth.onAuthStateChange((event) => {
+        if (event === "PASSWORD_RECOVERY") {
+          setMode("recovery");
+        }
+      });
+
+      // 현재 세션 확인
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (session) {
+        // recovery 이벤트가 아직 안 왔을 수 있으니 잠시 대기
+        setTimeout(() => {
+          setMode((prev) => {
+            if (prev === "loading") {
+              router.replace("/user/dashboard");
+              return "redirect";
+            }
+            return prev;
+          });
+        }, 1500);
+      } else {
+        router.replace("/auth/login");
+      }
+    };
+
+    handleAuth();
+  }, [router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,7 +93,7 @@ export default function Home() {
       });
 
       if (updateError) {
-        setError(`변경 실패: ${updateError.message} (${updateError.status || ""})`);
+        setError(`변경 실패: ${updateError.message}`);
         setLoading(false);
         return;
       }
