@@ -1,0 +1,194 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
+import { ExternalLink, Trash2, RefreshCw } from "lucide-react";
+
+interface Article {
+  id: number;
+  title: string;
+  url: string;
+  site_name: string;
+  publish_date: string;
+  risk_level: string | null;
+  summary: string | null;
+  region: string | null;
+  industry_tags: string[];
+}
+
+const RISK_OPTIONS = [
+  { value: "Level1", label: "Level1 (긴급)", color: "bg-red-500 text-white" },
+  { value: "Level2", label: "Level2 (주의)", color: "bg-amber-500 text-white" },
+  { value: "Level3", label: "Level3 (참고)", color: "bg-blue-500 text-white" },
+  { value: "해당없음", label: "해당없음", color: "bg-gray-300 text-gray-700" },
+];
+
+const FILTER_OPTIONS = [
+  { value: "pending", label: "미분류 + 해당없음" },
+  { value: "미분류", label: "미분류만" },
+  { value: "해당없음", label: "해당없음만" },
+];
+
+export default function ReviewPage() {
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [filter, setFilter] = useState("pending");
+  const [loading, setLoading] = useState(true);
+
+  const fetchArticles = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch(`/api/review?filter=${filter}&limit=50`);
+    if (res.ok) {
+      setArticles(await res.json());
+    }
+    setLoading(false);
+  }, [filter]);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
+
+  const handleReclassify = async (id: number, risk_level: string) => {
+    const res = await fetch("/api/review", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, risk_level }),
+    });
+
+    if (res.ok) {
+      toast.success(`ID ${id}: ${risk_level}로 변경`);
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    } else {
+      toast.error("변경 실패");
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("이 게시글을 삭제하시겠습니까?")) return;
+
+    const res = await fetch("/api/review", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, action: "delete" }),
+    });
+
+    if (res.ok) {
+      toast.success("삭제 완료");
+      setArticles((prev) => prev.filter((a) => a.id !== id));
+    } else {
+      toast.error("삭제 실패");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">{"게시글 검토"}</h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {"자동 분류 결과를 확인하고 위험등급을 조정합니다."}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="h-9 px-3 rounded-md border border-gray-300 text-sm"
+          >
+            {FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <Button variant="outline" size="sm" onClick={fetchArticles}>
+            <RefreshCw className="w-4 h-4 mr-1" />
+            {"새로고침"}
+          </Button>
+        </div>
+      </div>
+
+      <p className="text-sm text-gray-400">
+        {loading ? "로딩 중..." : `총 ${articles.length}건`}
+      </p>
+
+      <div className="space-y-3">
+        {articles.map((article) => (
+          <Card key={article.id} className="py-0">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Badge variant="outline" className="text-xs shrink-0">
+                      {article.risk_level || "미분류"}
+                    </Badge>
+                    {article.region && (
+                      <Badge variant="secondary" className="text-xs shrink-0">
+                        {article.region}
+                      </Badge>
+                    )}
+                    <span className="text-xs text-gray-400">
+                      {article.site_name} | {article.publish_date}
+                    </span>
+                  </div>
+
+                  <a
+                    href={article.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium hover:text-teal-600 line-clamp-1 inline-flex items-center gap-1"
+                  >
+                    {article.title}
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
+
+                  {article.summary && (
+                    <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                      {article.summary}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  {RISK_OPTIONS.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => handleReclassify(article.id, opt.value)}
+                      className={`px-2 py-1 text-xs rounded ${
+                        article.risk_level === opt.value
+                          ? opt.color
+                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                      title={opt.label}
+                    >
+                      {opt.value === "해당없음" ? "제외" : opt.value.replace("Level", "L")}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => handleDelete(article.id)}
+                    className="px-2 py-1 text-xs rounded bg-gray-100 text-red-500 hover:bg-red-50"
+                    title="삭제"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+
+        {!loading && articles.length === 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center text-sm text-gray-400 font-normal">
+                {"검토할 게시글이 없습니다."}
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
