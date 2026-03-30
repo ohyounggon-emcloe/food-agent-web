@@ -28,6 +28,10 @@ function LoginForm() {
   useEffect(() => {
     if (searchParams.get("expired") === "true") {
       setInfo("세션이 만료되었습니다. 다시 로그인해주세요.");
+    } else if (searchParams.get("reset") === "true") {
+      setInfo("비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.");
+    } else if (searchParams.get("verified") === "true") {
+      setInfo("이메일 인증이 완료되었습니다. 로그인해주세요.");
     }
   }, [searchParams]);
 
