@@ -13,37 +13,54 @@ interface RegionStat {
 }
 
 /*
- * 대한민국 17개 시도 — 간략화 SVG path.
- * viewBox="0 0 800 1000" 기준 좌표.
+ * 대한민국 17개 시도 중심 좌표.
+ * 경도(x)·위도(y)를 SVG viewBox 0~500 기준으로 변환.
+ * 변환식: x = (lng - 125) * 70,  y = (39 - lat) * 85
  */
-const REGIONS: { name: string; d: string; cx: number; cy: number }[] = [
-  { name: "서울", d: "M370,280 L390,275 L400,290 L395,305 L375,300 Z", cx: 385, cy: 290 },
-  { name: "인천", d: "M340,280 L365,270 L370,285 L360,305 L335,300 Z", cx: 352, cy: 288 },
-  { name: "경기", d: "M330,230 L420,225 L430,260 L415,320 L390,330 L350,325 L320,290 Z", cx: 375, cy: 275 },
-  { name: "강원", d: "M420,200 L540,180 L560,250 L520,320 L440,330 L420,290 Z", cx: 490, cy: 260 },
-  { name: "충북", d: "M390,340 L460,330 L480,370 L460,410 L400,400 Z", cx: 435, cy: 370 },
-  { name: "충남", d: "M280,340 L385,335 L395,400 L360,430 L270,420 L260,380 Z", cx: 330, cy: 380 },
-  { name: "세종", d: "M360,355 L385,350 L390,370 L370,375 Z", cx: 375, cy: 362 },
-  { name: "대전", d: "M370,385 L400,380 L405,400 L380,405 Z", cx: 388, cy: 393 },
-  { name: "전북", d: "M270,430 L380,420 L400,470 L360,500 L270,490 L255,460 Z", cx: 325, cy: 460 },
-  { name: "전남", d: "M250,500 L370,505 L390,560 L360,620 L280,640 L230,590 L240,540 Z", cx: 310, cy: 570 },
-  { name: "광주", d: "M300,530 L330,525 L335,545 L310,550 Z", cx: 318, cy: 538 },
-  { name: "경북", d: "M465,340 L570,320 L590,400 L560,460 L480,470 L450,420 Z", cx: 525, cy: 395 },
-  { name: "대구", d: "M490,430 L530,420 L535,450 L500,455 Z", cx: 513, cy: 440 },
-  { name: "경남", d: "M400,480 L530,465 L550,530 L490,570 L410,560 L390,520 Z", cx: 470, cy: 520 },
-  { name: "울산", d: "M555,450 L590,440 L595,480 L565,490 Z", cx: 575, cy: 465 },
-  { name: "부산", d: "M540,530 L575,520 L580,555 L550,560 Z", cx: 560, cy: 540 },
-  { name: "제주", d: "M280,760 L380,755 L390,790 L370,810 L290,810 L270,790 Z", cx: 330, cy: 783 },
+const REGIONS: { name: string; x: number; y: number }[] = [
+  { name: "서울",   x: 182, y: 148 },
+  { name: "인천",   x: 155, y: 156 },
+  { name: "경기",   x: 192, y: 175 },
+  { name: "강원",   x: 270, y: 130 },
+  { name: "충북",   x: 228, y: 230 },
+  { name: "세종",   x: 190, y: 252 },
+  { name: "충남",   x: 155, y: 260 },
+  { name: "대전",   x: 200, y: 272 },
+  { name: "전북",   x: 168, y: 325 },
+  { name: "광주",   x: 148, y: 380 },
+  { name: "전남",   x: 160, y: 415 },
+  { name: "경북",   x: 310, y: 250 },
+  { name: "대구",   x: 295, y: 310 },
+  { name: "울산",   x: 340, y: 340 },
+  { name: "경남",   x: 275, y: 370 },
+  { name: "부산",   x: 325, y: 380 },
+  { name: "제주",   x: 155, y: 510 },
 ];
 
-function getColor(count: number, maxCount: number): string {
-  if (count === 0) return "#f1f5f9";
-  const intensity = Math.min(count / Math.max(maxCount, 1), 1);
-  // slate-200 → teal-300 → teal-500 → teal-700
-  if (intensity < 0.25) return "#99f6e4";
-  if (intensity < 0.5) return "#5eead4";
-  if (intensity < 0.75) return "#14b8a6";
-  return "#0f766e";
+/* 한반도 외곽 실루엣 (간략화) */
+const KOREA_OUTLINE =
+  "M160,80 L195,75 L230,60 L280,55 L340,50 L370,70 L355,110 " +
+  "L340,140 L360,170 L370,200 L355,240 L365,270 L350,310 " +
+  "L360,350 L340,390 L310,400 L290,395 L260,410 L230,435 " +
+  "L195,445 L170,430 L140,440 L120,420 L105,385 L110,345 " +
+  "L95,310 L100,270 L110,235 L100,200 L110,170 L125,140 L140,110 Z";
+
+const JEJU_OUTLINE =
+  "M115,490 L200,488 L210,510 L195,530 L120,532 L105,510 Z";
+
+function getBubbleRadius(count: number, maxCount: number): number {
+  if (count === 0) return 6;
+  const ratio = count / Math.max(maxCount, 1);
+  return 8 + ratio * 20;
+}
+
+function getBubbleColor(count: number, maxCount: number): string {
+  if (count === 0) return "#e2e8f0";
+  const ratio = count / Math.max(maxCount, 1);
+  if (ratio < 0.25) return "#6ee7b7";
+  if (ratio < 0.5) return "#34d399";
+  if (ratio < 0.75) return "#10b981";
+  return "#059669";
 }
 
 export function KoreaMap() {
@@ -73,23 +90,39 @@ export function KoreaMap() {
       </CardHeader>
       <CardContent>
         <div className="relative">
-          <svg
-            viewBox="200 150 450 700"
-            className="w-full h-auto max-h-[350px]"
-          >
+          <svg viewBox="60 30 340 530" className="w-full h-auto max-h-[400px]">
+            {/* 한반도 실루엣 */}
+            <path
+              d={KOREA_OUTLINE}
+              fill="#f8fafc"
+              stroke="#cbd5e1"
+              strokeWidth={1.5}
+            />
+            <path
+              d={JEJU_OUTLINE}
+              fill="#f8fafc"
+              stroke="#cbd5e1"
+              strokeWidth={1.5}
+            />
+
+            {/* 지역 버블 */}
             {REGIONS.map((region) => {
               const stat = statMap[region.name];
               const count = stat?.count || 0;
-              const fill = getColor(count, maxCount);
+              const r = getBubbleRadius(count, maxCount);
+              const fill = getBubbleColor(count, maxCount);
               const isHovered = hoveredRegion === region.name;
 
               return (
                 <g key={region.name}>
-                  <path
-                    d={region.d}
+                  <circle
+                    cx={region.x}
+                    cy={region.y}
+                    r={isHovered ? r + 3 : r}
                     fill={fill}
-                    stroke={isHovered ? "#0f766e" : "#94a3b8"}
-                    strokeWidth={isHovered ? 2.5 : 1}
+                    fillOpacity={isHovered ? 0.95 : 0.8}
+                    stroke={isHovered ? "#047857" : "#fff"}
+                    strokeWidth={isHovered ? 2.5 : 1.5}
                     className="cursor-pointer transition-all duration-150"
                     onMouseEnter={() => setHoveredRegion(region.name)}
                     onMouseLeave={() => setHoveredRegion(null)}
@@ -98,17 +131,30 @@ export function KoreaMap() {
                     }
                   />
                   <text
-                    x={region.cx}
-                    y={region.cy}
+                    x={region.x}
+                    y={region.y + 1}
                     textAnchor="middle"
                     dominantBaseline="central"
                     className="pointer-events-none select-none"
-                    fontSize={region.name.length > 2 ? 10 : 12}
-                    fill={count > 0 ? "#0f172a" : "#64748b"}
-                    fontWeight={count > 0 ? 600 : 400}
+                    fontSize={9}
+                    fontWeight={600}
+                    fill={count > 0 ? "#fff" : "#64748b"}
                   >
                     {region.name}
                   </text>
+                  {count > 0 && (
+                    <text
+                      x={region.x}
+                      y={region.y + r + 10}
+                      textAnchor="middle"
+                      className="pointer-events-none select-none"
+                      fontSize={8}
+                      fill="#475569"
+                      fontWeight={500}
+                    >
+                      {count}
+                    </text>
+                  )}
                 </g>
               );
             })}
@@ -120,7 +166,7 @@ export function KoreaMap() {
               <p className="font-semibold text-slate-800">{hoveredStat.region}</p>
               <p className="text-slate-500">
                 {"총 "}
-                <span className="font-bold text-teal-600">{hoveredStat.count}</span>
+                <span className="font-bold text-emerald-600">{hoveredStat.count}</span>
                 {"건"}
               </p>
               {hoveredStat.level1 > 0 && (
@@ -137,19 +183,19 @@ export function KoreaMap() {
         <div className="flex items-center gap-2 mt-3 text-xs text-slate-400">
           <span>{"건수:"}</span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-slate-100 border border-slate-200" />
+            <span className="w-3 h-3 rounded-full bg-slate-200 border border-slate-300" />
             {"0"}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-teal-200" />
+            <span className="w-3 h-3 rounded-full bg-emerald-300" />
             {"소"}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-teal-400" />
+            <span className="w-3 h-3 rounded-full bg-emerald-500" />
             {"중"}
           </span>
           <span className="flex items-center gap-1">
-            <span className="w-3 h-3 rounded bg-teal-700" />
+            <span className="w-3 h-3 rounded-full bg-emerald-700" />
             {"다"}
           </span>
         </div>
@@ -158,7 +204,7 @@ export function KoreaMap() {
         {stats.length > 0 && (
           <div className="mt-3 pt-3 border-t text-xs text-slate-500">
             {"최근 90일 총 "}
-            <span className="font-bold text-teal-600">
+            <span className="font-bold text-emerald-600">
               {stats.reduce((s, r) => s + r.count, 0)}
             </span>
             {"건 ("}
