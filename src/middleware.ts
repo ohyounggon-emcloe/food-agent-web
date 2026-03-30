@@ -34,6 +34,16 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
+  // 루트에서 code 파라미터가 있으면 /auth/callback으로 전달 (비밀번호 재설정 등)
+  if (pathname === "/") {
+    const code = request.nextUrl.searchParams.get("code");
+    if (code) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/callback";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // /admin/*, /user/* — 비로그인이면 로그인 페이지로
   if (pathname.startsWith("/admin") || pathname.startsWith("/user")) {
     if (!session) {
@@ -56,5 +66,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/user/:path*", "/auth/login", "/auth/signup"],
+  matcher: ["/", "/admin/:path*", "/user/:path*", "/auth/login", "/auth/signup"],
 };

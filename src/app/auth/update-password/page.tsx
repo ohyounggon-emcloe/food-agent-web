@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,38 +13,7 @@ export default function UpdatePasswordPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [ready, setReady] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const supabase = createClient();
-
-    // hash fragment에서 세션 복구
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        setReady(true);
-      }
-    });
-
-    // 이미 세션이 있으면 바로 표시
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
-        setReady(true);
-      }
-    });
-
-    // 5초 후에도 세션이 없으면 만료 처리
-    const timer = setTimeout(() => {
-      setReady((prev) => {
-        if (!prev) {
-          setError("재설정 링크가 만료되었거나 유효하지 않습니다.");
-        }
-        return prev || true;
-      });
-    }, 5000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,33 +33,31 @@ export default function UpdatePasswordPage() {
 
     try {
       const supabase = createClient();
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError("세션이 만료되었습니다. 비밀번호 재설정을 다시 요청해주세요.");
+        setLoading(false);
+        return;
+      }
+
       const { error: updateError } = await supabase.auth.updateUser({
         password,
       });
 
       if (updateError) {
-        setError(updateError.message);
+        setError(`변경 실패: ${updateError.message}`);
         setLoading(false);
         return;
       }
 
       await supabase.auth.signOut();
       router.push("/auth/login?reset=true");
-    } catch {
-      setError("비밀번호 변경 중 오류가 발생했습니다.");
+    } catch (err) {
+      setError(`오류: ${err instanceof Error ? err.message : String(err)}`);
       setLoading(false);
     }
   };
-
-  if (!ready) {
-    return (
-      <Card>
-        <CardContent className="py-10 text-center">
-          <p className="text-gray-500">{"인증 확인 중..."}</p>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>
@@ -99,8 +67,17 @@ export default function UpdatePasswordPage() {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
-              {error}
+            <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md space-y-2">
+              <p>{error}</p>
+              <div className="flex gap-2">
+                <Link href="/auth/reset-password" className="text-xs text-teal-600 hover:underline">
+                  {"재설정 링크 재발송"}
+                </Link>
+                <span className="text-xs text-gray-300">|</span>
+                <Link href="/auth/login" className="text-xs text-teal-600 hover:underline">
+                  {"로그인 페이지로"}
+                </Link>
+              </div>
             </div>
           )}
           <div>

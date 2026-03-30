@@ -8,10 +8,20 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient();
-    const { data } = await supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    // 비밀번호 재설정 → 새 비밀번호 입력 페이지로
+    if (error) {
+      return NextResponse.redirect(`${origin}/auth/login?error=expired`);
+    }
+
+    // 비밀번호 재설정인 경우
     if (type === "recovery") {
+      return NextResponse.redirect(`${origin}/auth/update-password`);
+    }
+
+    // AMR에서 recovery 확인 (Supabase가 type을 전달하지 않을 때 대비)
+    const amr = data?.session?.user?.amr;
+    if (amr && amr.some((a: { method: string }) => a.method === "recovery")) {
       return NextResponse.redirect(`${origin}/auth/update-password`);
     }
 
@@ -30,6 +40,5 @@ export async function GET(request: Request) {
     }
   }
 
-  // 인증 실패 시
   return NextResponse.redirect(`${origin}/auth/login?verified=true`);
 }
