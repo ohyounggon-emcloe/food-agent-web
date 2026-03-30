@@ -5,6 +5,7 @@ export interface Site {
   category: string | null;
   board_name: string | null;
   status: string | null;
+  collection_method: string | null;
   error_message: string | null;
   suggested_url: string | null;
   last_scraped_at: string | null;

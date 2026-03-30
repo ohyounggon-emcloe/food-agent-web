@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
+  const collectionMethod = searchParams.get("collection_method");
+
   let query = supabase
     .from("compliance_data")
     .select("*")
@@ -23,6 +25,9 @@ export async function GET(request: NextRequest) {
   }
   if (status) {
     query = query.eq("status", status);
+  }
+  if (collectionMethod && collectionMethod !== "all") {
+    query = query.eq("collection_method", collectionMethod);
   }
   if (search) {
     query = query.or(
