@@ -4,8 +4,10 @@ import { requireAuth, isAuthError } from "@/lib/api-auth";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
-  const authResult = await requireAuth(supabase);
-  if (isAuthError(authResult)) return authResult;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json([], { status: 200 });
+  }
 
   const { searchParams } = new URL(request.url);
   const riskLevel = searchParams.get("risk_level");

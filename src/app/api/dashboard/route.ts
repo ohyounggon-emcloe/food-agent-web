@@ -1,12 +1,23 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { requireAuth, isAuthError } from "@/lib/api-auth";
 
 export async function GET() {
   try {
     const supabase = await createClient();
-  const authResult = await requireAuth(supabase);
-  if (isAuthError(authResult)) return authResult;
+
+    // 인증 실패해도 대시보드 데이터는 반환 (공개 데이터)
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      // 미인증 시 빈 데이터 반환 (에러 대신)
+      return NextResponse.json({
+        totalArticles: 0,
+        todayArticles: 0,
+        riskDistribution: [],
+        agentStats: [],
+        siteCounts: { active: 0, error: 0, inactive: 0 },
+        pendingSuggestions: { sites: 0, keywords: 0 },
+      });
+    }
 
     const today = new Date().toISOString().split("T")[0];
 
