@@ -78,7 +78,7 @@ export function FloatingChat() {
 
       {/* 채팅 패널 */}
       {open && (
-        <div className="fixed bottom-6 right-6 z-50 w-96 h-[32rem] bg-white rounded-2xl shadow-2xl border flex flex-col overflow-hidden">
+        <div className="fixed top-0 right-0 z-50 w-96 h-full bg-white shadow-2xl border-l flex flex-col">
           {/* 헤더 */}
           <div className="flex items-center justify-between px-4 py-3 bg-emerald-600 text-white">
             <div className="flex items-center gap-2">
