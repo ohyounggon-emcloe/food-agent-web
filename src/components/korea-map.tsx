@@ -36,7 +36,7 @@ const REGION_COORDS: Record<string, { lat: number; lng: number }> = {
   경북: { lat: 36.576, lng: 128.506 },
   경남: { lat: 35.46, lng: 128.2132 },
   제주: { lat: 33.4996, lng: 126.5312 },
-  전국: { lat: 36.5, lng: 127.8 },
+  전국: { lat: 36.8, lng: 130.2 },
 };
 
 /* ── Types ── */

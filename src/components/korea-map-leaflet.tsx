@@ -34,6 +34,13 @@ function RegionLabels({ markers }: { markers: MapMarker[] }) {
 
     for (const m of markers) {
       const color = RISK_COLORS[m.maxRisk] || "#14b8a6";
+      const isNational = m.region === "전국";
+      const nameFontSize = isNational ? "13px" : "11px";
+      const countFontSize = isNational ? "12px" : "10px";
+      const countPadding = isNational ? "2px 8px" : "1px 5px";
+      const iconW = isNational ? 80 : 60;
+      const iconH = isNational ? 44 : 36;
+
       const icon = L.divIcon({
         className: "",
         html: `
@@ -42,20 +49,20 @@ function RegionLabels({ markers }: { markers: MapMarker[] }) {
             pointer-events:none;transform:translateY(-28px);
           ">
             <span style="
-              font-size:11px;font-weight:700;color:#1e293b;
+              font-size:${nameFontSize};font-weight:${isNational ? 800 : 700};color:${isNational ? "#0f766e" : "#1e293b"};
               text-shadow:0 0 3px white,0 0 3px white,0 0 3px white;
               white-space:nowrap;
             ">${m.region}</span>
             <span style="
-              font-size:10px;font-weight:800;color:${color};
-              background:white;border-radius:8px;padding:1px 5px;
+              font-size:${countFontSize};font-weight:800;color:${isNational ? "white" : color};
+              background:${isNational ? "#0f766e" : "white"};border-radius:8px;padding:${countPadding};
               box-shadow:0 1px 3px rgba(0,0,0,0.15);
               margin-top:1px;white-space:nowrap;
             ">${m.count}건</span>
           </div>
         `,
-        iconSize: [60, 36],
-        iconAnchor: [30, 18],
+        iconSize: [iconW, iconH],
+        iconAnchor: [iconW / 2, iconH / 2],
       });
 
       const marker = L.marker([m.lat, m.lng], { icon, interactive: false });
