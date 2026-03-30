@@ -5,7 +5,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useRef,
   useState,
 } from "react";
 import { createClient } from "@/lib/supabase-browser";
@@ -40,7 +39,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const initDone = useRef(false);
 
   const supabase = createClient();
 
@@ -95,35 +93,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [supabase]
   );
 
-  // 초기화: 모든 페이지에서 실행 (auth 페이지 포함)
+  // 초기화
   useEffect(() => {
     let mounted = true;
 
-    // 비밀번호 재설정 페이지에서는 auth init 건너뛰기 (토큰 락 충돌 방지)
     const isUpdatePassword = typeof window !== "undefined" &&
       window.location.pathname === "/auth/update-password";
 
     const init = async () => {
-      // 중복 실행 방지
-      if (initDone.current) return;
-      initDone.current = true;
-
       if (isUpdatePassword) {
         if (mounted) setLoading(false);
         return;
       }
 
       try {
-        // 10초 타임아웃: getUser()가 응답하지 않으면 강제로 loading 해제
-        const timeoutPromise = new Promise<{ data: { user: null } }>((resolve) =>
-          setTimeout(() => resolve({ data: { user: null } }), 10000)
-        );
-
-        const { data: { user: currentUser } } = await Promise.race([
-          supabase.auth.getUser(),
-          timeoutPromise,
-        ]);
-
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
         if (!mounted) return;
         setUser(currentUser);
         if (currentUser) {
@@ -136,20 +120,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
+    // 3초 안전장치: init이 어떤 이유로든 끝나지 않으면 강제 loading 해제
+    const safetyTimer = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn("Auth init timeout - forcing loading=false");
+        setLoading(false);
+      }
+    }, 3000);
+
     init();
 
-    // 비밀번호 재설정 페이지에서는 리스너도 건너뛰기
     if (isUpdatePassword) {
-      return () => { mounted = false; };
+      return () => { mounted = false; clearTimeout(safetyTimer); };
     }
 
-    // onAuthStateChange 리스너: init 완료 후에만 프로필 재조회
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: string, session: { user: User } | null) => {
       if (!mounted) return;
-
-      // INITIAL_SESSION 이벤트는 init()과 중복되므로 무시
       if (event === "INITIAL_SESSION") return;
 
       const currentUser = session?.user ?? null;
@@ -164,6 +152,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile]);
