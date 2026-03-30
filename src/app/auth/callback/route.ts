@@ -20,8 +20,9 @@ export async function GET(request: Request) {
     }
 
     // AMR에서 recovery 확인 (Supabase가 type을 전달하지 않을 때 대비)
-    const amr = data?.session?.user?.amr;
-    if (amr && amr.some((a: { method: string }) => a.method === "recovery")) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const amr = (data?.session?.user as any)?.amr as { method: string }[] | undefined;
+    if (amr && amr.some((a) => a.method === "recovery")) {
       return NextResponse.redirect(`${origin}/auth/update-password`);
     }
 
