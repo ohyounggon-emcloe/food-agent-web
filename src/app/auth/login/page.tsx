@@ -56,8 +56,19 @@ function LoginForm() {
         return;
       }
 
-      // 로그인 성공 → 대시보드로 이동 (role 체크는 admin layout에서)
-      router.push("/admin/dashboard");
+      // 로그인 성공 → 역할에 따라 적절한 대시보드로 이동
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", (await supabase.auth.getUser()).data.user?.id)
+        .single();
+
+      const role = profile?.role || "regular";
+      if (["admin", "super_admin"].includes(role)) {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/user/dashboard");
+      }
       router.refresh();
     } catch {
       setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
@@ -109,12 +120,19 @@ function LoginForm() {
             {loading ? "로그인 중..." : "로그인"}
           </Button>
         </form>
-        <p className="text-center text-sm text-gray-500 mt-4">
-          {"계정이 없으신가요? "}
-          <Link href="/auth/signup" className="text-teal-500 hover:underline">
-            {"회원가입"}
-          </Link>
-        </p>
+        <div className="text-center text-sm text-gray-500 mt-4 space-y-2">
+          <p>
+            <Link href="/auth/reset-password" className="text-teal-500 hover:underline">
+              {"비밀번호를 잊으셨나요?"}
+            </Link>
+          </p>
+          <p>
+            {"계정이 없으신가요? "}
+            <Link href="/auth/signup" className="text-teal-500 hover:underline">
+              {"회원가입"}
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
