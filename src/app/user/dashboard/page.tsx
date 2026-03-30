@@ -26,15 +26,48 @@ export default function UserDashboard() {
     { id: number; title: string; risk_level: string; site_name: string; publish_date: string; url: string }[]
   >([]);
 
+  const [error, setError] = useState(false);
+
   useEffect(() => {
-    fetch("/api/dashboard").then((r) => r.json()).then(setData);
-    fetch("/api/news?limit=10&days=3").then((r) => r.json()).then((d) =>
-      setRecentNews(Array.isArray(d) ? d : [])
-    );
+    const timeout = setTimeout(() => setError(true), 10000);
+
+    Promise.all([
+      fetch("/api/dashboard").then((r) => {
+        if (!r.ok) throw new Error("dashboard fetch failed");
+        return r.json();
+      }).then(setData),
+      fetch("/api/news?limit=10&days=3").then((r) => {
+        if (!r.ok) return [];
+        return r.json();
+      }).then((d) => setRecentNews(Array.isArray(d) ? d : [])),
+    ])
+      .catch((err) => {
+        console.error("Dashboard load error:", err);
+        setError(true);
+      })
+      .finally(() => clearTimeout(timeout));
   }, []);
 
+  if (error) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-red-500 font-medium">{"데이터를 불러올 수 없습니다"}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700"
+        >
+          {"새로고침"}
+        </button>
+      </div>
+    );
+  }
+
   if (!data) {
-    return <p className="text-gray-500">{"로딩 중..."}</p>;
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-gray-500">{"로딩 중..."}</p>
+      </div>
+    );
   }
 
   const highRisk = data.riskDistribution.filter(

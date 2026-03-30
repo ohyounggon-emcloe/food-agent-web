@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -34,15 +35,31 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { role, loading, signOut } = useAuth();
+  const { role, loading, user, signOut } = useAuth();
+  const [authTimeout, setAuthTimeout] = useState(false);
 
-  // 로딩 중
-  if (loading) {
+  useEffect(() => {
+    if (loading) {
+      const timer = setTimeout(() => setAuthTimeout(true), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [loading]);
+
+  // 로딩 중 (5초 타임아웃)
+  if (loading && !authTimeout) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-gray-500">{"로딩 중..."}</p>
       </div>
     );
+  }
+
+  // 타임아웃 또는 미로그인 → 로그인 페이지로
+  if ((loading && authTimeout) || (!loading && !user)) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/login";
+    }
+    return null;
   }
 
   // 권한 없음
