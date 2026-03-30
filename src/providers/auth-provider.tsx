@@ -182,13 +182,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user, supabase]);
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error("Sign out error:", err);
-    }
+    // 즉시 리다이렉트 (signOut 응답을 기다리지 않음 — 콜드스타트 대응)
     setUser(null);
     setProfile(null);
+    supabase.auth.signOut().catch(() => {});
     window.location.href = "/auth/login?logout=true";
   };
 
