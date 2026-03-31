@@ -79,8 +79,8 @@ export default function ReportsPage() {
           </p>
         </div>
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="유형" />
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="전체" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">전체</SelectItem>
