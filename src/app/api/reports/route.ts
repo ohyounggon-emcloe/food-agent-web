@@ -10,36 +10,64 @@ export async function GET(request: NextRequest) {
 
   const { searchParams } = new URL(request.url);
   const industry = searchParams.get("industry");
+  const type = searchParams.get("type") || "all"; // daily | weekly | all
 
-  if (useNcloudDb()) {
-    let sql = "SELECT * FROM weekly_reports";
-    const params: unknown[] = [];
+  try {
+    if (useNcloudDb()) {
+      const results: unknown[] = [];
 
-    if (industry && industry !== "all") {
-      sql += " WHERE industry = $1";
-      params.push(industry);
+      // 주간 리포트
+      if (type === "all" || type === "weekly") {
+        let sql = "SELECT *, 'weekly' as report_type FROM weekly_reports";
+        const params: unknown[] = [];
+        if (industry && industry !== "all") {
+          sql += " WHERE industry = $1";
+          params.push(industry);
+        }
+        sql += " ORDER BY week_start DESC LIMIT 30";
+        const weekly = await query(sql, params);
+        results.push(...(weekly || []));
+      }
+
+      // 일일 리포트
+      if (type === "all" || type === "daily") {
+        const daily = await query(
+          "SELECT *, 'daily' as report_type FROM daily_reports ORDER BY report_date DESC LIMIT 30"
+        );
+        results.push(...(daily || []));
+      }
+
+      return NextResponse.json(results);
     }
 
-    sql += " ORDER BY week_start DESC LIMIT 50";
+    // Fallback: Supabase
+    const results: unknown[] = [];
 
-    const data = await query(sql, params);
-    return NextResponse.json(data);
+    if (type === "all" || type === "weekly") {
+      let q = supabase
+        .from("weekly_reports")
+        .select("*")
+        .order("week_start", { ascending: false })
+        .limit(30);
+      if (industry && industry !== "all") {
+        q = q.eq("industry", industry);
+      }
+      const { data } = await q;
+      results.push(...(data || []).map((d) => ({ ...d, report_type: "weekly" })));
+    }
+
+    if (type === "all" || type === "daily") {
+      const { data } = await supabase
+        .from("daily_reports")
+        .select("*")
+        .order("report_date", { ascending: false })
+        .limit(30);
+      results.push(...(data || []).map((d) => ({ ...d, report_type: "daily" })));
+    }
+
+    return NextResponse.json(results);
+  } catch (error) {
+    console.error("Reports API error:", error);
+    return NextResponse.json({ error: "리포트 조회 실패" }, { status: 500 });
   }
-
-  let q = supabase
-    .from("weekly_reports")
-    .select("*")
-    .order("week_start", { ascending: false })
-    .limit(50);
-
-  if (industry && industry !== "all") {
-    q = q.eq("industry", industry);
-  }
-
-  const { data, error } = await q;
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-  return NextResponse.json(data);
 }
