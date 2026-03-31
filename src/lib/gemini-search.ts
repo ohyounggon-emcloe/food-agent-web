@@ -38,10 +38,10 @@ export async function searchWithGemini(
     // grounding metadata에서 출처 추출
     const candidate = response.candidates?.[0];
     const metadata = candidate?.groundingMetadata;
-    const chunks =
-      (metadata as Record<string, unknown>)?.groundingChunks as
-        | Array<{ web?: { title?: string; uri?: string } }>
-        | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const chunks = (metadata as any)?.groundingChunks as
+      | Array<{ web?: { title?: string; uri?: string } }>
+      | undefined;
 
     const sources: GeminiGroundingSource[] = (chunks || [])
       .filter((chunk) => chunk.web)
