@@ -66,7 +66,7 @@ export default function SearchPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">{"AI 식품안전 검색"}</h2>
+        <h2 className="text-2xl font-bold">{"AI 통합 정보검색"}</h2>
         <p className="text-gray-500 text-sm mt-1">
           {"수집된 모든 식품안전 정보를 검색합니다."}
         </p>
