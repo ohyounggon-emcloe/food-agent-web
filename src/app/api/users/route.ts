@@ -1,12 +1,23 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
-// user_profiles is auth-related - KEEP using Supabase
 export async function GET() {
   const supabase = await createClient();
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
+
+  if (useNcloudDb()) {
+    try {
+      const data = await query(
+        "SELECT * FROM user_profiles ORDER BY created_at DESC"
+      );
+      return NextResponse.json(data);
+    } catch (err) {
+      console.error("Users NCloud error:", err);
+    }
+  }
 
   const { data, error } = await supabase
     .from("user_profiles")

@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
-// user_profiles is auth-related - KEEP using Supabase
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -19,6 +19,22 @@ export async function PATCH(
   for (const key of allowedFields) {
     if (body[key] !== undefined) {
       updateData[key] = body[key];
+    }
+  }
+
+  if (useNcloudDb()) {
+    try {
+      const setClauses = Object.keys(updateData).map((k, i) => `${k} = $${i + 1}`);
+      const values = [...Object.values(updateData), id];
+      const sql = `UPDATE user_profiles SET ${setClauses.join(", ")} WHERE id = $${values.length} RETURNING *`;
+      const rows = await query(sql, values);
+
+      // Supabase에도 동기화
+      await supabase.from("user_profiles").update(updateData).eq("id", id);
+
+      return NextResponse.json(rows?.[0] || {});
+    } catch (err) {
+      console.error("Users PATCH NCloud error:", err);
     }
   }
 
