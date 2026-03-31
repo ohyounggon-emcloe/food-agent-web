@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/providers/auth-provider";
+import { TableSkeleton } from "@/components/skeleton-loader";
 import { RoleBadge } from "@/components/role-badge";
 import { RegionSelector } from "@/components/region-selector";
 import { IndustrySelector } from "@/components/industry-selector";
@@ -109,7 +110,7 @@ export default function ProfilePage() {
   };
 
   if (!profile) {
-    return <p className="text-gray-500">{"로딩 중..."}</p>;
+    return <TableSkeleton />;
   }
 
   return (

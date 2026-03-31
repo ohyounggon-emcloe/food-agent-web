@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 
 interface AnalysisData {
   totalArticles: number;
@@ -24,7 +25,7 @@ export default function AnalysisPage() {
   }, []);
 
   if (!data) {
-    return <p className="text-gray-500">{"로딩 중..."}</p>;
+    return <DashboardSkeleton />;
   }
 
   const totalRisk = data.riskDistribution.reduce((s, r) => s + r.count, 0);

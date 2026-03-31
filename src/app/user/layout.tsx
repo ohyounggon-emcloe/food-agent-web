@@ -38,14 +38,33 @@ export default function UserLayout({
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center flex-col gap-4">
-        <p className="text-gray-500">{"로딩 중..."}</p>
-        <a
-          href="/auth/login?logout=true"
-          className="text-xs text-gray-400 hover:text-teal-500 hover:underline mt-4"
-        >
-          {"오래 걸리면 여기를 클릭하세요"}
-        </a>
+      <div className="flex h-screen">
+        {/* 사이드바 스켈레톤 */}
+        <aside className="hidden md:flex w-56 flex-col bg-slate-900 p-4">
+          <div className="h-8 w-24 bg-slate-700 rounded animate-pulse mb-6" />
+          <div className="space-y-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="h-8 bg-slate-800 rounded animate-pulse" />
+            ))}
+          </div>
+        </aside>
+        {/* 메인 스켈레톤 */}
+        <main className="flex-1 p-6">
+          <div className="space-y-4">
+            <div className="h-8 w-64 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-48 bg-gray-100 rounded animate-pulse" />
+            <div className="grid grid-cols-3 gap-4 mt-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-24 bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+            <div className="grid grid-cols-2 gap-4 mt-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="h-48 bg-gray-100 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

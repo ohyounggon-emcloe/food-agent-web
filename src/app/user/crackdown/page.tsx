@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { NewsListSkeleton } from "@/components/skeleton-loader";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -142,7 +143,7 @@ export default function CrackdownPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-500">로딩 중...</p>
+        <NewsListSkeleton />
       ) : alerts.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <p className="text-lg">조건에 맞는 단속 정보가 없습니다</p>

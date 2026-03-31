@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/pagination";
+import { NewsListSkeleton } from "@/components/skeleton-loader";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
@@ -181,7 +182,7 @@ function NewsFeed() {
       </div>
 
       {loading ? (
-        <p className="text-gray-500">{"로딩 중..."}</p>
+        <NewsListSkeleton />
       ) : articles.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <p className="text-lg">{"조건에 맞는 게시글이 없습니다"}</p>
