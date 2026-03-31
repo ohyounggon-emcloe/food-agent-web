@@ -21,7 +21,7 @@ import {
 const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }[] = [
   { href: "/user/dashboard", label: "대시보드", icon: LayoutDashboard },
   { href: "/user/news", label: "뉴스 피드", icon: Rss },
-  { href: "/user/search", label: "통합 검색", icon: Search },
+  { href: "/user/search", label: "AI 식품안전 검색", icon: Search },
   { href: "/user/crackdown", label: "단속정보", icon: ShieldAlert },
   { href: "/user/reports", label: "주간 리포트", icon: FileText },
   { href: "/user/analysis", label: "상세 분석", icon: BrainCircuit },
