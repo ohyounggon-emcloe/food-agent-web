@@ -184,7 +184,7 @@ export function FloatingChat() {
                           className="flex items-center gap-1 text-[10px] text-teal-600 hover:underline"
                         >
                           <Badge variant="outline" className="text-[9px] px-1 py-0 h-3.5">
-                            {src.similarity}%
+                            {src.site_name === "웹 검색" ? "웹" : `${src.similarity}%`}
                           </Badge>
                           <span className="line-clamp-1">{src.title}</span>
                           <ExternalLink className="w-2.5 h-2.5 shrink-0" />

@@ -171,7 +171,7 @@ export default function ChatPage() {
                       className="flex items-center gap-1.5 text-xs text-teal-600 hover:underline"
                     >
                       <Badge variant="outline" className="text-[10px] px-1 py-0">
-                        {src.similarity}%
+                        {src.site_name === "웹 검색" ? "웹" : `${src.similarity}%`}
                       </Badge>
                       <span className="line-clamp-1">{src.title}</span>
                       <ExternalLink className="w-3 h-3 shrink-0" />
