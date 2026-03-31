@@ -191,11 +191,6 @@ export default function DashboardPage() {
                       >
                         {Number(agent.success_rate || 0).toFixed(1)}%
                       </Badge>
-                      {agent.avg_duration_ms && (
-                        <span className="text-xs text-gray-400">
-                          {(Number(agent.avg_duration_ms) / 1000).toFixed(1)}s
-                        </span>
-                      )}
                     </div>
                   </div>
                 ))}
