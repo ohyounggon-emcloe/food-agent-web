@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       .split(/\s+/)
       .filter((w) => w.length >= 2 && !stopWords.has(w));
 
-    // 임베딩 검색 + Gemini 웹 검색 시작 (병렬)
+    // 임베딩 검색 + 네이버 웹 검색 시작 (병렬)
     const embeddingPromise = getQueryEmbedding(message);
     const webSearchPromise: Promise<WebSearchResult | null> = isWebSearchAvailable()
       ? searchWeb(message)
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
       .limit(20);
 
     const [queryEmbedding, textSearchResult, keywordsResult, webSearchResult] =
-      await Promise.all([embeddingPromise, textSearchPromise, keywordsPromise, geminiPromise]);
+      await Promise.all([embeddingPromise, textSearchPromise, keywordsPromise, webSearchPromise]);
 
     // 2. 임베딩 유사도 검색 (상위 5건)
     const { data: embeddingMatches } = await supabase.rpc("match_articles", {
@@ -307,7 +307,7 @@ function buildStreamingResponse(
     }
   }
 
-  // Gemini 웹 검색 결과 추가
+  // 네이버 웹 검색 결과 추가
   if (webSearchResult && webSearchResult.text) {
     context += `\n[웹 검색 결과]\n${webSearchResult.text.slice(0, 2000)}\n`;
     if (webSearchResult.sources.length > 0) {
