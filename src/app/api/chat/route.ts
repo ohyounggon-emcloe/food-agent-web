@@ -72,10 +72,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // 1. 임베딩 검색 + 키워드 텍스트 검색을 병렬 실행
-    const embeddingPromise = getQueryEmbedding(message);
+    // 1. 질문에서 핵심 키워드 추출 (조사/어미/일반어 제거)
+    const stopWords = new Set([
+      "최근", "알려줘", "알려주세요", "뭐야", "뭐에요", "어때", "있어", "없어",
+      "해줘", "해주세요", "보여줘", "보여주세요", "관련", "대해", "대한",
+      "어떤", "어떻게", "무엇", "언제", "어디", "왜", "이번", "지난",
+      "현황", "정보", "내용", "사항", "것", "거", "좀", "이", "그", "저",
+    ]);
+    const keywords = message
+      .replace(/[%_?!.,。]/g, "")
+      .split(/\s+/)
+      .filter((w) => w.length >= 2 && !stopWords.has(w));
 
-    const sanitizedMessage = message.replace(/[%_]/g, "");
+    // 임베딩 검색 시작 (병렬)
+    const embeddingPromise = getQueryEmbedding(message);
 
     let textSearchData: Array<{
       id: number;
@@ -93,25 +103,33 @@ export async function POST(request: NextRequest) {
     }> | null = null;
 
     if (useNcloudDb()) {
+      // 키워드별 OR 조건 생성
+      const kwConditions = keywords.length > 0
+        ? keywords.map((_, i) => `(title ILIKE $${i + 1} OR summary ILIKE $${i + 1})`).join(" OR ")
+        : "FALSE";
+      const kwParams = keywords.map((k) => `%${k.replace(/[%_]/g, "")}%`);
+
       const [queryEmbedding, textSearchResult, keywordsResult] =
         await Promise.all([
           embeddingPromise,
-          query<{
-            id: number;
-            title: string;
-            url: string;
-            site_name: string;
-            publish_date: string;
-            risk_level: string;
-            summary: string;
-          }>(
-            `SELECT id, title, url, site_name, publish_date, risk_level, summary
-             FROM collected_info
-             WHERE title ILIKE $1 OR summary ILIKE $1
-             ORDER BY publish_date DESC
-             LIMIT 5`,
-            [`%${sanitizedMessage}%`]
-          ),
+          keywords.length > 0
+            ? query<{
+                id: number;
+                title: string;
+                url: string;
+                site_name: string;
+                publish_date: string;
+                risk_level: string;
+                summary: string;
+              }>(
+                `SELECT id, title, url, site_name, publish_date, risk_level, summary
+                 FROM collected_info
+                 WHERE ${kwConditions}
+                 ORDER BY publish_date DESC
+                 LIMIT 5`,
+                kwParams
+              )
+            : Promise.resolve([]),
           query<{ keyword: string; risk_level: string; action_guide: string }>(
             "SELECT keyword, risk_level, action_guide FROM keywords_meta LIMIT 20"
           ),

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { query, queryOne, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -14,28 +15,64 @@ export async function GET(request: NextRequest) {
 
   const collectionMethod = searchParams.get("collection_method");
 
-  let query = supabase
+  if (useNcloudDb()) {
+    const conditions: string[] = [];
+    const params: unknown[] = [];
+    let paramIdx = 1;
+
+    if (category) {
+      conditions.push(`category = $${paramIdx}`);
+      params.push(category);
+      paramIdx++;
+    }
+    if (status) {
+      conditions.push(`status = $${paramIdx}`);
+      params.push(status);
+      paramIdx++;
+    }
+    if (collectionMethod && collectionMethod !== "all") {
+      conditions.push(`collection_method = $${paramIdx}`);
+      params.push(collectionMethod);
+      paramIdx++;
+    }
+    if (search) {
+      conditions.push(`(site_name ILIKE $${paramIdx} OR target_url ILIKE $${paramIdx})`);
+      params.push(`%${search}%`);
+      paramIdx++;
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+    const data = await query(
+      `SELECT * FROM compliance_data ${whereClause} ORDER BY category DESC, site_name ASC`,
+      params
+    );
+
+    return NextResponse.json(data);
+  }
+
+  // Fallback: existing Supabase code
+  let q = supabase
     .from("compliance_data")
     .select("*")
     .order("category", { ascending: false })
     .order("site_name", { ascending: true });
 
   if (category) {
-    query = query.eq("category", category);
+    q = q.eq("category", category);
   }
   if (status) {
-    query = query.eq("status", status);
+    q = q.eq("status", status);
   }
   if (collectionMethod && collectionMethod !== "all") {
-    query = query.eq("collection_method", collectionMethod);
+    q = q.eq("collection_method", collectionMethod);
   }
   if (search) {
-    query = query.or(
+    q = q.or(
       `site_name.ilike.%${search}%,target_url.ilike.%${search}%`
     );
   }
 
-  const { data, error } = await query;
+  const { data, error } = await q;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -54,6 +91,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  if (useNcloudDb()) {
+    const data = await queryOne(
+      `INSERT INTO compliance_data (site_name, target_url, category, board_name, status)
+       VALUES ($1, $2, $3, $4, 'active')
+       RETURNING *`,
+      [site_name, target_url, category || "", board_name || ""]
+    );
+    return NextResponse.json(data, { status: 201 });
+  }
+
+  // Fallback: existing Supabase code
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("compliance_data")

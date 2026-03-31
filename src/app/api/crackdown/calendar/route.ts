@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAuth, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET() {
   try {
@@ -13,6 +14,18 @@ export async function GET() {
       .toISOString()
       .split("T")[0];
 
+    if (useNcloudDb()) {
+      const data = await query(
+        `SELECT id, title, alert_type, region, enforcement_date, risk_level
+         FROM crackdown_alerts
+         WHERE created_at >= $1 AND enforcement_date IS NOT NULL
+         ORDER BY enforcement_date ASC`,
+        [cutoff]
+      );
+      return NextResponse.json(data || []);
+    }
+
+    // Fallback: existing Supabase code
     const { data, error } = await supabase
       .from("crackdown_alerts")
       .select("id, title, alert_type, region, enforcement_date, risk_level")

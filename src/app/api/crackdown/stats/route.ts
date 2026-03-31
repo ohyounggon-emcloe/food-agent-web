@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAuth, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET() {
   try {
@@ -12,19 +13,30 @@ export async function GET() {
       .toISOString()
       .split("T")[0];
 
-    const { data, error } = await supabase
-      .from("crackdown_alerts")
-      .select("region, risk_level")
-      .gte("created_at", cutoff);
+    let rawData: { region: string | null; risk_level: string | null }[];
 
-    if (error) throw error;
+    if (useNcloudDb()) {
+      rawData = await query<{ region: string | null; risk_level: string | null }>(
+        "SELECT region, risk_level FROM crackdown_alerts WHERE created_at >= $1",
+        [cutoff]
+      );
+    } else {
+      // Fallback: existing Supabase code
+      const { data, error } = await supabase
+        .from("crackdown_alerts")
+        .select("region, risk_level")
+        .gte("created_at", cutoff);
+
+      if (error) throw error;
+      rawData = data || [];
+    }
 
     const regionMap: Record<
       string,
       { region: string; count: number; level1: number; level2: number; level3: number }
     > = {};
 
-    for (const row of data || []) {
+    for (const row of rawData) {
       const region = row.region || "전국";
       if (!regionMap[region]) {
         regionMap[region] = { region, count: 0, level1: 0, level2: 0, level3: 0 };

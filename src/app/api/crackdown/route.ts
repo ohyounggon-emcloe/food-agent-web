@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAuth, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,20 +18,48 @@ export async function GET(request: NextRequest) {
       .toISOString()
       .split("T")[0];
 
-    let query = supabase
+    if (useNcloudDb()) {
+      const conditions: string[] = ["created_at >= $1"];
+      const params: unknown[] = [cutoff];
+      let paramIdx = 2;
+
+      if (alertType && alertType !== "all") {
+        conditions.push(`alert_type = $${paramIdx}`);
+        params.push(alertType);
+        paramIdx++;
+      }
+      if (region && region !== "all") {
+        conditions.push(`region = $${paramIdx}`);
+        params.push(region);
+        paramIdx++;
+      }
+
+      const data = await query(
+        `SELECT * FROM crackdown_alerts
+         WHERE ${conditions.join(" AND ")}
+         ORDER BY created_at DESC
+         LIMIT 100`,
+        params
+      );
+
+      return NextResponse.json(data || []);
+    }
+
+    // Fallback: existing Supabase code
+    let q = supabase
       .from("crackdown_alerts")
       .select("*")
       .gte("created_at", cutoff)
       .order("created_at", { ascending: false });
 
     if (alertType && alertType !== "all") {
-      query = query.eq("alert_type", alertType);
+      q = q.eq("alert_type", alertType);
     }
     if (region && region !== "all") {
-      query = query.eq("region", region);
+      q = q.eq("region", region);
     }
 
-    const { data, error } = await query.limit(100);
+    const { data, error } = await q.limit(100);
 
     if (error) throw error;
     return NextResponse.json(data || []);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { queryOne, execute, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function PATCH(
   request: NextRequest,
@@ -13,6 +14,20 @@ export async function PATCH(
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
+  if (useNcloudDb()) {
+    const fields = Object.keys(body);
+    const values = Object.values(body);
+    const setClauses = fields.map((f, i) => `${f} = $${i + 1}`);
+    values.push(parseInt(id));
+
+    const data = await queryOne(
+      `UPDATE api_sources SET ${setClauses.join(", ")} WHERE id = $${values.length} RETURNING *`,
+      values
+    );
+    return NextResponse.json(data);
+  }
+
+  // Fallback: existing Supabase code
   const { data, error } = await supabase
     .from("api_sources")
     .update(body)
@@ -36,6 +51,12 @@ export async function DELETE(
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
+  if (useNcloudDb()) {
+    await execute("DELETE FROM api_sources WHERE id = $1", [parseInt(id)]);
+    return NextResponse.json({ ok: true });
+  }
+
+  // Fallback: existing Supabase code
   const { error } = await supabase
     .from("api_sources")
     .delete()

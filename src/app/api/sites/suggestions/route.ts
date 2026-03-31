@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { query, queryOne, execute, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET() {
   const supabase = await createClient();
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
+  if (useNcloudDb()) {
+    const data = await query(
+      "SELECT * FROM compliance_data WHERE suggested_url IS NOT NULL ORDER BY created_at DESC"
+    );
+    return NextResponse.json(data);
+  }
+
+  // Fallback: existing Supabase code
   const { data, error } = await supabase
     .from("compliance_data")
     .select("*")
@@ -32,6 +41,41 @@ export async function POST(request: NextRequest) {
 
   const supabase = await createClient();
 
+  if (useNcloudDb()) {
+    if (action === "approve") {
+      const site = await queryOne<{ suggested_url: string | null }>(
+        "SELECT * FROM compliance_data WHERE id = $1",
+        [id]
+      );
+
+      if (!site?.suggested_url) {
+        return NextResponse.json(
+          { error: "추천 URL이 없습니다" },
+          { status: 400 }
+        );
+      }
+
+      await execute(
+        `UPDATE compliance_data
+         SET target_url = $1, suggested_url = NULL, status = 'active', error_message = NULL
+         WHERE id = $2`,
+        [site.suggested_url, id]
+      );
+      return NextResponse.json({ success: true, action: "approved" });
+    }
+
+    if (action === "reject") {
+      await execute(
+        "UPDATE compliance_data SET suggested_url = NULL WHERE id = $1",
+        [id]
+      );
+      return NextResponse.json({ success: true, action: "rejected" });
+    }
+
+    return NextResponse.json({ error: "잘못된 action" }, { status: 400 });
+  }
+
+  // Fallback: existing Supabase code
   if (action === "approve") {
     const { data: site } = await supabase
       .from("compliance_data")

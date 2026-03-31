@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAuth, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
@@ -10,21 +11,44 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const year = searchParams.get("year") || new Date().getFullYear().toString();
 
-  const { data, error } = await supabase
-    .from("food_poisoning_stats")
-    .select("*")
-    .eq("occurrence_year", year)
-    .order("occurrence_month", { ascending: true });
+  let rawData: {
+    occurrence_area: string;
+    occurrence_month: string;
+    incident_count: number;
+    patient_count: number;
+  }[];
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (useNcloudDb()) {
+    rawData = await query<{
+      occurrence_area: string;
+      occurrence_month: string;
+      incident_count: number;
+      patient_count: number;
+    }>(
+      `SELECT * FROM food_poisoning_stats
+       WHERE occurrence_year = $1
+       ORDER BY occurrence_month ASC`,
+      [year]
+    );
+  } else {
+    // Fallback: existing Supabase code
+    const { data, error } = await supabase
+      .from("food_poisoning_stats")
+      .select("*")
+      .eq("occurrence_year", year)
+      .order("occurrence_month", { ascending: true });
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    rawData = data || [];
   }
 
   // 지역별 집계
   const byRegion: Record<string, { incidents: number; patients: number }> = {};
   const byMonth: Record<string, { incidents: number; patients: number }> = {};
 
-  for (const row of data || []) {
+  for (const row of rawData) {
     const area = row.occurrence_area;
     const month = row.occurrence_month;
     const inc = row.incident_count || 0;
@@ -52,6 +76,6 @@ export async function GET(request: NextRequest) {
     byMonth: Object.entries(byMonth)
       .map(([month, data]) => ({ month, ...data }))
       .sort((a, b) => a.month.localeCompare(b.month)),
-    raw: data,
+    raw: rawData,
   });
 }

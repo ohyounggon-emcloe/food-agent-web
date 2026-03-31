@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { query, queryOne, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET() {
   const supabase = await createClient();
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
+  if (useNcloudDb()) {
+    const data = await query(
+      "SELECT * FROM api_sources ORDER BY created_at DESC"
+    );
+    return NextResponse.json(data);
+  }
+
+  // Fallback: existing Supabase code
   const { data, error } = await supabase
     .from("api_sources")
     .select("*")
@@ -33,6 +42,25 @@ export async function POST(request: NextRequest) {
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
+  if (useNcloudDb()) {
+    const data = await queryOne(
+      `INSERT INTO api_sources (name, provider, endpoint, api_key_env, auth_type, category, rate_limit_per_min, is_active)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, false)
+       RETURNING *`,
+      [
+        name,
+        provider,
+        endpoint,
+        body.api_key_env || null,
+        body.auth_type || "query_param",
+        body.category || "food_safety",
+        body.rate_limit_per_min || 30,
+      ]
+    );
+    return NextResponse.json(data, { status: 201 });
+  }
+
+  // Fallback: existing Supabase code
   const { data, error } = await supabase
     .from("api_sources")
     .insert({

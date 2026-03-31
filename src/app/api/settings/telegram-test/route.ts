@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function POST() {
   const supabase = await createClient();
@@ -8,19 +9,34 @@ export async function POST() {
   const authResult = await requireAdmin(supabase);
   if (isAuthError(authResult)) return authResult;
 
-  // system_config에서 텔레그램 설정 읽기
-  const { data: configs } = await supabase
-    .from("system_config")
-    .select("key, value")
-    .in("key", ["telegram_bot_token", "telegram_chat_id"]);
+  let token: string | undefined;
+  let chatId: string | undefined;
 
-  const configMap: Record<string, string> = {};
-  for (const c of configs || []) {
-    configMap[c.key] = c.value;
+  if (useNcloudDb()) {
+    const configs = await query<{ key: string; value: string }>(
+      "SELECT key, value FROM system_config WHERE key IN ('telegram_bot_token', 'telegram_chat_id')"
+    );
+
+    const configMap: Record<string, string> = {};
+    for (const c of configs || []) {
+      configMap[c.key] = c.value;
+    }
+    token = configMap.telegram_bot_token;
+    chatId = configMap.telegram_chat_id;
+  } else {
+    // Fallback: existing Supabase code
+    const { data: configs } = await supabase
+      .from("system_config")
+      .select("key, value")
+      .in("key", ["telegram_bot_token", "telegram_chat_id"]);
+
+    const configMap: Record<string, string> = {};
+    for (const c of configs || []) {
+      configMap[c.key] = c.value;
+    }
+    token = configMap.telegram_bot_token;
+    chatId = configMap.telegram_chat_id;
   }
-
-  const token = configMap.telegram_bot_token;
-  const chatId = configMap.telegram_chat_id;
 
   if (!token || !chatId) {
     return NextResponse.json(

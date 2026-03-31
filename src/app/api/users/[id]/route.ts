@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAdmin, isAuthError } from "@/lib/api-auth";
 
+// user_profiles is auth-related - KEEP using Supabase
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

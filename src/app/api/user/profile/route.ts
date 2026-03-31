@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 
+// user_profiles is auth-related - KEEP using Supabase (rule #3)
 export async function GET() {
   const supabase = await createClient();
   const {

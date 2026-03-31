@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { requireAuth, isAuthError } from "@/lib/api-auth";
+import { query, queryOne, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET() {
   try {
@@ -14,6 +15,83 @@ export async function GET() {
       .toISOString()
       .split("T")[0];
 
+    if (useNcloudDb()) {
+      const [
+        totalResult,
+        todayResult,
+        highRiskData,
+        riskData,
+        trendData,
+        agentData,
+        logsData,
+      ] = await Promise.all([
+        queryOne<{ count: string }>("SELECT count(*) FROM collected_info"),
+        queryOne<{ count: string }>("SELECT count(*) FROM collected_info WHERE publish_date = $1", [todayStr]),
+        query(
+          `SELECT id, title, url, site_name, risk_level, summary, publish_date, has_attachments
+           FROM collected_info
+           WHERE risk_level IN ('Level1', 'Level2') AND publish_date >= $1
+           ORDER BY publish_date DESC
+           LIMIT 20`,
+          [weekAgo]
+        ),
+        query("SELECT risk_level FROM collected_info"),
+        query(
+          `SELECT publish_date FROM collected_info
+           WHERE publish_date >= $1
+           ORDER BY publish_date ASC`,
+          [weekAgo]
+        ),
+        query("SELECT * FROM meta_monitor"),
+        query(
+          `SELECT agent_name, status, started_at, duration_ms, articles_count, error_message
+           FROM system_logs
+           ORDER BY started_at DESC
+           LIMIT 10`
+        ),
+      ]);
+
+      // 위험도 분포 집계
+      const riskCounts: Record<string, number> = {};
+      for (const row of riskData || []) {
+        const level = (row as { risk_level: string | null }).risk_level || "미분류";
+        riskCounts[level] = (riskCounts[level] || 0) + 1;
+      }
+      const riskDistribution = Object.entries(riskCounts).map(
+        ([risk_level, count]) => ({ risk_level, count })
+      );
+
+      // 수집 추이 (날짜별 건수)
+      const trendCounts: Record<string, number> = {};
+      for (const row of trendData || []) {
+        const d = (row as { publish_date: string }).publish_date || "unknown";
+        trendCounts[d] = (trendCounts[d] || 0) + 1;
+      }
+      const collectionTrend = Object.entries(trendCounts)
+        .map(([date, count]) => ({ date, count }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
+      // 에이전트 성공률
+      const agentStats = (agentData || []).map((a: Record<string, unknown>) => ({
+        agent_name: a.agent_name,
+        total_runs: a.total_runs,
+        success_rate: parseFloat(String(a.success_rate)) || 0,
+        avg_duration_ms: parseInt(String(a.avg_duration_ms)) || 0,
+        last_run_at: a.last_run_at,
+      }));
+
+      return NextResponse.json({
+        totalArticles: parseInt(totalResult?.count || "0"),
+        todayArticles: parseInt(todayResult?.count || "0"),
+        highRiskAlerts: highRiskData || [],
+        riskDistribution,
+        collectionTrend,
+        agentStats,
+        recentLogs: logsData || [],
+      });
+    }
+
+    // Fallback: existing Supabase code
     const [
       totalResp,
       todayResp,

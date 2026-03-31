@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { query, useNcloudDb } from "@/lib/ncloud-db";
 
 // 30초 캐시
 export const revalidate = 30;
@@ -23,7 +24,91 @@ export async function GET(request: NextRequest) {
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().split("T")[0];
 
-  let query = supabase
+  if (useNcloudDb()) {
+    const conditions: string[] = ["publish_date >= $1"];
+    const params: unknown[] = [cutoffStr];
+    let paramIdx = 2;
+
+    if (riskLevel && riskLevel !== "all") {
+      conditions.push(`risk_level = $${paramIdx}`);
+      params.push(riskLevel);
+      paramIdx++;
+    } else {
+      conditions.push("risk_level NOT IN ('해당없음', '미분류')");
+      conditions.push("risk_level IS NOT NULL");
+    }
+
+    if (search) {
+      conditions.push(`(title ILIKE $${paramIdx} OR site_name ILIKE $${paramIdx})`);
+      params.push(`%${search}%`);
+      paramIdx++;
+    }
+
+    if (region) {
+      conditions.push(`(region IS NULL OR region = $${paramIdx})`);
+      params.push(region);
+      paramIdx++;
+    }
+
+    const sql = `
+      SELECT id, title, url, site_name, publish_date, risk_level, summary, has_attachments, region, industry_tags
+      FROM collected_info
+      WHERE ${conditions.join(" AND ")}
+      ORDER BY risk_level ASC, publish_date DESC
+      LIMIT $${paramIdx}
+    `;
+    params.push(limit);
+
+    const data = await query<{
+      id: number;
+      title: string;
+      url: string;
+      site_name: string;
+      publish_date: string;
+      risk_level: string;
+      summary: string;
+      has_attachments: boolean;
+      region: string | null;
+      industry_tags: string[];
+    }>(sql, params);
+
+    // 개인화 필터: 사용자 선호 지역/업태 기반
+    if (personalized && !region) {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("preferred_regions, preferred_industries")
+        .eq("id", user.id)
+        .single();
+
+      const prefRegions = profile?.preferred_regions || [];
+      const prefIndustries = profile?.preferred_industries || [];
+
+      if (prefRegions.length > 0 || prefIndustries.length > 0) {
+        const prefSidos = prefRegions.map((r: { sido: string }) => r.sido);
+
+        const filtered = (data || []).filter((article: { region: string | null; industry_tags: string[] }) => {
+          if (!article.region) return true;
+          if (prefSidos.length > 0 && prefSidos.includes(article.region)) return true;
+          if (prefIndustries.length > 0 && article.industry_tags) {
+            const prefCats = prefIndustries.map((i: { category: string }) => i.category);
+            const hasMatch = article.industry_tags.some((tag: string) =>
+              prefCats.some((cat: string) => tag.includes(cat) || cat.includes(tag))
+            );
+            if (hasMatch) return true;
+          }
+          if (prefSidos.length > 0) return false;
+          return true;
+        });
+
+        return NextResponse.json(filtered);
+      }
+    }
+
+    return NextResponse.json(data);
+  }
+
+  // Fallback: existing Supabase code
+  let q = supabase
     .from("collected_info")
     .select(
       "id, title, url, site_name, publish_date, risk_level, summary, has_attachments, region, industry_tags"
@@ -34,21 +119,19 @@ export async function GET(request: NextRequest) {
     .limit(limit);
 
   if (riskLevel && riskLevel !== "all") {
-    query = query.eq("risk_level", riskLevel);
+    q = q.eq("risk_level", riskLevel);
   } else {
-    // 기본: '해당없음', '미분류' 제외 (사용자 페이지에서는 보이지 않음)
-    query = query.not("risk_level", "in", '("해당없음","미분류")');
-    query = query.not("risk_level", "is", "null");
+    q = q.not("risk_level", "in", '("해당없음","미분류")');
+    q = q.not("risk_level", "is", "null");
   }
   if (search) {
-    query = query.or(`title.ilike.%${search}%,site_name.ilike.%${search}%`);
+    q = q.or(`title.ilike.%${search}%,site_name.ilike.%${search}%`);
   }
   if (region) {
-    // 명시적 지역 필터: 전국(null) + 해당 지역
-    query = query.or(`region.is.null,region.eq.${region}`);
+    q = q.or(`region.is.null,region.eq.${region}`);
   }
 
-  const { data, error } = await query;
+  const { data, error } = await q;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
