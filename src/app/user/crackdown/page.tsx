@@ -187,8 +187,8 @@ export default function CrackdownPage() {
             ))}
           </div>
 
-          {/* 우측: 상세 + 체크리스트 */}
-          <div className="space-y-4">
+          {/* 우측: 상세 + 체크리스트 (스크롤 따라감) */}
+          <div className="space-y-4 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto">
             {selectedAlert ? (
               <>
                 <Card>
