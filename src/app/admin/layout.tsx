@@ -26,7 +26,7 @@ const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/sites", label: "사이트 관리", icon: Globe },
   { href: "/admin/keywords", label: "키워드 관리", icon: ScanSearch },
   { href: "/admin/review", label: "게시글 검토", icon: ClipboardCheck },
-  { href: "/admin/search", label: "통합 검색", icon: Search },
+  { href: "/admin/search", label: "AI 식품안전 검색", icon: Search },
   { href: "/admin/users", label: "사용자 관리", icon: Users },
   { href: "/admin/logs", label: "시스템 로그", icon: ScrollText },
   { href: "/admin/settings", label: "설정", icon: SlidersHorizontal },
