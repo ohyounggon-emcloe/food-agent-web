@@ -89,6 +89,77 @@ export default function AdminSearchPage() {
         </p>
       )}
 
+      {/* 초기 상태: 검색 전 */}
+      {!searched && !loading && (
+        <div className="flex flex-col items-center justify-center py-12 overflow-hidden">
+          <div className="text-center">
+            <p className="text-gray-400 text-sm mb-6">
+              {"식품안전 정보를 검색해 보세요"}
+            </p>
+
+            {/* 추천 검색어 */}
+            <div className="flex flex-wrap justify-center gap-2 mb-8">
+              {["식중독", "행정처분", "회수판매중지", "HACCP", "위생점검", "수입식품", "원산지", "잔류농약"].map((keyword) => (
+                <button
+                  key={keyword}
+                  onClick={async () => {
+                    setQuery(keyword);
+                    setLoading(true);
+                    setSearched(true);
+                    const res = await fetch(`/api/search?q=${encodeURIComponent(keyword)}&page=1&pageSize=20&days=365&includeAll=true`);
+                    if (res.ok) {
+                      const result = await res.json();
+                      setArticles(result.data || []);
+                      setTotal(result.total || 0);
+                      setTotalPages(result.totalPages || 0);
+                    }
+                    setLoading(false);
+                  }}
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-teal-50 hover:text-teal-700 rounded-full text-xs text-gray-500 transition-colors"
+                >
+                  {keyword}
+                </button>
+              ))}
+            </div>
+
+            {/* 카테고리 아이콘 */}
+            <div className="flex justify-center gap-8 text-gray-300">
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center">
+                  <span className="text-red-300 text-lg">!</span>
+                </div>
+                <span className="text-[10px]">위험알림</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center">
+                  <span className="text-blue-300 text-lg">&sect;</span>
+                </div>
+                <span className="text-[10px]">법규</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center">
+                  <span className="text-amber-300 text-lg">&#9888;</span>
+                </div>
+                <span className="text-[10px]">단속</span>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-10 h-10 rounded-full bg-teal-50 flex items-center justify-center">
+                  <span className="text-teal-300 text-lg">&#10003;</span>
+                </div>
+                <span className="text-[10px]">위생</span>
+              </div>
+            </div>
+
+            {/* AI-FX 워터마크 */}
+            <div className="mt-12 pointer-events-none select-none">
+              <span className="text-[100px] font-extrabold tracking-tight opacity-[0.03] leading-none">
+                AI-FX
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-3">
         {articles.map((article) => (
           <Card key={article.id} className="py-0 hover:shadow-md transition-shadow">

@@ -13,9 +13,10 @@ export async function GET(request: NextRequest) {
   const limit = parseInt(searchParams.get("limit") || "20");
 
   if (useNcloudDb()) {
+    try {
     // Level1, Level2 위험 게시글
     let articleSql = `
-      SELECT id, title, risk_level, site_name, publish_date, url, source_type
+      SELECT id, title, risk_level, site_name, publish_date, url
       FROM collected_info
       WHERE risk_level IN ('Level1', 'Level2')
     `;
@@ -38,7 +39,6 @@ export async function GET(request: NextRequest) {
       site_name: string;
       publish_date: string;
       url: string;
-      source_type: string;
     }>(articleSql, articleParams);
 
     // 단속 알림
@@ -93,6 +93,10 @@ export async function GET(request: NextRequest) {
       count: notifications.length,
       notifications: notifications.slice(0, limit),
     });
+    } catch (err) {
+      console.error("Notifications NCloud error:", err);
+      return NextResponse.json({ count: 0, notifications: [] });
+    }
   }
 
   // Fallback: existing Supabase code
