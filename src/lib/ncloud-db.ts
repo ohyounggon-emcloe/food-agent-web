@@ -46,7 +46,10 @@ export async function execute(
 }
 
 export function useNcloudDb(): boolean {
-  return process.env.USE_NCLOUD_DB === "true";
+  // Vercel 환경변수 우선, 없으면 기본 true (NCloud DB 사용)
+  const envVal = process.env.USE_NCLOUD_DB;
+  if (envVal !== undefined) return envVal === "true";
+  return true;
 }
 
 export { pool };
