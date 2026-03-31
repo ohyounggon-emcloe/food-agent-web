@@ -93,7 +93,7 @@ export function NotificationBell() {
 
       {/* 알림 패널 */}
       {isOpen && (
-        <div className="absolute right-0 top-10 w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto">
+        <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto sm:absolute sm:right-0 sm:top-10 sm:w-80">
           <div className="p-3 border-b bg-gray-50 rounded-t-lg">
             <h3 className="text-sm font-semibold text-gray-700">위험 알림</h3>
             <p className="text-xs text-gray-400">Level1/Level2 위험 정보</p>
