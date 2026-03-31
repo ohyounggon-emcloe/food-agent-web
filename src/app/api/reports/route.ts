@@ -68,6 +68,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(results);
   } catch (error) {
     console.error("Reports API error:", error);
-    return NextResponse.json({ error: "리포트 조회 실패" }, { status: 500 });
+    const msg = error instanceof Error ? error.message : String(error);
+    return NextResponse.json({ error: "리포트 조회 실패", detail: msg, useNcloud: useNcloudDb(), host: process.env.NCLOUD_DB_HOST || "not set" }, { status: 500 });
   }
 }
