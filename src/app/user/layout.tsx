@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/user-menu";
+import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import {
   LayoutDashboard,
@@ -58,10 +59,13 @@ export default function UserLayout({
     <div className="flex h-screen">
       <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
         <div className="p-6 border-b border-slate-800">
-          <h1 className="text-xl font-extrabold tracking-tight">
-            <span className="text-white">AI</span>
-            <span className="text-emerald-400">-FX</span>
-          </h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-extrabold tracking-tight">
+              <span className="text-white">AI</span>
+              <span className="text-emerald-400">-FX</span>
+            </h1>
+            <NotificationBell />
+          </div>
           <p className="text-xs text-slate-300 tracking-[0.15em] mt-1">{"Food Intelligence Platform"}</p>
         </div>
 
