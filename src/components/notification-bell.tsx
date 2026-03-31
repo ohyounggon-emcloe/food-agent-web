@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bell, AlertTriangle, Shield, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -15,16 +15,15 @@ interface Notification {
   url: string;
 }
 
-interface SummaryGroup {
-  label: string;
-  icon: typeof AlertTriangle;
-  href: string;
-  color: string;
-  bgColor: string;
-  borderColor: string;
-  count: number;
-  unread: number;
-}
+const TYPE_LABEL: Record<string, string> = {
+  article: "위험정보",
+  crackdown: "단속정보",
+};
+
+const RISK_LABEL: Record<string, string> = {
+  Level1: "즉시대응",
+  Level2: "주의관찰",
+};
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -55,14 +54,12 @@ export function NotificationBell() {
     }
   }, [lastChecked]);
 
-  // 30초마다 폴링
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 30000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
-  // 외부 클릭 시 닫기
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
@@ -75,60 +72,22 @@ export function NotificationBell() {
 
   const handleOpen = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
-      setReadIds(new Set(notifications.map((n) => n.id)));
-      setLastChecked(new Date().toISOString());
-    }
   };
 
-  // 분류별 요약 집계
-  const summaryGroups: SummaryGroup[] = useMemo(() => {
-    const countBy = (
-      predicate: (n: Notification) => boolean
-    ) => {
-      const matched = notifications.filter(predicate);
-      return {
-        count: matched.length,
-        unread: matched.filter((n) => !readIds.has(n.id)).length,
-      };
-    };
+  const handleMarkAllRead = () => {
+    setReadIds(new Set(notifications.map((n) => n.id)));
+    setLastChecked(new Date().toISOString());
+  };
 
-    const l1 = countBy((n) => n.risk_level === "Level1");
-    const l2 = countBy((n) => n.risk_level === "Level2");
-    const crackdown = countBy((n) => n.type === "crackdown");
-
-    return [
-      {
-        label: "즉시 대응",
-        icon: AlertTriangle,
-        href: "/user/news?risk=Level1",
-        color: "text-red-600",
-        bgColor: "bg-red-50",
-        borderColor: "border-red-200",
-        ...l1,
-      },
-      {
-        label: "주의 관찰",
-        icon: Shield,
-        href: "/user/news?risk=Level2",
-        color: "text-amber-600",
-        bgColor: "bg-amber-50",
-        borderColor: "border-amber-200",
-        ...l2,
-      },
-      {
-        label: "단속 정보",
-        icon: Shield,
-        href: "/user/crackdown",
-        color: "text-blue-600",
-        bgColor: "bg-blue-50",
-        borderColor: "border-blue-200",
-        ...crackdown,
-      },
-    ];
-  }, [notifications, readIds]);
-
-  const totalCount = notifications.length;
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    return `${mm}-${dd} ${hh}:${mi}`;
+  };
 
   return (
     <div className="relative" ref={panelRef}>
@@ -139,67 +98,91 @@ export function NotificationBell() {
       >
         <Bell className="w-5 h-5 text-slate-400" />
         {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
-            {unreadCount > 9 ? "9+" : unreadCount}
+          <span className="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+            {unreadCount > 99 ? "99+" : unreadCount}
           </span>
         )}
       </button>
 
-      {/* 알림 요약 패널 */}
+      {/* 알림 패널 — 벨 오른쪽으로 펼침 */}
       {isOpen && (
-        <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-72 bg-white rounded-lg shadow-xl border z-50 sm:absolute sm:right-0 sm:top-10 sm:w-72">
-          <div className="px-3 py-2.5 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700">위험 알림</h3>
-              <p className="text-[11px] text-gray-400">
-                총 {totalCount}건 · 미확인 {unreadCount}건
-              </p>
-            </div>
+        <div className="fixed inset-x-2 top-14 bg-white rounded-lg shadow-xl border border-gray-200 z-50 sm:fixed sm:inset-auto sm:left-auto sm:right-2 sm:top-14 sm:w-96">
+          {/* 헤더 */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+            <h3 className="text-sm font-semibold text-gray-900">알림</h3>
+            {unreadCount > 0 && (
+              <button
+                onClick={handleMarkAllRead}
+                className="text-xs text-gray-500 hover:text-gray-700 border border-gray-300 rounded-md px-2.5 py-1 hover:bg-gray-50 transition-colors"
+              >
+                모두읽음으로표시
+              </button>
+            )}
           </div>
 
-          {totalCount === 0 ? (
-            <div className="p-5 text-center text-sm text-gray-400">
-              새로운 위험 알림이 없습니다
-            </div>
-          ) : (
-            <div className="p-2 space-y-1.5">
-              {summaryGroups.map((group) => (
-                <Link
-                  key={group.label}
-                  href={group.href}
-                  onClick={() => setIsOpen(false)}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors",
-                    group.bgColor,
-                    group.borderColor,
-                    "hover:opacity-80"
-                  )}
-                >
-                  <group.icon className={cn("w-4 h-4 shrink-0", group.color)} />
-                  <span className={cn("text-sm font-medium flex-1", group.color)}>
-                    {group.label}
-                  </span>
-                  <span className={cn("text-lg font-bold tabular-nums", group.color)}>
-                    {group.count}
-                  </span>
-                  {group.unread > 0 && (
-                    <span className="bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0">
-                      {group.unread > 9 ? "9+" : group.unread}
-                    </span>
-                  )}
-                  <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
-                </Link>
-              ))}
-            </div>
-          )}
+          {/* 알림 목록 */}
+          <div className="max-h-[60vh] overflow-y-auto divide-y divide-gray-100">
+            {notifications.length === 0 ? (
+              <div className="py-12 text-center text-sm text-gray-400">
+                새로운 알림이 없습니다
+              </div>
+            ) : (
+              notifications.slice(0, 20).map((n) => {
+                const isUnread = !readIds.has(n.id);
+                const category =
+                  RISK_LABEL[n.risk_level] || TYPE_LABEL[n.type] || "정보";
 
-          <div className="px-3 py-2 border-t">
+                return (
+                  <Link
+                    key={n.id}
+                    href={n.url}
+                    target={n.type === "article" ? "_blank" : undefined}
+                    rel="noreferrer"
+                    onClick={() => {
+                      setReadIds((prev) => new Set([...prev, n.id]));
+                    }}
+                    className="block px-4 py-3 hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-400 mb-0.5">{category}</p>
+                        <p
+                          className={cn(
+                            "text-sm leading-snug line-clamp-2",
+                            isUnread
+                              ? "font-semibold text-gray-900"
+                              : "font-normal text-gray-600"
+                          )}
+                        >
+                          {n.title}
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {n.source} | {formatDate(n.date)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 pt-1">
+                        <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                          {formatDate(n.date).slice(0, 5)}
+                        </span>
+                        {isUnread && (
+                          <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+
+          {/* 푸터 */}
+          <div className="border-t border-gray-100 px-4 py-2.5 text-center">
             <Link
               href="/user/news"
               onClick={() => setIsOpen(false)}
-              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+              className="text-sm text-gray-500 hover:text-gray-700 font-medium"
             >
-              전체 게시글 보기 →
+              전체보기
             </Link>
           </div>
         </div>
