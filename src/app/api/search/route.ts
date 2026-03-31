@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
   if (useNcloudDb()) {
     const conditions: string[] = [
       `(title ILIKE $1 OR summary ILIKE $1 OR site_name ILIKE $1)`,
-      `publish_date >= $2`,
+      `(publish_date >= $2 OR publish_date IS NULL)`,
     ];
     const params: unknown[] = [`%${q}%`, cutoffStr];
     let paramIdx = 3;
@@ -57,10 +57,10 @@ export async function GET(request: NextRequest) {
 
     // Data query
     const data = await query(
-      `SELECT id, title, url, site_name, publish_date, risk_level, summary, region, industry_tags
+      `SELECT id, title, url, site_name, publish_date, risk_level, summary, region
        FROM collected_info
        WHERE ${whereClause}
-       ORDER BY publish_date DESC
+       ORDER BY publish_date DESC NULLS LAST
        OFFSET $${paramIdx} LIMIT $${paramIdx + 1}`,
       [...params, from, pageSize]
     );
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
 
   let searchQuery = supabase
     .from("collected_info")
-    .select("id, title, url, site_name, publish_date, risk_level, summary, region, industry_tags", { count: "exact" })
+    .select("id, title, url, site_name, publish_date, risk_level, summary, region", { count: "exact" })
     .or(`title.ilike.%${q}%,summary.ilike.%${q}%,site_name.ilike.%${q}%`)
     .gte("publish_date", cutoffStr);
 
