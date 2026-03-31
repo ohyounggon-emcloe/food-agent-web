@@ -23,7 +23,8 @@ export async function searchWeb(
   if (!isWebSearchAvailable()) return null;
 
   try {
-    const query = encodeURIComponent(userQuery);
+    // 식품안전 도메인으로 검색 범위 한정
+    const query = encodeURIComponent(`식품 ${userQuery}`);
     const res = await fetch(
       `https://openapi.naver.com/v1/search/news.json?query=${query}&display=5&sort=date`,
       {
