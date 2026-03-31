@@ -104,9 +104,9 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* 알림 패널 — 벨 오른쪽으로 펼침 */}
+      {/* 알림 패널 — 벨 바로 옆(오른쪽)으로 펼침 */}
       {isOpen && (
-        <div className="fixed inset-x-2 top-14 bg-white rounded-lg shadow-xl border border-gray-200 z-50 sm:fixed sm:inset-auto sm:left-auto sm:right-2 sm:top-14 sm:w-96">
+        <div className="absolute left-full top-0 ml-2 w-80 sm:w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
           {/* 헤더 */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
             <h3 className="text-sm font-semibold text-gray-900">알림</h3>
