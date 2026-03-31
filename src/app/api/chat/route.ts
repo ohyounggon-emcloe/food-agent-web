@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { query, useNcloudDb } from "@/lib/ncloud-db";
+import { searchWithGemini, isGeminiAvailable, type GeminiSearchResult } from "@/lib/gemini-search";
 
 const VOYAGE_API_KEY = process.env.VOYAGE_API_KEY || "";
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
@@ -85,8 +86,14 @@ export async function POST(request: NextRequest) {
       .split(/\s+/)
       .filter((w) => w.length >= 2 && !stopWords.has(w));
 
-    // 임베딩 검색 시작 (병렬)
+    // 임베딩 검색 + Gemini 웹 검색 시작 (병렬)
     const embeddingPromise = getQueryEmbedding(message);
+    const geminiPromise: Promise<GeminiSearchResult | null> = isGeminiAvailable()
+      ? Promise.race([
+          searchWithGemini(message),
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000)),
+        ])
+      : Promise.resolve(null);
 
     let textSearchData: Array<{
       id: number;
@@ -110,7 +117,7 @@ export async function POST(request: NextRequest) {
         : "FALSE";
       const kwParams = searchTerms.map((k) => `%${k.replace(/[%_]/g, "")}%`);
 
-      const [queryEmbedding, textSearchResult, keywordsResult] =
+      const [queryEmbedding, textSearchResult, keywordsResult, geminiResult] =
         await Promise.all([
           embeddingPromise,
           searchTerms.length > 0
@@ -134,6 +141,7 @@ export async function POST(request: NextRequest) {
           query<{ keyword: string; risk_level: string; action_guide: string }>(
             "SELECT keyword, risk_level, action_guide FROM keywords_meta LIMIT 20"
           ),
+          geminiPromise,
         ]);
 
       textSearchData = textSearchResult;
@@ -191,7 +199,7 @@ export async function POST(request: NextRequest) {
       const matches = allMatches.slice(0, 8);
       const keywords = keywordsData;
 
-      return buildStreamingResponse(matches, keywords, message, history);
+      return buildStreamingResponse(matches, keywords, message, history, geminiResult);
     }
 
     // Fallback: existing Supabase code (키워드별 OR 검색)
@@ -216,8 +224,8 @@ export async function POST(request: NextRequest) {
       .select("keyword, risk_level, action_guide")
       .limit(20);
 
-    const [queryEmbedding, textSearchResult, keywordsResult] =
-      await Promise.all([embeddingPromise, textSearchPromise, keywordsPromise]);
+    const [queryEmbedding, textSearchResult, keywordsResult, geminiResult] =
+      await Promise.all([embeddingPromise, textSearchPromise, keywordsPromise, geminiPromise]);
 
     // 2. 임베딩 유사도 검색 (상위 5건)
     const { data: embeddingMatches } = await supabase.rpc("match_articles", {
@@ -257,7 +265,7 @@ export async function POST(request: NextRequest) {
     const matches = allMatches.slice(0, 8);
     const kwMeta = keywordsResult.data;
 
-    return buildStreamingResponse(matches, kwMeta, message, history);
+    return buildStreamingResponse(matches, kwMeta, message, history, geminiResult);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error("Chat error:", errorMsg);
@@ -282,7 +290,8 @@ function buildStreamingResponse(
     action_guide: string;
   }> | null,
   message: string,
-  history: { role: string; content: string }[] | undefined
+  history: { role: string; content: string }[] | undefined,
+  geminiResult?: GeminiSearchResult | null
 ) {
   // 4. 컨텍스트 구성 — 유사도 50% 미만의 임베딩 결과는 제외 (노이즈 방지)
   const relevantMatches = matches.filter(
@@ -297,6 +306,17 @@ function buildStreamingResponse(
       context += `- [${match.risk_level || "미분류"}] ${match.title} (${match.site_name}, ${match.publish_date})\n`;
       if (match.summary) {
         context += `  요약: ${match.summary.slice(0, 500)}\n`;
+      }
+    }
+  }
+
+  // Gemini 웹 검색 결과 추가
+  if (geminiResult && geminiResult.text) {
+    context += `\n[웹 검색 결과]\n${geminiResult.text.slice(0, 2000)}\n`;
+    if (geminiResult.sources.length > 0) {
+      context += "출처:\n";
+      for (const src of geminiResult.sources.slice(0, 5)) {
+        context += `- ${src.title}: ${src.url}\n`;
       }
     }
   }
@@ -326,7 +346,7 @@ function buildStreamingResponse(
   ];
 
   // 6. SSE 스트리밍 응답 구성
-  const sources = matches
+  const dbSources = matches
     .filter((m) => m.similarity > 0)
     .slice(0, 5)
     .map((m) => ({
@@ -336,6 +356,16 @@ function buildStreamingResponse(
       site_name: m.site_name,
       similarity: Math.round(m.similarity * 100),
     }));
+
+  const webSources = (geminiResult?.sources || []).slice(0, 3).map((s, i) => ({
+    id: -(i + 1),
+    title: s.title,
+    url: s.url,
+    site_name: "웹 검색",
+    similarity: 0,
+  }));
+
+  const sources = [...dbSources, ...webSources];
 
   const encoder = new TextEncoder();
 
