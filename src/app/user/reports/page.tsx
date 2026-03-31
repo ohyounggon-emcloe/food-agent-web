@@ -73,9 +73,9 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">{"리포트"}</h2>
+          <h2 className="text-2xl font-bold">{"식품안전리포트"}</h2>
           <p className="text-gray-500 text-sm mt-1">
-            {"AI 생성 일일/주간 식품안전 리포트"}
+            {"AI가 매일/매주 자동 생성하는 식품안전 분석 리포트"}
           </p>
         </div>
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
