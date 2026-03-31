@@ -5,18 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Send, Bot, User, ExternalLink, Loader2 } from "lucide-react";
+import { Send, Bot, User, ExternalLink } from "lucide-react";
+
+interface Source {
+  id: number;
+  title: string;
+  url: string;
+  site_name: string;
+  similarity: number;
+}
 
 interface Message {
   role: "user" | "assistant";
   content: string;
-  sources?: { id: number; title: string; url: string; site_name: string; similarity: number }[];
+  sources?: Source[];
 }
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [streamingText, setStreamingText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -31,7 +40,11 @@ export default function ChatPage() {
     setInput("");
     setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
     setLoading(true);
+    setStreamingText("");
     scrollToBottom();
+
+    let sources: Source[] = [];
+    let fullText = "";
 
     try {
       const history = messages.map((m) => ({ role: m.role, content: m.content }));
@@ -47,18 +60,50 @@ export default function ChatPage() {
         throw new Error(err.error || "응답 실패");
       }
 
-      const data = await res.json();
+      const reader = res.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.startsWith("data: ")) continue;
+          try {
+            const event = JSON.parse(line.slice(6));
+            if (event.type === "sources") {
+              sources = event.sources || [];
+            } else if (event.type === "text") {
+              fullText += event.text;
+              setStreamingText(fullText);
+              scrollToBottom();
+            }
+          } catch {
+            // 파싱 실패 무시
+          }
+        }
+      }
+
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: data.response, sources: data.sources },
+        { role: "assistant", content: fullText, sources },
       ]);
     } catch (err) {
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: `오류가 발생했습니다: ${err instanceof Error ? err.message : "알 수 없는 오류"}` },
+        {
+          role: "assistant",
+          content: `오류가 발생했습니다: ${err instanceof Error ? err.message : "알 수 없는 오류"}`,
+        },
       ]);
     } finally {
       setLoading(false);
+      setStreamingText("");
       scrollToBottom();
     }
   };
@@ -74,7 +119,7 @@ export default function ChatPage() {
 
       {/* 메시지 영역 */}
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 && (
+        {messages.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center h-full text-gray-400 space-y-4">
             <Bot className="w-16 h-16 text-emerald-300" />
             <div className="text-center space-y-2">
@@ -144,16 +189,30 @@ export default function ChatPage() {
           </div>
         ))}
 
+        {/* 스트리밍 중인 응답 */}
         {loading && (
           <div className="flex gap-3">
             <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
               <Bot className="w-4 h-4 text-emerald-600" />
             </div>
-            <Card className="py-0">
-              <CardContent className="py-3 px-4">
-                <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-              </CardContent>
-            </Card>
+            <div className="max-w-[80%]">
+              <Card className="py-0">
+                <CardContent className="py-3 px-4">
+                  {streamingText ? (
+                    <p className="text-sm whitespace-pre-wrap">
+                      {streamingText}
+                      <span className="inline-block w-1.5 h-4 bg-emerald-500 animate-pulse ml-0.5 align-middle" />
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "0ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "150ms" }} />
+                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </div>
         )}
 
