@@ -80,7 +80,9 @@ export default function ReportsPage() {
         </div>
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v ?? "all")}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="전체" />
+            <span>
+              {typeFilter === "all" ? "전체" : typeFilter === "daily" ? "일일 리포트" : "주간 리포트"}
+            </span>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">전체</SelectItem>
