@@ -189,11 +189,11 @@ export default function DashboardPage() {
                               : "destructive"
                         }
                       >
-                        {agent.success_rate?.toFixed(1) || 0}%
+                        {Number(agent.success_rate || 0).toFixed(1)}%
                       </Badge>
                       {agent.avg_duration_ms && (
                         <span className="text-xs text-gray-400">
-                          {(agent.avg_duration_ms / 1000).toFixed(1)}s
+                          {(Number(agent.avg_duration_ms) / 1000).toFixed(1)}s
                         </span>
                       )}
                     </div>
