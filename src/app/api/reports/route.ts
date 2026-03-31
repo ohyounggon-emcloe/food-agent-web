@@ -13,6 +13,15 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") || "all"; // daily | weekly | all
 
   try {
+    // DEBUG: 환경변수 확인
+    if (type === "debug") {
+      return NextResponse.json({
+        useNcloud: useNcloudDb(),
+        USE_NCLOUD_DB: process.env.USE_NCLOUD_DB || "not set",
+        NCLOUD_DB_HOST: process.env.NCLOUD_DB_HOST || "not set",
+      });
+    }
+
     if (useNcloudDb()) {
       const results: unknown[] = [];
 
