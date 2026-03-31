@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       "어떤", "어떻게", "무엇", "언제", "어디", "왜", "이번", "지난",
       "현황", "정보", "내용", "사항", "것", "거", "좀", "이", "그", "저",
     ]);
-    const keywords = message
+    const searchTerms = message
       .replace(/[%_?!.,。]/g, "")
       .split(/\s+/)
       .filter((w) => w.length >= 2 && !stopWords.has(w));
@@ -104,15 +104,15 @@ export async function POST(request: NextRequest) {
 
     if (useNcloudDb()) {
       // 키워드별 OR 조건 생성
-      const kwConditions = keywords.length > 0
-        ? keywords.map((_, i) => `(title ILIKE $${i + 1} OR summary ILIKE $${i + 1})`).join(" OR ")
+      const kwConditions = searchTerms.length > 0
+        ? searchTerms.map((_, i) => `(title ILIKE $${i + 1} OR summary ILIKE $${i + 1})`).join(" OR ")
         : "FALSE";
-      const kwParams = keywords.map((k) => `%${k.replace(/[%_]/g, "")}%`);
+      const kwParams = searchTerms.map((k) => `%${k.replace(/[%_]/g, "")}%`);
 
       const [queryEmbedding, textSearchResult, keywordsResult] =
         await Promise.all([
           embeddingPromise,
-          keywords.length > 0
+          searchTerms.length > 0
             ? query<{
                 id: number;
                 title: string;
@@ -194,14 +194,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback: existing Supabase code (키워드별 OR 검색)
-    const orFilter = keywords
+    const orFilter = searchTerms
       .map((k) => {
         const safe = k.replace(/[%_]/g, "");
         return `title.ilike.%${safe}%,summary.ilike.%${safe}%`;
       })
       .join(",");
 
-    const textSearchPromise = keywords.length > 0
+    const textSearchPromise = searchTerms.length > 0
       ? supabase
           .from("collected_info")
           .select("id, title, url, site_name, publish_date, risk_level, summary")
