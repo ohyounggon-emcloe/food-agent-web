@@ -88,10 +88,10 @@ export async function POST(request: NextRequest) {
 
     // 임베딩 검색 + 네이버 웹 검색 시작 (병렬)
     const embeddingPromise = getQueryEmbedding(message);
-    // 네이버 검색은 불용어 제거된 키워드로 검색
+    // 네이버 검색: 불용어 제거된 키워드로 검색 + 결과 필터링용 키워드 전달
     const searchQuery = searchTerms.length > 0 ? searchTerms.join(" ") : message;
     const webSearchPromise: Promise<WebSearchResult | null> = isWebSearchAvailable()
-      ? searchWeb(searchQuery)
+      ? searchWeb(searchQuery, searchTerms)
       : Promise.resolve(null);
 
     let textSearchData: Array<{

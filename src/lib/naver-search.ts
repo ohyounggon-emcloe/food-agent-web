@@ -17,16 +17,36 @@ export function isWebSearchAvailable(): boolean {
   return NAVER_CLIENT_ID.length > 0 && NAVER_CLIENT_SECRET.length > 0;
 }
 
+// HTML 태그 제거
+const stripHtml = (s: string) =>
+  s.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ");
+
+/**
+ * 검색 결과가 질문의 키워드와 관련 있는지 판단.
+ * 제목+설명에 검색 키워드 중 하나라도 포함되면 관련 있음.
+ */
+function isRelevant(
+  item: NaverNewsItem,
+  searchTerms: string[]
+): boolean {
+  const combined = stripHtml(
+    `${item.title} ${item.description}`
+  ).toLowerCase();
+
+  return searchTerms.some((term) => combined.includes(term.toLowerCase()));
+}
+
 export async function searchWeb(
-  userQuery: string
+  userQuery: string,
+  searchTerms?: string[]
 ): Promise<WebSearchResult | null> {
   if (!isWebSearchAvailable()) return null;
 
   try {
-    // 식품안전 도메인으로 검색 범위 한정
-    const query = encodeURIComponent(`식품 ${userQuery}`);
+    const query = encodeURIComponent(userQuery);
+    // 넉넉하게 10건 가져온 후 필터링
     const res = await fetch(
-      `https://openapi.naver.com/v1/search/news.json?query=${query}&display=5&sort=date`,
+      `https://openapi.naver.com/v1/search/news.json?query=${query}&display=10&sort=date`,
       {
         headers: {
           "X-Naver-Client-Id": NAVER_CLIENT_ID,
@@ -38,12 +58,16 @@ export async function searchWeb(
     if (!res.ok) return null;
 
     const data = await res.json();
-    const items: NaverNewsItem[] = data.items || [];
+    const allItems: NaverNewsItem[] = data.items || [];
+
+    // 키워드 기반 관련성 필터링
+    const terms = searchTerms && searchTerms.length > 0
+      ? searchTerms
+      : userQuery.split(/\s+/).filter((w) => w.length >= 2);
+
+    const items = allItems.filter((item) => isRelevant(item, terms)).slice(0, 5);
 
     if (items.length === 0) return null;
-
-    // HTML 태그 제거
-    const stripHtml = (s: string) => s.replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ");
 
     const text = items
       .map(
