@@ -254,9 +254,9 @@ export async function POST(request: NextRequest) {
 
     // 최대 8건으로 제한
     const matches = allMatches.slice(0, 8);
-    const keywords = keywordsResult.data;
+    const kwMeta = keywordsResult.data;
 
-    return buildStreamingResponse(matches, keywords, message, history);
+    return buildStreamingResponse(matches, kwMeta, message, history);
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error("Chat error:", errorMsg);
