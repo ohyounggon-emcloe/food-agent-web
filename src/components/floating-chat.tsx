@@ -129,7 +129,7 @@ export function FloatingChat() {
               <Bot className="w-5 h-5" />
               <span className="font-medium text-sm">{"AI-FX 어시스턴트"}</span>
             </div>
-            <button onClick={() => setOpen(false)} className="hover:bg-emerald-700 rounded p-1">
+            <button onClick={() => { setOpen(false); setMessages([]); setStreamingText(""); }} className="hover:bg-emerald-700 rounded p-1">
               <X className="w-4 h-4" />
             </button>
           </div>
