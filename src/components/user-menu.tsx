@@ -1,11 +1,19 @@
 "use client";
 
+import { useEffect } from "react";
 import { useAuth } from "@/providers/auth-provider";
 import { RoleBadge } from "@/components/role-badge";
 import { Button } from "@/components/ui/button";
 
 export function UserMenu() {
   const { profile, role, loading, signOut } = useAuth();
+
+  // 세션 만료 시 자동 로그아웃
+  useEffect(() => {
+    if (!loading && !profile) {
+      signOut();
+    }
+  }, [loading, profile, signOut]);
 
   if (loading) {
     return <div className="text-xs text-slate-500">{"..."}</div>;
@@ -14,15 +22,7 @@ export function UserMenu() {
   if (!profile) {
     return (
       <div className="space-y-2">
-        <p className="text-xs text-slate-500">세션 만료</p>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full text-sm h-8 mt-1 bg-red-600 text-white border-red-600 hover:bg-red-700 hover:border-red-700"
-          onClick={signOut}
-        >
-          {"로그아웃"}
-        </Button>
+        <p className="text-xs text-slate-500">세션 만료 - 로그아웃 중...</p>
       </div>
     );
   }
