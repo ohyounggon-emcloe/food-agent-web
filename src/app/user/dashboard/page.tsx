@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { Badge } from "@/components/ui/badge";
 import { CrackdownCalendar } from "@/components/crackdown-calendar";
 import { KoreaMap } from "@/components/korea-map";
@@ -63,11 +64,7 @@ export default function UserDashboard() {
   }
 
   if (!data) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <p className="text-gray-500">{"로딩 중..."}</p>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   const highRisk = data.riskDistribution.filter(

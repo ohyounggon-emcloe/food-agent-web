@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 
+// 60초 캐시 (ISR)
+export const revalidate = 60;
+
 export async function GET() {
   try {
     const supabase = await createClient();
@@ -24,7 +27,9 @@ export async function GET() {
     const [
       totalResp,
       todayResp,
-      riskResp,
+      level1Resp,
+      level2Resp,
+      level3Resp,
       agentResp,
       siteResp,
       kwSugResp,
@@ -34,7 +39,9 @@ export async function GET() {
         .from("collected_info")
         .select("id", { count: "exact", head: true })
         .eq("publish_date", today),
-      supabase.from("collected_info").select("risk_level"),
+      supabase.from("collected_info").select("id", { count: "exact", head: true }).eq("risk_level", "Level1"),
+      supabase.from("collected_info").select("id", { count: "exact", head: true }).eq("risk_level", "Level2"),
+      supabase.from("collected_info").select("id", { count: "exact", head: true }).eq("risk_level", "Level3"),
       supabase.from("meta_monitor").select("*"),
       supabase.from("compliance_data").select("status"),
       supabase
@@ -43,14 +50,11 @@ export async function GET() {
         .eq("status", "pending"),
     ]);
 
-    const riskCounts: Record<string, number> = {};
-    for (const row of riskResp.data || []) {
-      const level = row.risk_level || "미분류";
-      riskCounts[level] = (riskCounts[level] || 0) + 1;
-    }
-    const riskDistribution = Object.entries(riskCounts).map(
-      ([risk_level, count]) => ({ risk_level, count })
-    );
+    const riskDistribution = [
+      { risk_level: "Level1", count: level1Resp.count || 0 },
+      { risk_level: "Level2", count: level2Resp.count || 0 },
+      { risk_level: "Level3", count: level3Resp.count || 0 },
+    ];
 
     const siteCounts = { active: 0, error: 0, inactive: 0 };
     for (const row of siteResp.data || []) {
