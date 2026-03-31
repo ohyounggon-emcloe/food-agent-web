@@ -88,8 +88,10 @@ export async function POST(request: NextRequest) {
 
     // 임베딩 검색 + 네이버 웹 검색 시작 (병렬)
     const embeddingPromise = getQueryEmbedding(message);
+    // 네이버 검색은 불용어 제거된 키워드로 검색
+    const searchQuery = searchTerms.length > 0 ? searchTerms.join(" ") : message;
     const webSearchPromise: Promise<WebSearchResult | null> = isWebSearchAvailable()
-      ? searchWeb(message)
+      ? searchWeb(searchQuery)
       : Promise.resolve(null);
 
     let textSearchData: Array<{
@@ -292,7 +294,7 @@ function buildStreamingResponse(
 ) {
   // 4. 컨텍스트 구성 — 유사도 50% 미만의 임베딩 결과는 제외 (노이즈 방지)
   const relevantMatches = matches.filter(
-    (m) => m.similarity === 0 || m.similarity >= 0.5
+    (m) => m.similarity === 0 || m.similarity >= 0.6
   );
 
   let context = "";
@@ -344,7 +346,7 @@ function buildStreamingResponse(
 
   // 6. SSE 스트리밍 응답 구성
   const dbSources = matches
-    .filter((m) => m.similarity > 0)
+    .filter((m) => m.similarity >= 0.6)
     .slice(0, 5)
     .map((m) => ({
       id: m.id,
