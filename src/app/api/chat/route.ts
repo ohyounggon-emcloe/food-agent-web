@@ -193,15 +193,22 @@ export async function POST(request: NextRequest) {
       return buildStreamingResponse(matches, keywords, message, history);
     }
 
-    // Fallback: existing Supabase code
-    const textSearchPromise = supabase
-      .from("collected_info")
-      .select("id, title, url, site_name, publish_date, risk_level, summary")
-      .or(
-        `title.ilike.%${sanitizedMessage}%,summary.ilike.%${sanitizedMessage}%`
-      )
-      .order("publish_date", { ascending: false })
-      .limit(5);
+    // Fallback: existing Supabase code (키워드별 OR 검색)
+    const orFilter = keywords
+      .map((k) => {
+        const safe = k.replace(/[%_]/g, "");
+        return `title.ilike.%${safe}%,summary.ilike.%${safe}%`;
+      })
+      .join(",");
+
+    const textSearchPromise = keywords.length > 0
+      ? supabase
+          .from("collected_info")
+          .select("id, title, url, site_name, publish_date, risk_level, summary")
+          .or(orFilter)
+          .order("publish_date", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: [] });
 
     const keywordsPromise = supabase
       .from("keywords_meta")
