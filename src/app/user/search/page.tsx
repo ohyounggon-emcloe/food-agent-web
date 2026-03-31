@@ -96,15 +96,8 @@ export default function SearchPage() {
 
       {/* 초기 상태: 검색 전 */}
       {!searched && !loading && (
-        <div className="relative flex flex-col items-center justify-center py-16 overflow-hidden">
-          {/* AI-FX 워터마크 */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none">
-            <span className="text-[120px] font-extrabold tracking-tight opacity-[0.04]">
-              AI-FX
-            </span>
-          </div>
-
-          <div className="relative z-10 text-center">
+        <div className="flex flex-col items-center justify-center py-12 overflow-hidden">
+          <div className="text-center">
             <p className="text-gray-400 text-sm mb-6">
               {"식품안전 정보를 검색해 보세요"}
             </p>
@@ -160,6 +153,13 @@ export default function SearchPage() {
                 </div>
                 <span className="text-[10px]">위생</span>
               </div>
+            </div>
+
+            {/* AI-FX 워터마크 (하단) */}
+            <div className="mt-12 pointer-events-none select-none">
+              <span className="text-[100px] font-extrabold tracking-tight opacity-[0.03] leading-none">
+                AI-FX
+              </span>
             </div>
           </div>
         </div>
