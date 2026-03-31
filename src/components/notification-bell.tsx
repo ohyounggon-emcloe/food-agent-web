@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Bell, AlertTriangle, Shield, ChevronRight } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 interface Notification {
@@ -15,10 +15,16 @@ interface Notification {
   url: string;
 }
 
-const RISK_STYLE: Record<string, string> = {
-  Level1: "bg-red-500 text-white",
-  Level2: "bg-amber-500 text-white",
-};
+interface SummaryGroup {
+  label: string;
+  icon: typeof AlertTriangle;
+  href: string;
+  color: string;
+  bgColor: string;
+  borderColor: string;
+  count: number;
+  unread: number;
+}
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -70,11 +76,59 @@ export function NotificationBell() {
   const handleOpen = () => {
     setIsOpen(!isOpen);
     if (!isOpen) {
-      // 모두 읽음 처리
       setReadIds(new Set(notifications.map((n) => n.id)));
       setLastChecked(new Date().toISOString());
     }
   };
+
+  // 분류별 요약 집계
+  const summaryGroups: SummaryGroup[] = useMemo(() => {
+    const countBy = (
+      predicate: (n: Notification) => boolean
+    ) => {
+      const matched = notifications.filter(predicate);
+      return {
+        count: matched.length,
+        unread: matched.filter((n) => !readIds.has(n.id)).length,
+      };
+    };
+
+    const l1 = countBy((n) => n.risk_level === "Level1");
+    const l2 = countBy((n) => n.risk_level === "Level2");
+    const crackdown = countBy((n) => n.type === "crackdown");
+
+    return [
+      {
+        label: "즉시 대응",
+        icon: AlertTriangle,
+        href: "/user/news?risk=Level1",
+        color: "text-red-600",
+        bgColor: "bg-red-50",
+        borderColor: "border-red-200",
+        ...l1,
+      },
+      {
+        label: "주의 관찰",
+        icon: Shield,
+        href: "/user/news?risk=Level2",
+        color: "text-amber-600",
+        bgColor: "bg-amber-50",
+        borderColor: "border-amber-200",
+        ...l2,
+      },
+      {
+        label: "단속 정보",
+        icon: Shield,
+        href: "/user/crackdown",
+        color: "text-blue-600",
+        bgColor: "bg-blue-50",
+        borderColor: "border-blue-200",
+        ...crackdown,
+      },
+    ];
+  }, [notifications, readIds]);
+
+  const totalCount = notifications.length;
 
   return (
     <div className="relative" ref={panelRef}>
@@ -91,46 +145,63 @@ export function NotificationBell() {
         )}
       </button>
 
-      {/* 알림 패널 */}
+      {/* 알림 요약 패널 */}
       {isOpen && (
-        <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-80 bg-white rounded-lg shadow-xl border z-50 max-h-96 overflow-y-auto sm:absolute sm:right-0 sm:top-10 sm:w-80">
-          <div className="p-3 border-b bg-gray-50 rounded-t-lg">
-            <h3 className="text-sm font-semibold text-gray-700">위험 알림</h3>
-            <p className="text-xs text-gray-400">Level1/Level2 위험 정보</p>
+        <div className="fixed right-2 top-14 w-[calc(100vw-1rem)] max-w-72 bg-white rounded-lg shadow-xl border z-50 sm:absolute sm:right-0 sm:top-10 sm:w-72">
+          <div className="px-3 py-2.5 border-b bg-gray-50 rounded-t-lg flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-semibold text-gray-700">위험 알림</h3>
+              <p className="text-[11px] text-gray-400">
+                총 {totalCount}건 · 미확인 {unreadCount}건
+              </p>
+            </div>
           </div>
 
-          {notifications.length === 0 ? (
-            <div className="p-6 text-center text-sm text-gray-400">
+          {totalCount === 0 ? (
+            <div className="p-5 text-center text-sm text-gray-400">
               새로운 위험 알림이 없습니다
             </div>
           ) : (
-            <div className="divide-y">
-              {notifications.slice(0, 15).map((n) => (
-                <a
-                  key={n.id}
-                  href={n.url}
-                  target={n.type === "article" ? "_blank" : undefined}
-                  rel="noreferrer"
+            <div className="p-2 space-y-1.5">
+              {summaryGroups.map((group) => (
+                <Link
+                  key={group.label}
+                  href={group.href}
+                  onClick={() => setIsOpen(false)}
                   className={cn(
-                    "block p-3 hover:bg-gray-50 transition-colors",
-                    !readIds.has(n.id) && "bg-red-50/50"
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg border transition-colors",
+                    group.bgColor,
+                    group.borderColor,
+                    "hover:opacity-80"
                   )}
                 >
-                  <div className="flex items-start gap-2">
-                    <Badge className={cn("text-[10px] px-1.5 py-0 shrink-0 mt-0.5", RISK_STYLE[n.risk_level] || "bg-gray-500 text-white")}>
-                      {n.risk_level}
-                    </Badge>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium line-clamp-2">{n.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
-                        {n.source} | {n.date?.slice(0, 10)}
-                      </p>
-                    </div>
-                  </div>
-                </a>
+                  <group.icon className={cn("w-4 h-4 shrink-0", group.color)} />
+                  <span className={cn("text-sm font-medium flex-1", group.color)}>
+                    {group.label}
+                  </span>
+                  <span className={cn("text-lg font-bold tabular-nums", group.color)}>
+                    {group.count}
+                  </span>
+                  {group.unread > 0 && (
+                    <span className="bg-red-500 text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center shrink-0">
+                      {group.unread > 9 ? "9+" : group.unread}
+                    </span>
+                  )}
+                  <ChevronRight className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                </Link>
               ))}
             </div>
           )}
+
+          <div className="px-3 py-2 border-t">
+            <Link
+              href="/user/news"
+              onClick={() => setIsOpen(false)}
+              className="text-xs text-teal-600 hover:text-teal-700 font-medium"
+            >
+              전체 게시글 보기 →
+            </Link>
+          </div>
         </div>
       )}
     </div>
