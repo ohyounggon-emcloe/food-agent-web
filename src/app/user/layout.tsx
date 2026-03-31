@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   BrainCircuit,
   Search,
+  FileText,
   UserCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }
   { href: "/user/news", label: "뉴스 피드", icon: Rss },
   { href: "/user/search", label: "통합 검색", icon: Search },
   { href: "/user/crackdown", label: "단속정보", icon: ShieldAlert },
+  { href: "/user/reports", label: "주간 리포트", icon: FileText },
   { href: "/user/analysis", label: "상세 분석", icon: BrainCircuit },
   { href: "/user/profile", label: "내 정보", icon: UserCircle },
 ];
