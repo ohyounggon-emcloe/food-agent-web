@@ -20,11 +20,7 @@ export function UserMenu() {
   }
 
   if (!profile) {
-    return (
-      <div className="space-y-2">
-        <p className="text-xs text-slate-500">세션 만료 - 로그아웃 중...</p>
-      </div>
-    );
+    return null;
   }
 
   return (

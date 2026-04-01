@@ -102,15 +102,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
        window.location.pathname === "/");
 
     const init = async () => {
-      // 인증 페이지(로그인/회원가입/비밀번호 등)는 즉시 렌더링
+      // 인증 페이지는 즉시 렌더링
       if (isAuthPage) {
         if (mounted) setLoading(false);
-        // 로그인 상태 확인은 비동기로 진행 (화면 차단 없음)
       }
 
       try {
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        // getSession()은 로컬 토큰 기반이라 빠름
+        const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
+        const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
           await fetchProfile(currentUser);
@@ -122,18 +123,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // 5초 안전장치: init이 어떤 이유로든 끝나지 않으면 강제 loading 해제
-    const safetyTimer = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn("Auth init timeout - forcing loading=false");
-        setLoading(false);
-      }
-    }, 5000);
-
     init();
 
     if (isAuthPage) {
-      return () => { mounted = false; clearTimeout(safetyTimer); };
+      return () => { mounted = false; };
     }
 
     const {
@@ -154,7 +147,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       mounted = false;
-      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile]);
