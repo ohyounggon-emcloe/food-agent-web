@@ -409,30 +409,30 @@ export default function InspectionPage() {
                 <table className="w-full border-collapse hidden print:table" style={{ borderCollapse: "collapse" }}>
                   <tbody>
                     <tr>
-                      <td style={{ border: "1px solid #333", width: "33%", padding: "8px", textAlign: "center", height: "60px", verticalAlign: "top", fontSize: "9pt" }}>
-                        <strong>점검자</strong><br /><br />(서명)
+                      <td style={{ border: "1px solid #333", width: "33%", padding: "6px 12px", fontSize: "9pt" }}>
+                        <strong>점검자</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명)
                       </td>
-                      <td style={{ border: "1px solid #333", width: "33%", padding: "8px", textAlign: "center", height: "60px", verticalAlign: "top", fontSize: "9pt" }}>
-                        <strong>확인자</strong><br /><br />(서명)
+                      <td style={{ border: "1px solid #333", width: "33%", padding: "6px 12px", fontSize: "9pt" }}>
+                        <strong>확인자</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명)
                       </td>
-                      <td style={{ border: "1px solid #333", width: "34%", padding: "8px", textAlign: "center", height: "60px", verticalAlign: "top", fontSize: "9pt" }}>
+                      <td style={{ border: "1px solid #333", width: "34%", padding: "6px 12px", fontSize: "9pt" }}>
                         <strong>비고</strong>
                       </td>
                     </tr>
                   </tbody>
                 </table>
                 {/* 화면용 서명란 */}
-                <div className="grid grid-cols-3 gap-4 text-sm text-gray-500 print:hidden">
-                  <div className="border-t pt-2 text-center">
-                    <p className="text-xs text-gray-400 mb-4">점검자</p>
-                    <p className="text-gray-300">(서명)</p>
+                <div className="flex gap-4 text-sm text-gray-500 border-t pt-3 print:hidden">
+                  <div className="flex-1 flex items-center gap-4 px-3">
+                    <span className="text-xs font-medium text-gray-400">점검자</span>
+                    <span className="text-gray-300">(서명)</span>
                   </div>
-                  <div className="border-t pt-2 text-center">
-                    <p className="text-xs text-gray-400 mb-4">확인자</p>
-                    <p className="text-gray-300">(서명)</p>
+                  <div className="flex-1 flex items-center gap-4 px-3 border-l">
+                    <span className="text-xs font-medium text-gray-400">확인자</span>
+                    <span className="text-gray-300">(서명)</span>
                   </div>
-                  <div className="border-t pt-2 text-center">
-                    <p className="text-xs text-gray-400 mb-4">비고</p>
+                  <div className="flex-1 flex items-center gap-4 px-3 border-l">
+                    <span className="text-xs font-medium text-gray-400">비고</span>
                   </div>
                 </div>
               </div>
