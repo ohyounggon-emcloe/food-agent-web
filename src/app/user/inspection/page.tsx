@@ -194,16 +194,19 @@ export default function InspectionPage() {
             text-align: center;
           }
           /* 페이지 설정 */
-          /* 챗봇 아이콘 숨김 */
+          /* 챗봇 아이콘 및 fixed 요소 숨김 */
           .floating-chat, [class*="floating"], [class*="chat-button"],
-          button[aria-label*="chat"], [id*="chat"] {
+          button[aria-label*="chat"], [id*="chat"],
+          .fixed, [style*="position: fixed"], [class*="fixed"] {
             display: none !important;
           }
           @page {
             size: A4 portrait;
-            margin: 12mm 10mm;
+            margin: 12mm 10mm 8mm 10mm;
           }
-          /* 브라우저 URL 헤더/푸터 제거 (사용자 설정에 따라) */
+          /* 브라우저 머리글/바닥글(URL) 영역 최소화 */
+          @page :first { margin-top: 8mm; }
+          @page { margin-top: 5mm; margin-bottom: 5mm; }
         }
       `}</style>
 
