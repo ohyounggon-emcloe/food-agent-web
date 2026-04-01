@@ -83,9 +83,9 @@ export default function UserDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold">{"오늘의 식품위생법규 정보 현황"}</h2>
+        <h2 className="text-2xl font-bold">{"AI 식품안전 모니터링"}</h2>
         <p className="text-gray-500 text-sm mt-1">
-          {"AI 자동 수집을 통한 최신 식품 안전 정보"}
+          {"AI가 24시간 수집·분석하는 식품안전 실시간 현황"}
         </p>
       </div>
 
