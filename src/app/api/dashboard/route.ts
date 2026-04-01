@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     if (useNcloudDb()) {
-      const [cache, agentStats, unclassified] = await Promise.all([
+      const [cache, agentStats, unclassified, todayHighRisk] = await Promise.all([
         queryOne<{
           total_articles: number;
           today_articles: number;
@@ -38,6 +38,12 @@ export async function GET() {
         query("SELECT * FROM meta_monitor"),
         queryOne<{ count: string }>(
           "SELECT count(*) FROM collected_info WHERE risk_level IS NULL OR risk_level IN ('미분류', '')"
+        ),
+        queryOne<{ level1: string; level2: string }>(
+          `SELECT
+            count(*) FILTER (WHERE risk_level = 'Level1') as level1,
+            count(*) FILTER (WHERE risk_level = 'Level2') as level2
+          FROM collected_info WHERE created_at >= CURRENT_DATE`
         ),
       ]);
 
@@ -58,8 +64,8 @@ export async function GET() {
         totalArticles: cache.total_articles,
         todayArticles: cache.today_articles,
         riskDistribution: [
-          { risk_level: "Level1", count: cache.level1_count },
-          { risk_level: "Level2", count: cache.level2_count },
+          { risk_level: "Level1", count: Number(todayHighRisk?.level1 || 0) },
+          { risk_level: "Level2", count: Number(todayHighRisk?.level2 || 0) },
           { risk_level: "Level3", count: cache.level3_count },
         ],
         agentStats: agentStats || [],
