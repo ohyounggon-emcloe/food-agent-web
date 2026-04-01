@@ -61,4 +61,5 @@ export interface DashboardData {
   agentStats: AgentStats[];
   siteCounts: { active: number; error: number; inactive: number };
   pendingSuggestions: { sites: number; keywords: number };
+  unclassifiedCount?: number;
 }
