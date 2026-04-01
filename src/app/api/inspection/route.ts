@@ -18,14 +18,15 @@ export async function GET(request: NextRequest) {
       let paramIdx = 1;
 
       if (category && category !== "all") {
-        conditions.push(`category = $${paramIdx}`);
+        // 선택한 업종 + 공통 항목 함께 조회
+        conditions.push(`(category = $${paramIdx} OR category = '공통')`);
         params.push(category);
         paramIdx++;
       }
 
       const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
       const data = await query(
-        `SELECT * FROM self_inspection_items ${whereClause} ORDER BY category, criteria, seq`,
+        `SELECT * FROM self_inspection_items ${whereClause} ORDER BY CASE WHEN category = '공통' THEN 1 ELSE 0 END, criteria, id`,
         params
       );
 

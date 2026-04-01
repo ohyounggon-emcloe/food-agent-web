@@ -23,17 +23,17 @@ interface InspectionItem {
 }
 
 const CATEGORIES = [
-  { value: "all", label: "전체" },
-  { value: "외식", label: "일반음식점" },
-  { value: "급식", label: "단체급식" },
-  { value: "공급사", label: "식자재납품" },
-  { value: "제조", label: "식품공장" },
+  { value: "일반음식점", label: "일반음식점" },
+  { value: "단체급식", label: "단체급식" },
+  { value: "식자재납품", label: "식자재납품" },
+  { value: "식품공장", label: "식품공장" },
+  { value: "배달간편", label: "배달·간편음식점" },
 ];
 
 export default function InspectionPage() {
   const [items, setItems] = useState<InspectionItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [category, setCategory] = useState("all");
+  const [category, setCategory] = useState("일반음식점");
   const [checks, setChecks] = useState<Record<number, string>>({});
   const [shopName, setShopName] = useState("");
   const [shopAddress, setShopAddress] = useState("");
@@ -245,6 +245,9 @@ export default function InspectionPage() {
                           </td>
                         )}
                         <td className="border border-gray-300 px-3 py-2 text-gray-600">
+                          <span className="text-gray-400 mr-1 text-xs">
+                            {idx + 1}.
+                          </span>
                           {item.content}
                         </td>
                         <td className="border border-gray-300 px-2 py-2 text-center check-cell">
