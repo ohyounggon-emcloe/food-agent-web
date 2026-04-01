@@ -14,6 +14,7 @@ import {
   BrainCircuit,
   Search,
   FileText,
+  ClipboardCheck,
   UserCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -23,6 +24,7 @@ const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }
   { href: "/user/news", label: "뉴스 피드", icon: Rss },
   { href: "/user/search", label: "AI 통합 정보검색", icon: Search },
   { href: "/user/crackdown", label: "단속정보", icon: ShieldAlert },
+  { href: "/user/inspection", label: "위생자율점검지", icon: ClipboardCheck },
   { href: "/user/reports", label: "식품안전리포트", icon: FileText },
   { href: "/user/analysis", label: "상세 분석", icon: BrainCircuit },
   { href: "/user/profile", label: "내 정보", icon: UserCircle },
