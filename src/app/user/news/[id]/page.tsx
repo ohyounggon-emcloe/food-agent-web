@@ -203,25 +203,12 @@ export default function NewsDetailPage() {
       )}
 
       {/* 첨부파일 */}
-      {article.has_attachments && article.attachment_names && article.attachment_names.length > 0 && (
+      {article.has_attachments && (
         <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-500 flex items-center gap-2">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
               <Paperclip className="w-4 h-4" />
-              첨부파일 ({article.attachment_names.length}건)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-1">
-              {article.attachment_names.map((name, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-2 text-sm text-gray-600 py-1"
-                >
-                  <Paperclip className="w-3 h-3 text-gray-400" />
-                  {name}
-                </div>
-              ))}
+              첨부파일 있음 — 원문에서 확인하세요
             </div>
           </CardContent>
         </Card>
