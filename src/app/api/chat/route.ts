@@ -50,9 +50,9 @@ async function getQueryEmbedding(text: string): Promise<number[]> {
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
+    data: { session },
+  } = await supabase.auth.getSession();
+  if (!session?.user) {
     return new Response(JSON.stringify({ error: "Authentication required" }), {
       status: 401,
     });

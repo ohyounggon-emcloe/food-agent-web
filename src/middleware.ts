@@ -1,38 +1,12 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  // 세션 갱신 — getUser() 단일 호출 (이중 호출 제거)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
-  // 루트에서 code 파라미터가 있으면 /auth/callback으로 전달 (비밀번호 재설정 등)
+  // Supabase 세션 쿠키 존재 여부로 로그인 판단 (네트워크 호출 없음)
+  const hasSession = request.cookies.getAll().some((c) => c.name.startsWith("sb-"));
+
+  // 루트에서 code 파라미터가 있으면 /auth/callback으로 전달
   if (pathname === "/") {
     const code = request.nextUrl.searchParams.get("code");
     if (code) {
@@ -42,17 +16,16 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // /admin/*, /user/* — 비로그인이면 로그인 페이지로
+  // /admin/*, /user/* — 세션 쿠키 없으면 로그인 페이지로
   if (pathname.startsWith("/admin") || pathname.startsWith("/user")) {
-    if (!user) {
+    if (!hasSession) {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/login";
       return NextResponse.redirect(url);
     }
   }
 
-  // /auth/login, /auth/signup — 이미 로그인이면 대시보드로
-  // 단, logout/expired/verified/reset/error 파라미터가 있으면 리다이렉트하지 않음
+  // /auth/login, /auth/signup — 세션 쿠키 있으면 대시보드로
   if (pathname === "/auth/login" || pathname === "/auth/signup") {
     const sp = request.nextUrl.searchParams;
     const bypassRedirect =
@@ -62,14 +35,14 @@ export async function middleware(request: NextRequest) {
       sp.has("reset") ||
       sp.has("error");
 
-    if (user && !bypassRedirect) {
+    if (hasSession && !bypassRedirect) {
       const url = request.nextUrl.clone();
       url.pathname = "/user/dashboard";
       return NextResponse.redirect(url);
     }
   }
 
-  return supabaseResponse;
+  return NextResponse.next();
 }
 
 export const config = {
