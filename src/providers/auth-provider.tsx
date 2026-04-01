@@ -97,13 +97,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const isUpdatePassword = typeof window !== "undefined" &&
-      window.location.pathname === "/auth/update-password";
+    const isAuthPage = typeof window !== "undefined" &&
+      (window.location.pathname.startsWith("/auth/") ||
+       window.location.pathname === "/");
 
     const init = async () => {
-      if (isUpdatePassword) {
+      // 인증 페이지(로그인/회원가입/비밀번호 등)는 즉시 렌더링
+      if (isAuthPage) {
         if (mounted) setLoading(false);
-        return;
+        // 로그인 상태 확인은 비동기로 진행 (화면 차단 없음)
       }
 
       try {
@@ -120,17 +122,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // 3초 안전장치: init이 어떤 이유로든 끝나지 않으면 강제 loading 해제
+    // 1.5초 안전장치: init이 어떤 이유로든 끝나지 않으면 강제 loading 해제
     const safetyTimer = setTimeout(() => {
       if (mounted && loading) {
         console.warn("Auth init timeout - forcing loading=false");
         setLoading(false);
       }
-    }, 3000);
+    }, 1500);
 
     init();
 
-    if (isUpdatePassword) {
+    if (isAuthPage) {
       return () => { mounted = false; clearTimeout(safetyTimer); };
     }
 
