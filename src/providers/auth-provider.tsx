@@ -122,13 +122,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    // 1.5초 안전장치: init이 어떤 이유로든 끝나지 않으면 강제 loading 해제
+    // 5초 안전장치: init이 어떤 이유로든 끝나지 않으면 강제 loading 해제
     const safetyTimer = setTimeout(() => {
       if (mounted && loading) {
         console.warn("Auth init timeout - forcing loading=false");
         setLoading(false);
       }
-    }, 1500);
+    }, 5000);
 
     init();
 

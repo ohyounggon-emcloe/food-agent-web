@@ -6,14 +6,14 @@ import { RoleBadge } from "@/components/role-badge";
 import { Button } from "@/components/ui/button";
 
 export function UserMenu() {
-  const { profile, role, loading, signOut } = useAuth();
+  const { user, profile, role, loading, signOut } = useAuth();
 
-  // 세션 만료 시 자동 로그아웃
+  // 세션 만료 시 자동 로그아웃 (user 확인 후에만)
   useEffect(() => {
-    if (!loading && !profile) {
+    if (!loading && !profile && !user) {
       signOut();
     }
-  }, [loading, profile, signOut]);
+  }, [loading, profile, user, signOut]);
 
   if (loading) {
     return <div className="text-xs text-slate-500">{"..."}</div>;
