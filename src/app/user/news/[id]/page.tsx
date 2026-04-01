@@ -81,9 +81,14 @@ export default function NewsDetailPage() {
     );
   }
 
-  const collectDate = article.created_at
-    ? new Date(article.created_at).toLocaleString("ko-KR")
-    : "-";
+  const formatDate = (d: string | null) => {
+    if (!d) return "-";
+    try {
+      return new Date(d).toLocaleDateString("ko-KR", { year: "numeric", month: "2-digit", day: "2-digit" });
+    } catch { return d; }
+  };
+  const publishDate = formatDate(article.publish_date);
+  const collectDate = formatDate(article.created_at);
 
   return (
     <div className="space-y-6">
@@ -105,12 +110,12 @@ export default function NewsDetailPage() {
       <Card>
         <CardContent className="py-4">
           <div className="flex items-center gap-2 mb-3">
-            <h3 className="text-sm font-bold text-gray-700">출처</h3>
+            <h3 className="text-base font-bold text-gray-800">출처</h3>
           </div>
           <div className="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
             <div>
               <span className="text-xs text-gray-400">공고일</span>
-              <p className="font-medium">{article.publish_date || "-"}</p>
+              <p className="font-medium">{publishDate}</p>
             </div>
             <div>
               <span className="text-xs text-gray-400">수집일</span>
