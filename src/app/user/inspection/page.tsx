@@ -416,10 +416,16 @@ export default function InspectionPage() {
                   <tbody>
                     <tr>
                       <td style={{ border: "1px solid #333", width: "33%", padding: "6px 12px", fontSize: "9pt" }}>
-                        <strong>점검자</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명)
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <strong>점검자</strong>
+                          <span style={{ color: "#999" }}>(서명)</span>
+                        </div>
                       </td>
                       <td style={{ border: "1px solid #333", width: "33%", padding: "6px 12px", fontSize: "9pt" }}>
-                        <strong>확인자</strong> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (서명)
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <strong>확인자</strong>
+                          <span style={{ color: "#999" }}>(서명)</span>
+                        </div>
                       </td>
                       <td style={{ border: "1px solid #333", width: "34%", padding: "6px 12px", fontSize: "9pt" }}>
                         <strong>비고</strong>
@@ -429,15 +435,15 @@ export default function InspectionPage() {
                 </table>
                 {/* 화면용 서명란 */}
                 <div className="flex gap-4 text-sm text-gray-500 border-t pt-3 print:hidden">
-                  <div className="flex-1 flex items-center gap-4 px-3">
+                  <div className="flex-1 flex items-center justify-between px-3">
                     <span className="text-xs font-medium text-gray-400">점검자</span>
-                    <span className="text-gray-300">(서명)</span>
+                    <span className="text-gray-300 text-xs">(서명)</span>
                   </div>
-                  <div className="flex-1 flex items-center gap-4 px-3 border-l">
+                  <div className="flex-1 flex items-center justify-between px-3 border-l">
                     <span className="text-xs font-medium text-gray-400">확인자</span>
-                    <span className="text-gray-300">(서명)</span>
+                    <span className="text-gray-300 text-xs">(서명)</span>
                   </div>
-                  <div className="flex-1 flex items-center gap-4 px-3 border-l">
+                  <div className="flex-1 flex items-center px-3 border-l">
                     <span className="text-xs font-medium text-gray-400">비고</span>
                   </div>
                 </div>
