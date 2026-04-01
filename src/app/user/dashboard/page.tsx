@@ -133,15 +133,11 @@ export default function UserDashboard() {
           <CardContent className="space-y-2">
             {insights.map((ins) => {
               const icon = ins.category === "핵심이슈" ? "🔴" : ins.category === "법규변경" ? "🔵" : "🟡";
-              const bg = ins.category === "핵심이슈" ? "bg-red-50" : ins.category === "법규변경" ? "bg-blue-50" : "bg-amber-50";
               return (
-                <div key={ins.id} className={`${bg} rounded-lg p-3 flex items-start gap-2`}>
-                  <span className="text-sm mt-0.5">{icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">{ins.title}</p>
-                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{ins.content}</p>
-                  </div>
-                </div>
+                <Link key={ins.id} href="/user/insights" className="flex items-center gap-2 py-1 hover:bg-gray-50 rounded px-1">
+                  <span className="text-xs">{icon}</span>
+                  <p className="text-sm text-gray-800 truncate">{ins.title}</p>
+                </Link>
               );
             })}
           </CardContent>
