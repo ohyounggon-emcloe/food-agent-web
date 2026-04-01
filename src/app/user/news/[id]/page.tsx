@@ -138,12 +138,9 @@ export default function NewsDetailPage() {
         </CardContent>
       </Card>
 
-      {/* 위해 정보 섹션 */}
+      {/* 본문 정보 섹션 */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-500">위해 정보</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <table className="w-full text-sm">
             <tbody>
               <tr className="border-b">
