@@ -6,9 +6,9 @@ const pool = new Pool({
   database: process.env.NCLOUD_DB_NAME || "foodagent_db",
   user: process.env.NCLOUD_DB_USER || "foodagent",
   password: process.env.NCLOUD_DB_PASSWORD || "FoodAgent2026",
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 5000,
+  max: 20,
+  idleTimeoutMillis: 60000,
+  connectionTimeoutMillis: 10000,
 });
 
 export async function query<T = Record<string, unknown>>(
@@ -46,7 +46,6 @@ export async function execute(
 }
 
 export function useNcloudDb(): boolean {
-  // Vercel 환경변수 우선, 없으면 기본 true (NCloud DB 사용)
   const envVal = process.env.USE_NCLOUD_DB;
   if (envVal !== undefined) return envVal === "true";
   return true;

@@ -113,7 +113,9 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(data, {
+      headers: { "Cache-Control": "s-maxage=10, stale-while-revalidate=30" },
+    });
   }
 
   // Fallback: existing Supabase code

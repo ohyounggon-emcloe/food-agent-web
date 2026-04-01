@@ -20,6 +20,10 @@ export function UserMenu() {
   }
 
   if (!profile) {
+    if (user) {
+      // profile 로딩 중
+      return <div className="text-xs text-slate-500">{"로딩 중..."}</div>;
+    }
     return null;
   }
 

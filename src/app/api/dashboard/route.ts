@@ -53,6 +53,7 @@ export async function GET() {
         });
       }
 
+      const headers = { "Cache-Control": "s-maxage=30, stale-while-revalidate=60" };
       return NextResponse.json({
         totalArticles: cache.total_articles,
         todayArticles: cache.today_articles,
@@ -73,7 +74,7 @@ export async function GET() {
         },
         cachedAt: cache.updated_at,
         unclassifiedCount: parseInt(unclassified?.count || "0"),
-      });
+      }, { headers });
     }
 
     // Fallback: existing Supabase code

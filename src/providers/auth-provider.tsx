@@ -108,17 +108,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
-        // getSession()은 로컬 토큰 기반이라 빠름
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
+        // loading을 즉시 해제 — profile은 백그라운드로 로드
+        if (mounted) setLoading(false);
         if (currentUser) {
-          await fetchProfile(currentUser);
+          fetchProfile(currentUser);
         }
       } catch (err) {
         console.error("Auth init error:", err);
-      } finally {
         if (mounted) setLoading(false);
       }
     };
@@ -158,7 +158,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const TIMEOUT_MS = 30 * 60 * 1000;
     let timer: ReturnType<typeof setTimeout>;
 
+    let lastReset = 0;
     const resetTimer = () => {
+      const now = Date.now();
+      if (now - lastReset < 5000) return; // 5초에 한 번만
+      lastReset = now;
       clearTimeout(timer);
       timer = setTimeout(() => {
         setUser(null);

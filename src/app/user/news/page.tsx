@@ -109,7 +109,7 @@ function NewsFeed() {
     if (riskValue !== "all") params.set("risk_level", riskValue);
     if (search) params.set("search", search);
     params.set("days", daysValue);
-    params.set("limit", "500");
+    params.set("limit", "50");
     if (sourceTab === "api") params.set("source_type", "api_feed");
 
     const res = await fetch(`/api/news?${params}`);
