@@ -81,7 +81,10 @@ export default function InspectionPage() {
       return;
     }
     setPrintError("");
+    const originalTitle = document.title;
+    document.title = `${shopName.trim()}_${inspectionDate}`;
     window.print();
+    document.title = originalTitle;
   };
 
   // 점검기준별 그룹핑
