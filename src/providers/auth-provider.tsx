@@ -112,10 +112,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        // loading을 즉시 해제 — profile은 백그라운드로 로드
         if (mounted) setLoading(false);
         if (currentUser) {
-          fetchProfile(currentUser);
+          await fetchProfile(currentUser);
         }
       } catch (err) {
         console.error("Auth init error:", err);
