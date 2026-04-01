@@ -52,7 +52,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
@@ -118,6 +118,26 @@ export default function DashboardPage() {
                   <span className="text-sm text-gray-400">없음</span>
                 )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className={data.unclassifiedCount > 0 ? "border-amber-200 bg-amber-50/30" : ""}>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium text-gray-500">
+              미분류 게시글
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className={`text-3xl font-bold ${data.unclassifiedCount > 0 ? "text-amber-600" : "text-gray-400"}`}>
+              {data.unclassifiedCount || 0}
+            </div>
+            {data.unclassifiedCount > 0 && (
+              <Link href="/admin/review?filter=미분류">
+                <p className="text-xs text-amber-600 mt-1 hover:underline">
+                  검토하기 →
+                </p>
+              </Link>
+            )}
           </CardContent>
         </Card>
       </div>

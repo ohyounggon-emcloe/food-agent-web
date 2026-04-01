@@ -46,6 +46,7 @@ export default function ReviewPage() {
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
@@ -81,6 +82,41 @@ export default function ReviewPage() {
       setTotal((prev) => prev - 1);
     } else {
       toast.error("변경 실패");
+    }
+  };
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === articles.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(articles.map((a) => a.id)));
+    }
+  };
+
+  const handleBulkReclassify = async (risk_level: string) => {
+    if (selectedIds.size === 0) return;
+    const ids = Array.from(selectedIds);
+    const res = await fetch("/api/review", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids, risk_level }),
+    });
+    if (res.ok) {
+      toast.success(`${ids.length}건 → ${risk_level}로 변경`);
+      setArticles((prev) => prev.filter((a) => !selectedIds.has(a.id)));
+      setTotal((prev) => prev - ids.length);
+      setSelectedIds(new Set());
+    } else {
+      toast.error("일괄 변경 실패");
     }
   };
 
@@ -146,6 +182,32 @@ export default function ReviewPage() {
           </Button>
         </div>
       </div>
+
+      {/* 일괄 분류 바 */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2">
+          <span className="text-sm font-medium text-teal-700">
+            {selectedIds.size}건 선택
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="text-xs text-gray-500">일괄 변경:</span>
+          {RISK_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => handleBulkReclassify(opt.value)}
+              className={`px-3 py-1 text-xs rounded font-medium ${opt.color} hover:opacity-80`}
+            >
+              {opt.value === "해당없음" ? "제외" : opt.value}
+            </button>
+          ))}
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="ml-auto text-xs text-gray-400 hover:text-gray-600"
+          >
+            선택 해제
+          </button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-400">
@@ -222,10 +284,27 @@ export default function ReviewPage() {
       </div>
 
       <div className="space-y-3">
+        {articles.length > 0 && (
+          <div className="flex items-center gap-2 px-1">
+            <input
+              type="checkbox"
+              checked={selectedIds.size === articles.length && articles.length > 0}
+              onChange={toggleSelectAll}
+              className="w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 cursor-pointer"
+            />
+            <span className="text-xs text-gray-400">전체 선택</span>
+          </div>
+        )}
         {articles.map((article) => (
-          <Card key={article.id} className="py-0">
+          <Card key={article.id} className={`py-0 ${selectedIds.has(article.id) ? "ring-2 ring-teal-300 bg-teal-50/30" : ""}`}>
             <CardContent className="py-4">
               <div className="flex items-start gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.has(article.id)}
+                  onChange={() => toggleSelect(article.id)}
+                  className="mt-1 w-4 h-4 rounded border-gray-300 text-teal-600 focus:ring-teal-500 shrink-0 cursor-pointer"
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <Badge variant="outline" className="text-xs shrink-0">

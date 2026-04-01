@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     if (useNcloudDb()) {
-      const [cache, agentStats] = await Promise.all([
+      const [cache, agentStats, unclassified] = await Promise.all([
         queryOne<{
           total_articles: number;
           today_articles: number;
@@ -36,6 +36,9 @@ export async function GET() {
           updated_at: string;
         }>("SELECT * FROM dashboard_cache WHERE id = 1"),
         query("SELECT * FROM meta_monitor"),
+        queryOne<{ count: string }>(
+          "SELECT count(*) FROM collected_info WHERE risk_level IS NULL OR risk_level IN ('미분류', '')"
+        ),
       ]);
 
       if (!cache) {
@@ -69,6 +72,7 @@ export async function GET() {
           keywords: cache.pending_keywords,
         },
         cachedAt: cache.updated_at,
+        unclassifiedCount: parseInt(unclassified?.count || "0"),
       });
     }
 

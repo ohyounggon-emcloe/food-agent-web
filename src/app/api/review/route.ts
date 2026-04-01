@@ -110,7 +110,26 @@ export async function PATCH(request: NextRequest) {
   if (isAuthError(authResult)) return authResult;
 
   const body = await request.json();
-  const { id, risk_level, action } = body;
+  const { id, ids, risk_level, action } = body;
+
+  // 일괄 변경 (ids 배열)
+  if (ids && Array.isArray(ids) && ids.length > 0 && risk_level) {
+    if (useNcloudDb()) {
+      const placeholders = ids.map((_: number, i: number) => `$${i + 2}`).join(",");
+      await execute(
+        `UPDATE collected_info SET risk_level = $1 WHERE id IN (${placeholders})`,
+        [risk_level, ...ids]
+      );
+      return NextResponse.json({ success: true, action: "bulk_updated", count: ids.length });
+    }
+
+    const { error } = await supabase
+      .from("collected_info")
+      .update({ risk_level })
+      .in("id", ids);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ success: true, action: "bulk_updated", count: ids.length });
+  }
 
   if (!id) {
     return NextResponse.json({ error: "id is required" }, { status: 400 });
