@@ -18,6 +18,16 @@ interface Insight {
   affected_industries: string[];
   action_items: string[] | { [key: string]: string }[];
   source_article_ids: number[];
+  severity: string | null;
+  risk_score: number | null;
+  estimated_cost: number | null;
+  related_law: string | null;
+  penalty_amount: string | null;
+  efficiency_tip: string | null;
+  logic: string | null;
+  confidence: number | null;
+  feedback_helpful: number;
+  feedback_not_helpful: number;
   created_at: string;
 }
 
@@ -184,20 +194,88 @@ export default function InsightsPage() {
                             </ul>
                           </div>
                         )}
-                        {ins.source_article_ids?.length > 0 && (
-                          <div className="mt-2 flex flex-wrap gap-1.5">
-                            <span className="text-xs text-gray-400">근거 뉴스:</span>
-                            {ins.source_article_ids.map((aid) => (
-                              <a
-                                key={aid}
-                                href={`/user/news/${aid}`}
-                                className="text-xs text-blue-500 hover:underline"
-                              >
-                                #{aid}
-                              </a>
-                            ))}
+                        {/* 리스크 점수 + 과태료 + 법령 */}
+                        {(ins.risk_score || ins.estimated_cost || ins.related_law) && (
+                          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                            {ins.risk_score && (
+                              <div className="bg-white/60 rounded p-2 text-center">
+                                <div className="text-gray-400">리스크 점수</div>
+                                <div className={`text-lg font-bold ${ins.risk_score >= 7 ? "text-red-600" : ins.risk_score >= 4 ? "text-amber-600" : "text-green-600"}`}>
+                                  {ins.risk_score}/10
+                                </div>
+                              </div>
+                            )}
+                            {ins.estimated_cost && (
+                              <div className="bg-white/60 rounded p-2 text-center">
+                                <div className="text-gray-400">예상 손실</div>
+                                <div className="text-lg font-bold text-red-600">
+                                  {ins.estimated_cost >= 10000
+                                    ? `${(ins.estimated_cost / 10000).toFixed(0)}억원`
+                                    : `${ins.estimated_cost}만원`}
+                                </div>
+                              </div>
+                            )}
+                            {ins.penalty_amount && (
+                              <div className="bg-white/60 rounded p-2 text-center">
+                                <div className="text-gray-400">예상 처분</div>
+                                <div className="text-sm font-semibold text-gray-700">{ins.penalty_amount}</div>
+                              </div>
+                            )}
                           </div>
                         )}
+
+                        {ins.efficiency_tip && (
+                          <div className="mt-2 bg-emerald-50 border border-emerald-200 rounded p-2 text-xs text-emerald-700">
+                            💡 {ins.efficiency_tip}
+                          </div>
+                        )}
+
+                        {ins.logic && (
+                          <details className="mt-2">
+                            <summary className="text-xs text-gray-400 cursor-pointer hover:text-gray-600">
+                              AI 추론 근거 보기
+                            </summary>
+                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+                              {ins.logic}
+                            </p>
+                          </details>
+                        )}
+
+                        {/* 근거 뉴스 + 피드백 */}
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="flex flex-wrap gap-1.5">
+                            {ins.source_article_ids?.length > 0 && (
+                              <>
+                                <span className="text-xs text-gray-400">근거:</span>
+                                {ins.source_article_ids.map((aid) => (
+                                  <a key={aid} href={`/user/news/${aid}`} className="text-xs text-blue-500 hover:underline">#{aid}</a>
+                                ))}
+                              </>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => fetch("/api/insights/feedback", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ insightId: ins.id, helpful: true }),
+                              })}
+                              className="text-xs text-gray-400 hover:text-green-600 transition-colors"
+                            >
+                              👍 도움됨{ins.feedback_helpful > 0 ? ` (${ins.feedback_helpful})` : ""}
+                            </button>
+                            <button
+                              onClick={() => fetch("/api/insights/feedback", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ insightId: ins.id, helpful: false }),
+                              })}
+                              className="text-xs text-gray-400 hover:text-red-600 transition-colors"
+                            >
+                              👎 도움안됨{ins.feedback_not_helpful > 0 ? ` (${ins.feedback_not_helpful})` : ""}
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>

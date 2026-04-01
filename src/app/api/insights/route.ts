@@ -19,7 +19,10 @@ export async function GET(request: NextRequest) {
     try {
       let sql = `
         SELECT id, insight_date, category, title, content,
-               affected_industries, action_items, source_article_ids, created_at
+               affected_industries, action_items, source_article_ids,
+               severity, risk_score, estimated_cost, related_law,
+               penalty_amount, efficiency_tip, logic, confidence,
+               feedback_helpful, feedback_not_helpful, created_at
         FROM daily_insights
         WHERE insight_date >= CURRENT_DATE - $1::integer
       `;
