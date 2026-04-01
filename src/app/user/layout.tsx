@@ -84,6 +84,15 @@ export default function UserLayout({
       {/* 모바일 헤더 */}
       <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 md:hidden">
         <MobileMenu navItems={navItems} role={role}>
+          {["admin", "super_admin"].includes(role) && (
+            <Link
+              href="/admin/dashboard"
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-emerald-400 hover:bg-slate-800 mb-2"
+            >
+              <span>{"⚙️"}</span>
+              <span>{"관리자 페이지"}</span>
+            </Link>
+          )}
           <UserMenu />
         </MobileMenu>
         <h1 className="text-lg font-bold">
