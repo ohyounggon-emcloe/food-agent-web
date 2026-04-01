@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
     const params: unknown[] = [cutoffStr];
     let paramIdx = 2;
 
+    // API 수집 데이터(제품 검사 결과 등)는 뉴스에서 제외
+    conditions.push("(source_type IS NULL OR source_type != 'api_feed')");
+
     if (riskLevel && riskLevel !== "all") {
       conditions.push(`risk_level = $${paramIdx}`);
       params.push(riskLevel);
@@ -117,6 +120,9 @@ export async function GET(request: NextRequest) {
     .order("risk_level", { ascending: true })
     .order("publish_date", { ascending: false })
     .limit(limit);
+
+  // API 수집 데이터 제외
+  q = q.or("source_type.is.null,source_type.neq.api_feed");
 
   if (riskLevel && riskLevel !== "all") {
     q = q.eq("risk_level", riskLevel);
