@@ -105,47 +105,36 @@ export default function NewsDetailPage() {
 
       {/* 출처 섹션 */}
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-500">출처</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <table className="w-full text-sm">
-            <tbody>
-              <tr className="border-b">
-                <td className="py-2 pr-4 font-medium text-gray-500 w-24">공고일</td>
-                <td className="py-2">{article.publish_date || "-"}</td>
-                <td className="py-2 pr-4 font-medium text-gray-500 w-24">수집일</td>
-                <td className="py-2">{collectDate}</td>
-              </tr>
-              <tr className="border-b">
-                <td className="py-2 pr-4 font-medium text-gray-500">출처기관</td>
-                <td className="py-2">{article.site_name}</td>
-                <td className="py-2 pr-4 font-medium text-gray-500">게시판</td>
-                <td className="py-2">{article.board_name || "-"}</td>
-              </tr>
-              <tr>
-                <td className="py-2 pr-4 font-medium text-gray-500">수집정보</td>
-                <td className="py-2" colSpan={3}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-400 truncate max-w-md">
-                      {article.url}
-                    </span>
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="shrink-0"
-                    >
-                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1">
-                        <ExternalLink className="w-3 h-3" />
-                        바로가기
-                      </Button>
-                    </a>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+        <CardContent className="py-4">
+          <div className="flex items-center gap-2 mb-3">
+            <h3 className="text-sm font-bold text-gray-700">출처</h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-sm">
+            <div>
+              <span className="text-xs text-gray-400">공고일</span>
+              <p className="font-medium">{article.publish_date || "-"}</p>
+            </div>
+            <div>
+              <span className="text-xs text-gray-400">수집일</span>
+              <p className="font-medium">{collectDate}</p>
+            </div>
+            <div>
+              <span className="text-xs text-gray-400">출처기관</span>
+              <p className="font-medium">{article.site_name}</p>
+            </div>
+            <div>
+              <span className="text-xs text-gray-400">수집정보</span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400 truncate max-w-[200px]">{article.url}</span>
+                <a href={article.url} target="_blank" rel="noreferrer">
+                  <Button size="sm" variant="outline" className="h-6 text-xs gap-1 px-2">
+                    <ExternalLink className="w-3 h-3" />
+                    바로가기
+                  </Button>
+                </a>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
