@@ -152,7 +152,7 @@ export default function AdminInspectionPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
-              <Select value={addForm.category} onValueChange={(v) => setAddForm({ ...addForm, category: v })}>
+              <Select value={addForm.category} onValueChange={(v: string) => setAddForm({ ...addForm, category: v })}>
                 <SelectTrigger><span>{addForm.category}</span></SelectTrigger>
                 <SelectContent>
                   {allCategories.map((c) => (
@@ -160,7 +160,7 @@ export default function AdminInspectionPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={addForm.criteria} onValueChange={(v) => setAddForm({ ...addForm, criteria: v })}>
+              <Select value={addForm.criteria} onValueChange={(v: string) => setAddForm({ ...addForm, criteria: v })}>
                 <SelectTrigger><span>{addForm.criteria}</span></SelectTrigger>
                 <SelectContent>
                   {CRITERIA_OPTIONS.map((c) => (
@@ -168,7 +168,7 @@ export default function AdminInspectionPage() {
                   ))}
                 </SelectContent>
               </Select>
-              <Select value={addForm.method} onValueChange={(v) => setAddForm({ ...addForm, method: v })}>
+              <Select value={addForm.method} onValueChange={(v: string) => setAddForm({ ...addForm, method: v })}>
                 <SelectTrigger><span>{addForm.method}</span></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="O/X">O/X</SelectItem>
@@ -219,7 +219,7 @@ export default function AdminInspectionPage() {
                     {editingId === item.id ? (
                       <>
                         <td className="px-3 py-2">
-                          <Select value={editForm.category} onValueChange={(v) => setEditForm({ ...editForm, category: v })}>
+                          <Select value={editForm.category} onValueChange={(v: string) => setEditForm({ ...editForm, category: v })}>
                             <SelectTrigger className="h-8 text-xs"><span>{editForm.category}</span></SelectTrigger>
                             <SelectContent>
                               {allCategories.map((c) => (
@@ -229,7 +229,7 @@ export default function AdminInspectionPage() {
                           </Select>
                         </td>
                         <td className="px-3 py-2">
-                          <Select value={editForm.criteria} onValueChange={(v) => setEditForm({ ...editForm, criteria: v })}>
+                          <Select value={editForm.criteria} onValueChange={(v: string) => setEditForm({ ...editForm, criteria: v })}>
                             <SelectTrigger className="h-8 text-xs"><span>{editForm.criteria}</span></SelectTrigger>
                             <SelectContent>
                               {CRITERIA_OPTIONS.map((c) => (
@@ -239,7 +239,7 @@ export default function AdminInspectionPage() {
                           </Select>
                         </td>
                         <td className="px-3 py-2">
-                          <Select value={editForm.method} onValueChange={(v) => setEditForm({ ...editForm, method: v })}>
+                          <Select value={editForm.method} onValueChange={(v: string) => setEditForm({ ...editForm, method: v })}>
                             <SelectTrigger className="h-8 text-xs"><span>{editForm.method}</span></SelectTrigger>
                             <SelectContent>
                               <SelectItem value="O/X">O/X</SelectItem>
