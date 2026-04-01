@@ -10,6 +10,7 @@ const VALID_AGENTS = [
   "reclassifier",
   "discovery",
   "reporting",
+  "insight",
   "orchestrate",
   "site_recommender",
   "keyword_recommender",

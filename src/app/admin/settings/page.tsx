@@ -38,6 +38,7 @@ const AGENTS = [
   { id: "self_improvement", label: "자동 개선", desc: "안전 범위 내 자동 개선" },
   { id: "embeddings", label: "임베딩", desc: "검색용 벡터 임베딩 생성" },
   { id: "reporting", label: "보고서", desc: "일일 보고서 생성" },
+  { id: "insight", label: "인사이트", desc: "일일 실무 인사이트 생성" },
 ];
 
 export default function SettingsPage() {
