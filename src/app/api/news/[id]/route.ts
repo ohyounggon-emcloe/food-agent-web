@@ -22,7 +22,7 @@ export async function GET(
       const article = await queryOne(
         `SELECT id, title, url, site_name, publish_date, risk_level,
                 summary, content, region, source_type,
-                has_attachments, created_at
+                has_attachments, matched_keywords, created_at
          FROM collected_info WHERE id = $1`,
         [numId]
       );

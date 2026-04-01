@@ -19,11 +19,9 @@ interface ArticleDetail {
   summary: string | null;
   content: string | null;
   region: string | null;
-  industry_tags: string[] | null;
   source_type: string | null;
   has_attachments: boolean;
-  attachment_names: string[] | null;
-  image_urls: string[] | null;
+  matched_keywords: string[] | null;
   created_at: string;
 }
 
@@ -109,7 +107,7 @@ export default function NewsDetailPage() {
           <div className="flex items-center gap-2 mb-3">
             <h3 className="text-sm font-bold text-gray-700">출처</h3>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-y-2 gap-x-4 text-sm">
+          <div className="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
             <div>
               <span className="text-xs text-gray-400">공고일</span>
               <p className="font-medium">{article.publish_date || "-"}</p>
@@ -121,18 +119,6 @@ export default function NewsDetailPage() {
             <div>
               <span className="text-xs text-gray-400">출처기관</span>
               <p className="font-medium">{article.site_name}</p>
-            </div>
-            <div>
-              <span className="text-xs text-gray-400">수집정보</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-400 truncate max-w-[200px]">{article.url}</span>
-                <a href={article.url} target="_blank" rel="noreferrer">
-                  <Button size="sm" variant="outline" className="h-6 text-xs gap-1 px-2">
-                    <ExternalLink className="w-3 h-3" />
-                    바로가기
-                  </Button>
-                </a>
-              </div>
             </div>
           </div>
         </CardContent>
@@ -154,9 +140,9 @@ export default function NewsDetailPage() {
                 </td>
                 <td className="py-2 pr-4 font-medium text-gray-500 w-20">키워드</td>
                 <td className="py-2">
-                  {article.industry_tags && article.industry_tags.length > 0 ? (
+                  {article.matched_keywords && article.matched_keywords.length > 0 ? (
                     <div className="flex flex-wrap gap-1">
-                      {article.industry_tags.map((tag, i) => (
+                      {article.matched_keywords.map((tag, i) => (
                         <Badge key={i} variant="secondary" className="text-xs">
                           {tag}
                         </Badge>
