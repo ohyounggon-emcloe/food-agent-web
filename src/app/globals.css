@@ -173,6 +173,14 @@
   }
 }
 
+/* Leaflet 지도 z-index 제한 (모바일 메뉴 아래로) */
+.leaflet-container {
+  z-index: 1 !important;
+}
+.leaflet-pane, .leaflet-control {
+  z-index: 1 !important;
+}
+
 /* 모바일 반응형 */
 @media (max-width: 768px) {
   [data-slot="card"] {

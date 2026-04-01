@@ -26,7 +26,7 @@ export function MobileMenuButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="md:hidden p-2 rounded-lg hover:bg-slate-800 transition-colors"
+      className="lg:hidden p-2 rounded-lg hover:bg-slate-800 transition-colors"
       aria-label="메뉴 열기"
     >
       <Menu className="w-6 h-6 text-white" />
@@ -66,7 +66,7 @@ export function MobileMenu({
       {/* 햄버거 버튼 */}
       <button
         onClick={() => setIsOpen(true)}
-        className="md:hidden p-2 rounded-lg hover:bg-slate-800 transition-colors"
+        className="lg:hidden p-2 rounded-lg hover:bg-slate-800 transition-colors"
         aria-label="메뉴 열기"
       >
         <Menu className="w-6 h-6 text-white" />
@@ -75,7 +75,7 @@ export function MobileMenu({
       {/* 오버레이 */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-[100] md:hidden"
+          className="fixed inset-0 bg-black/50 z-[100] lg:hidden"
           onClick={() => setIsOpen(false)}
         />
       )}
@@ -83,7 +83,7 @@ export function MobileMenu({
       {/* 슬라이드 메뉴 */}
       <aside
         className={cn(
-          "fixed top-0 left-0 h-full w-72 bg-slate-900 z-[101] transform transition-transform duration-300 ease-in-out md:hidden flex flex-col",
+          "fixed top-0 left-0 h-full w-72 bg-slate-900 z-[101] transform transition-transform duration-300 ease-in-out lg:hidden flex flex-col",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >

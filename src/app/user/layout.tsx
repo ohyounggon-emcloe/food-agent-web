@@ -43,7 +43,7 @@ export default function UserLayout({
     return (
       <div className="flex h-screen">
         {/* 사이드바 스켈레톤 */}
-        <aside className="hidden md:flex w-56 flex-col bg-slate-900 p-4">
+        <aside className="hidden lg:flex w-56 flex-col bg-slate-900 p-4">
           <div className="h-8 w-24 bg-slate-700 rounded animate-pulse mb-6" />
           <div className="space-y-3">
             {Array.from({ length: 7 }).map((_, i) => (
@@ -82,7 +82,7 @@ export default function UserLayout({
   return (
     <div className="flex h-screen">
       {/* 모바일 헤더 */}
-      <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 md:hidden">
+      <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 lg:hidden">
         <MobileMenu navItems={navItems} role={role}>
           {["admin", "super_admin"].includes(role) && (
             <Link
@@ -103,7 +103,7 @@ export default function UserLayout({
       </div>
 
       {/* 데스크톱 사이드바 */}
-      <aside className="hidden md:flex w-64 border-r border-slate-800 bg-slate-900 flex-col">
+      <aside className="hidden lg:flex w-64 border-r border-slate-800 bg-slate-900 flex-col">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-extrabold tracking-tight">
@@ -164,8 +164,8 @@ export default function UserLayout({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto bg-slate-50 pt-14 md:pt-0">
-        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">{children}</div>
+      <main className="flex-1 overflow-auto bg-slate-50 pt-14 lg:pt-0">
+        <div className="max-w-6xl mx-auto p-4 lg:p-8">{children}</div>
         <FloatingChat />
       </main>
     </div>
