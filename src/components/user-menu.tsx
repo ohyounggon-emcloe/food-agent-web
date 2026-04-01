@@ -15,15 +15,17 @@ export function UserMenu() {
     }
   }, [loading, profile, user, signOut]);
 
-  if (loading) {
-    return <div className="text-xs text-slate-500">{"..."}</div>;
+  if (loading || (!profile && user)) {
+    return (
+      <div className="space-y-2 animate-pulse">
+        <div className="h-5 w-24 bg-slate-700 rounded" />
+        <div className="h-3 w-32 bg-slate-800 rounded" />
+        <div className="h-8 w-full bg-slate-800 rounded" />
+      </div>
+    );
   }
 
   if (!profile) {
-    if (user) {
-      // profile 로딩 중
-      return <div className="text-xs text-slate-500">{"로딩 중..."}</div>;
-    }
     return null;
   }
 

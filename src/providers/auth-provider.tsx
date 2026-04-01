@@ -108,13 +108,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        // getSession으로 빠르게 토큰 확인
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
-        if (mounted) setLoading(false);
+
         if (currentUser) {
+          // profile 로드 후 loading 해제
           await fetchProfile(currentUser);
+          if (mounted) setLoading(false);
+        } else {
+          if (mounted) setLoading(false);
         }
       } catch (err) {
         console.error("Auth init error:", err);
