@@ -83,8 +83,12 @@ export default function InspectionPage() {
     setPrintError("");
     const originalTitle = document.title;
     document.title = `${shopName.trim()}_${inspectionDate}`;
-    window.print();
-    document.title = originalTitle;
+    setTimeout(() => {
+      window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 1000);
+    }, 100);
   };
 
   // 점검기준별 그룹핑
