@@ -18,6 +18,7 @@ export interface Keyword {
   keyword: string;
   risk_level: string | null;
   action_guide: string | null;
+  is_food_specific: boolean;
   created_at: string;
 }
 

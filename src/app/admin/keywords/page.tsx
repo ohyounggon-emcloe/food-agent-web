@@ -174,6 +174,7 @@ export default function KeywordsPage() {
                 <SortableHead sortKey={sortKey} sortAsc={sortAsc} column="id" label="ID" onClick={handleSort} className="w-12" />
                 <SortableHead sortKey={sortKey} sortAsc={sortAsc} column="keyword" label="키워드" onClick={handleSort} />
                 <SortableHead sortKey={sortKey} sortAsc={sortAsc} column="risk_level" label="위험등급" onClick={handleSort} />
+                <TableHead>{"식품전용"}</TableHead>
                 <TableHead>{"대응 가이드"}</TableHead>
                 <TableHead className="w-24">{"액션"}</TableHead>
               </TableRow>
@@ -193,6 +194,11 @@ export default function KeywordsPage() {
                       RISK_BADGE[kw.risk_level || ""]?.color || "bg-gray-100 text-gray-600"
                     )}>
                       {kw.risk_level || "-"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${kw.is_food_specific ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
+                      {kw.is_food_specific ? "Y" : "N"}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm text-gray-600 max-w-xs truncate">

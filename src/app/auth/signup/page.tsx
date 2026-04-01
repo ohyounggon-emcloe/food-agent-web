@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
@@ -8,15 +8,45 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
+interface RegionItem { id: number; sido: string; }
+interface IndustryItem { id: number; category: string; sub_type: string; }
+
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
+  const [regions, setRegions] = useState<RegionItem[]>([]);
+  const [industries, setIndustries] = useState<IndustryItem[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  useEffect(() => {
+    fetch("/api/regions").then(r => r.json()).then(data => {
+      const sidos = [...new Set((data || []).map((r: RegionItem) => r.sido))];
+      setRegions(sidos.map((s, i) => ({ id: i, sido: s as string })));
+    }).catch(() => {});
+    fetch("/api/industries").then(r => r.json()).then(data => {
+      const cats = [...new Set((data || []).map((i: IndustryItem) => i.category))];
+      setIndustries(cats.map((c, i) => ({ id: i, category: c as string, sub_type: "" })));
+    }).catch(() => {});
+  }, []);
+
+  const toggleRegion = (sido: string) => {
+    setSelectedRegions(prev =>
+      prev.includes(sido) ? prev.filter(r => r !== sido) : [...prev, sido]
+    );
+  };
+
+  const toggleIndustry = (cat: string) => {
+    setSelectedIndustries(prev =>
+      prev.includes(cat) ? prev.filter(i => i !== cat) : [...prev, cat]
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +68,11 @@ export default function SignupPage() {
       email,
       password,
       options: {
-        data: { nickname },
+        data: {
+          nickname,
+          preferred_regions: selectedRegions.map(s => ({ sido: s })),
+          preferred_industries: selectedIndustries.map(c => ({ category: c })),
+        },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -57,7 +91,7 @@ export default function SignupPage() {
   };
 
   return (
-    <Card>
+    <Card className="max-w-lg mx-auto">
       <CardHeader>
         <CardTitle className="text-center">{"회원가입"}</CardTitle>
       </CardHeader>
@@ -106,6 +140,49 @@ export default function SignupPage() {
               required
             />
           </div>
+
+          {/* 관심 지역 선택 */}
+          <div>
+            <label className="text-sm font-medium block mb-2">{"관심 지역 (선택)"}</label>
+            <div className="flex flex-wrap gap-1.5">
+              {regions.map(r => (
+                <button
+                  key={r.sido}
+                  type="button"
+                  onClick={() => toggleRegion(r.sido)}
+                  className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                    selectedRegions.includes(r.sido)
+                      ? "bg-green-600 text-white border-green-600"
+                      : "bg-white text-gray-600 border-gray-300 hover:border-green-400"
+                  }`}
+                >
+                  {r.sido}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* 관심 업태 선택 */}
+          <div>
+            <label className="text-sm font-medium block mb-2">{"관심 업태 (선택)"}</label>
+            <div className="flex flex-wrap gap-1.5">
+              {industries.map(i => (
+                <button
+                  key={i.category}
+                  type="button"
+                  onClick={() => toggleIndustry(i.category)}
+                  className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                    selectedIndustries.includes(i.category)
+                      ? "bg-blue-600 text-white border-blue-600"
+                      : "bg-white text-gray-600 border-gray-300 hover:border-blue-400"
+                  }`}
+                >
+                  {i.category}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? "가입 중..." : "회원가입"}
           </Button>

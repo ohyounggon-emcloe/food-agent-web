@@ -76,6 +76,13 @@ export default function NewsPage() {
   );
 }
 
+const REGIONS = [
+  "전국", "서울특별시", "부산광역시", "대구광역시", "인천광역시",
+  "광주광역시", "대전광역시", "울산광역시", "세종특별자치시",
+  "경기도", "강원도", "충청북도", "충청남도", "전라북도",
+  "전라남도", "경상북도", "경상남도", "제주특별자치도",
+];
+
 function NewsFeed() {
   const searchParams = useSearchParams();
   const [articles, setArticles] = useState<Article[]>([]);
@@ -86,6 +93,7 @@ function NewsFeed() {
     searchParams.get("risk_level") || "전체"
   );
   const [daysFilter, setDaysFilter] = useState("3일");
+  const [regionFilter, setRegionFilter] = useState("전국");
 
   const RISK_VALUE_MAP: Record<string, string> = {
     "전체": "all",
@@ -108,6 +116,7 @@ function NewsFeed() {
     const daysValue = DAYS_VALUE_MAP[daysFilter] || "3";
     if (riskValue !== "all") params.set("risk_level", riskValue);
     if (search) params.set("search", search);
+    if (regionFilter && regionFilter !== "전국") params.set("region", regionFilter);
     params.set("days", daysValue);
     params.set("limit", "50");
     if (sourceTab === "api") params.set("source_type", "api_feed");
@@ -117,7 +126,7 @@ function NewsFeed() {
     setArticles(Array.isArray(data) ? data : []);
     setLoading(false);
     setCurrentPage(1);
-  }, [riskFilter, search, daysFilter, sourceTab]);
+  }, [riskFilter, search, daysFilter, sourceTab, regionFilter]);
 
   useEffect(() => {
     fetchNews();
@@ -177,12 +186,12 @@ function NewsFeed() {
         </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-2 md:gap-3 flex-wrap">
         <Input
           placeholder="제목 또는 기관명 검색..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="max-w-xs"
+          className="w-full md:max-w-xs"
         />
         <Select value={riskFilter} onValueChange={(v) => setRiskFilter(v || "전체")}>
           <SelectTrigger className="w-40">
@@ -204,6 +213,16 @@ function NewsFeed() {
             <SelectItem value="3일">3일</SelectItem>
             <SelectItem value="7일">7일</SelectItem>
             <SelectItem value="30일">30일</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={regionFilter} onValueChange={(v) => setRegionFilter(v || "전국")}>
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="지역" />
+          </SelectTrigger>
+          <SelectContent>
+            {REGIONS.map(r => (
+              <SelectItem key={r} value={r}>{r}</SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
