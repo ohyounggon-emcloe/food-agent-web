@@ -82,13 +82,24 @@ export default function InspectionPage() {
     }
     setPrintError("");
     const originalTitle = document.title;
-    document.title = `${shopName.trim()}_${inspectionDate}`;
-    setTimeout(() => {
-      window.print();
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 1000);
-    }, 100);
+    const newTitle = `${shopName.trim()}_${inspectionDate}`;
+
+    // title 태그 직접 변경
+    document.title = newTitle;
+    const titleEl = document.querySelector("title");
+    if (titleEl) titleEl.textContent = newTitle;
+
+    // head의 meta title도 변경
+    const metaTitle = document.querySelector('meta[property="og:title"]');
+    if (metaTitle) metaTitle.setAttribute("content", newTitle);
+
+    window.addEventListener("afterprint", function restore() {
+      document.title = originalTitle;
+      if (titleEl) titleEl.textContent = originalTitle;
+      window.removeEventListener("afterprint", restore);
+    });
+
+    window.print();
   };
 
   // 점검기준별 그룹핑
