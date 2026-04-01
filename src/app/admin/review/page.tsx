@@ -78,8 +78,7 @@ export default function ReviewPage() {
 
     if (res.ok) {
       toast.success(`ID ${id}: ${risk_level}로 변경`);
-      setArticles((prev) => prev.filter((a) => a.id !== id));
-      setTotal((prev) => prev - 1);
+      fetchArticles();
     } else {
       toast.error("변경 실패");
     }
@@ -112,9 +111,8 @@ export default function ReviewPage() {
     });
     if (res.ok) {
       toast.success(`${ids.length}건 → ${risk_level}로 변경`);
-      setArticles((prev) => prev.filter((a) => !selectedIds.has(a.id)));
-      setTotal((prev) => prev - ids.length);
       setSelectedIds(new Set());
+      fetchArticles();
     } else {
       toast.error("일괄 변경 실패");
     }
@@ -131,8 +129,7 @@ export default function ReviewPage() {
 
     if (res.ok) {
       toast.success("삭제 완료");
-      setArticles((prev) => prev.filter((a) => a.id !== id));
-      setTotal((prev) => prev - 1);
+      fetchArticles();
     } else {
       toast.error("삭제 실패");
     }
