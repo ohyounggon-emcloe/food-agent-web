@@ -95,7 +95,7 @@ export default function InsightsPage() {
       <div className="flex gap-3">
         <Select value={category} onValueChange={(v) => setCategory(v || "all")}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="카테고리" />
+            <SelectValue>{category === "all" ? "전체" : category === "핵심이슈" ? "핵심 이슈" : category === "업종체크" ? "업종 체크" : "법규 변경"}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">전체</SelectItem>
@@ -106,7 +106,7 @@ export default function InsightsPage() {
         </Select>
         <Select value={days} onValueChange={(v) => setDays(v || "7")}>
           <SelectTrigger className="w-28">
-            <SelectValue />
+            <SelectValue>{days === "1" ? "오늘" : `${days}일`}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="1">오늘</SelectItem>
