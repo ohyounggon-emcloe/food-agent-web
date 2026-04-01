@@ -27,6 +27,9 @@ export default function UserDashboard() {
   const [recentNews, setRecentNews] = useState<
     { id: number; title: string; risk_level: string; site_name: string; publish_date: string; url: string }[]
   >([]);
+  const [insights, setInsights] = useState<
+    { id: number; category: string; title: string; content: string; created_at: string }[]
+  >([]);
 
   const [error, setError] = useState(false);
 
@@ -42,6 +45,10 @@ export default function UserDashboard() {
         if (!r.ok) return [];
         return r.json();
       }).then((d) => setRecentNews(Array.isArray(d) ? d : [])),
+      fetch("/api/insights?days=3").then((r) => {
+        if (!r.ok) return [];
+        return r.json();
+      }).then((d) => setInsights(Array.isArray(d) ? d.slice(0, 5) : [])),
     ])
       .catch((err) => {
         console.error("Dashboard load error:", err);
@@ -111,6 +118,35 @@ export default function UserDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* AI 식품 인사이트 요약 */}
+      {insights.length > 0 && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>{"AI 식품 인사이트"}</span>
+              <Link href="/user/insights" className="text-xs text-teal-600 hover:underline font-normal">
+                {"전체 보기 →"}
+              </Link>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {insights.map((ins) => {
+              const icon = ins.category === "핵심이슈" ? "🔴" : ins.category === "법규변경" ? "🔵" : "🟡";
+              const bg = ins.category === "핵심이슈" ? "bg-red-50" : ins.category === "법규변경" ? "bg-blue-50" : "bg-amber-50";
+              return (
+                <div key={ins.id} className={`${bg} rounded-lg p-3 flex items-start gap-2`}>
+                  <span className="text-sm mt-0.5">{icon}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{ins.title}</p>
+                    <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{ins.content}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* 달력 + 지도 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
