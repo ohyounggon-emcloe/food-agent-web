@@ -13,7 +13,6 @@ import {
   LayoutDashboard,
   Rss,
   ShieldAlert,
-  BrainCircuit,
   Search,
   FileText,
   ClipboardCheck,
@@ -24,13 +23,12 @@ import {
 
 const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }[] = [
   { href: "/user/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/user/insights", label: "AI 식품 인사이트", icon: Lightbulb },
   { href: "/user/news", label: "뉴스 피드", icon: Rss },
+  { href: "/user/reports", label: "식품안전리포트", icon: FileText },
   { href: "/user/search", label: "AI 통합 정보검색", icon: Search },
   { href: "/user/crackdown", label: "단속정보", icon: ShieldAlert },
   { href: "/user/inspection", label: "위생자율점검지", icon: ClipboardCheck },
-  { href: "/user/insights", label: "AI 인사이트", icon: Lightbulb },
-  { href: "/user/reports", label: "식품안전리포트", icon: FileText },
-  { href: "/user/analysis", label: "상세 분석", icon: BrainCircuit },
   { href: "/user/profile", label: "내 정보", icon: UserCircle },
 ];
 

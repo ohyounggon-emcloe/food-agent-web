@@ -17,6 +17,7 @@ interface Insight {
   content: string;
   affected_industries: string[];
   action_items: string[] | { [key: string]: string }[];
+  source_article_ids: number[];
   created_at: string;
 }
 
@@ -85,9 +86,9 @@ export default function InsightsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">AI 인사이트</h2>
+        <h2 className="text-2xl font-bold">AI 식품 인사이트</h2>
         <p className="text-gray-500 text-sm mt-1">
-          수집된 식품안전 뉴스에서 추출한 실무 인사이트
+          수집된 식품안전 뉴스에서 AI가 추출한 실무 인사이트
         </p>
       </div>
 
@@ -157,9 +158,14 @@ export default function InsightsPage() {
                             </div>
                           )}
                         </div>
-                        <h4 className="font-semibold text-gray-900 mb-2">
+                        <h4 className="font-semibold text-gray-900 mb-1">
                           {ins.title}
                         </h4>
+                        <p className="text-xs text-gray-400 mb-2">
+                          {ins.created_at ? new Date(ins.created_at).toLocaleString("ko-KR", {
+                            month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
+                          }) + " 생성" : ""}
+                        </p>
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                           {ins.content}
                         </p>
@@ -176,6 +182,20 @@ export default function InsightsPage() {
                                 </li>
                               ))}
                             </ul>
+                          </div>
+                        )}
+                        {ins.source_article_ids?.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <span className="text-xs text-gray-400">근거 뉴스:</span>
+                            {ins.source_article_ids.map((aid) => (
+                              <a
+                                key={aid}
+                                href={`/user/news/${aid}`}
+                                className="text-xs text-blue-500 hover:underline"
+                              >
+                                #{aid}
+                              </a>
+                            ))}
                           </div>
                         )}
                       </div>
