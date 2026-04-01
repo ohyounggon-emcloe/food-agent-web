@@ -20,12 +20,24 @@ interface Settings {
 }
 
 const AGENTS = [
-  { id: "scout", label: "Scout", desc: "게시글 수집" },
-  { id: "analyst", label: "Analyst", desc: "키워드 매칭 + 요약" },
-  { id: "reclassifier", label: "Reclassifier", desc: "LLM 재분류" },
-  { id: "discovery", label: "Discovery", desc: "게시판 탐색" },
-  { id: "reporting", label: "Reporting", desc: "보고서 생성" },
-  { id: "orchestrate", label: "Orchestrate", desc: "전체 파이프라인" },
+  { id: "orchestrate", label: "전체 실행", desc: "전체 파이프라인 자동 실행" },
+  { id: "scout", label: "Scout", desc: "공공사이트 게시글 수집" },
+  { id: "news_collector", label: "뉴스 수집", desc: "네이버 뉴스 검색 수집" },
+  { id: "analyst", label: "Analyst", desc: "키워드 매칭 + AI 요약" },
+  { id: "level_classifier", label: "LLM 분류", desc: "LLM 기반 위험등급 분류" },
+  { id: "level_validator", label: "분류 검증", desc: "분류 결과 교차 검증" },
+  { id: "level_criteria", label: "레벨 기준", desc: "위험등급 기준 정교화" },
+  { id: "reclassifier", label: "재분류기", desc: "미분류 게시글 재분류" },
+  { id: "data_quality", label: "데이터 정제", desc: "데이터 품질 검증" },
+  { id: "site_recommender", label: "사이트 추천", desc: "신규 수집 사이트 추천" },
+  { id: "keyword_recommender", label: "키워드 추천", desc: "신규 키워드 추천" },
+  { id: "collection_strategy", label: "수집 전략", desc: "사이트별 수집 방식 최적화" },
+  { id: "discovery", label: "게시판 탐색", desc: "신규 게시판 자동 발견" },
+  { id: "health_monitor", label: "상태 점검", desc: "에이전트 시스템 모니터링" },
+  { id: "improvement_planner", label: "개선 계획", desc: "주간 개선 방안 수립" },
+  { id: "self_improvement", label: "자동 개선", desc: "안전 범위 내 자동 개선" },
+  { id: "embeddings", label: "임베딩", desc: "검색용 벡터 임베딩 생성" },
+  { id: "reporting", label: "보고서", desc: "일일 보고서 생성" },
 ];
 
 export default function SettingsPage() {

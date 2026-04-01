@@ -5,11 +5,23 @@ import { query, queryOne, useNcloudDb } from "@/lib/ncloud-db";
 
 const VALID_AGENTS = [
   "scout",
+  "news_collector",
   "analyst",
   "reclassifier",
   "discovery",
   "reporting",
   "orchestrate",
+  "site_recommender",
+  "keyword_recommender",
+  "collection_strategy",
+  "level_classifier",
+  "level_validator",
+  "level_criteria",
+  "health_monitor",
+  "improvement_planner",
+  "self_improvement",
+  "data_quality",
+  "embeddings",
 ];
 
 export async function POST(request: NextRequest) {
