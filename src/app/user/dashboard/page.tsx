@@ -99,7 +99,7 @@ export default function UserDashboard() {
 
         <Card className={`py-2 md:py-3 ${highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}`}>
           <CardContent className="pb-0 pt-0 px-2 md:px-4">
-            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"고위험"}</p>
+            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"오늘 고위험"}</p>
             <div className={`text-lg md:text-2xl font-bold mt-0.5 ${highRiskCount > 0 ? "text-red-600" : ""}`}>
               {highRiskCount}
             </div>
