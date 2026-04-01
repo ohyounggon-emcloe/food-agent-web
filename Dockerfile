@@ -1,8 +1,8 @@
-# Stage 1: Dependencies
+# Stage 1: Dependencies (dev 포함 — 빌드에 필요)
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm ci
 
 # Stage 2: Build
 FROM node:20-alpine AS builder
