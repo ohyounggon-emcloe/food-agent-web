@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useCallback, useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NewsListSkeleton } from "@/components/skeleton-loader";
@@ -11,11 +11,10 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Printer } from "lucide-react";
+import { Printer, AlertCircle } from "lucide-react";
 
 interface InspectionItem {
   id: number;
-  seq: number;
   category: string;
   criteria: string;
   method: string;
@@ -40,12 +39,12 @@ export default function InspectionPage() {
   const [inspectionDate, setInspectionDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-  const printRef = useRef<HTMLDivElement>(null);
+  const [printError, setPrintError] = useState("");
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
     const params = new URLSearchParams();
-    if (category !== "all") params.set("category", category);
+    params.set("category", category);
 
     try {
       const res = await fetch(`/api/inspection?${params}`);
@@ -73,6 +72,15 @@ export default function InspectionPage() {
   };
 
   const handlePrint = () => {
+    if (!shopName.trim()) {
+      setPrintError("업소명을 입력해주세요.");
+      return;
+    }
+    if (!shopAddress.trim()) {
+      setPrintError("주소를 입력해주세요.");
+      return;
+    }
+    setPrintError("");
     window.print();
   };
 
@@ -84,50 +92,117 @@ export default function InspectionPage() {
   }
 
   const categoryLabel =
-    CATEGORIES.find((c) => c.value === category)?.label || "전체";
+    CATEGORIES.find((c) => c.value === category)?.label || category;
 
   return (
     <>
-      {/* 인쇄용 스타일 */}
+      {/* 인쇄용 스타일 — A4 양식 최적화 */}
       <style>{`
         @media print {
+          /* 사이드바, 헤더, 버튼 등 숨김 */
           nav, aside, header, .no-print, .sidebar,
-          [class*="sidebar"], [class*="aside"] {
+          [class*="sidebar"], [class*="aside"],
+          [class*="bg-slate-900"] {
             display: none !important;
           }
-          main {
+          /* 전체 레이아웃 리셋 */
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 10pt !important;
+            font-family: "맑은 고딕", "Malgun Gothic", sans-serif !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color: #000 !important;
+            background: #fff !important;
+          }
+          main, [class*="flex-1"], [class*="overflow"] {
             margin: 0 !important;
             padding: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
+            overflow: visible !important;
           }
-          body {
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-            font-size: 11px;
-          }
-          .print-area {
+          /* 카드 스타일 제거 */
+          .print-card {
+            border: none !important;
+            box-shadow: none !important;
             padding: 0 !important;
           }
+          /* 인쇄 영역 */
+          .print-area {
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          /* 테이블 스타일 */
           .print-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
             page-break-inside: auto;
+            font-size: 9pt;
+          }
+          .print-table th, .print-table td {
+            border: 1px solid #333 !important;
+            padding: 4px 6px !important;
+            color: #000 !important;
+          }
+          .print-table th {
+            background: #f0f0f0 !important;
+            font-weight: bold !important;
           }
           .print-table tr {
             page-break-inside: avoid;
           }
-          .check-cell {
+          /* 체크 표시 */
+          .print-check {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
             text-align: center;
-            font-size: 14px;
+            line-height: 20px;
+            font-size: 14pt;
+            font-weight: bold;
           }
+          .print-check-o { color: #000; }
+          .print-check-x { color: #cc0000; }
+          .print-check-empty {
+            border: 1px solid #999;
+            border-radius: 2px;
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+          }
+          /* 서명란 */
+          .print-signature {
+            margin-top: 20px;
+            page-break-inside: avoid;
+          }
+          /* 업소 정보 */
+          .print-info {
+            border: 1px solid #333;
+            margin-bottom: 10px;
+          }
+          .print-info td {
+            padding: 4px 8px !important;
+            border: 1px solid #333 !important;
+            font-size: 10pt;
+          }
+          .print-info .label {
+            background: #f0f0f0 !important;
+            font-weight: bold;
+            width: 80px;
+            text-align: center;
+          }
+          /* 페이지 설정 */
           @page {
-            size: A4;
-            margin: 15mm;
+            size: A4 portrait;
+            margin: 12mm 10mm;
           }
         }
       `}</style>
 
-      <div className="space-y-6 print-area" ref={printRef}>
-        {/* 헤더 (화면용) */}
+      <div className="space-y-6 print-area">
+        {/* 화면용 헤더 */}
         <div className="flex items-center justify-between no-print">
           <div>
             <h2 className="text-2xl font-bold">위생자율점검지</h2>
@@ -138,7 +213,7 @@ export default function InspectionPage() {
           <div className="flex items-center gap-2">
             <Select
               value={category}
-              onValueChange={(v) => setCategory(v ?? "all")}
+              onValueChange={(v) => v && setCategory(v)}
             >
               <SelectTrigger className="w-52">
                 <span>{categoryLabel}</span>
@@ -158,6 +233,14 @@ export default function InspectionPage() {
           </div>
         </div>
 
+        {/* 인쇄 필수입력 에러 */}
+        {printError && (
+          <div className="flex items-center gap-2 text-red-500 text-sm no-print">
+            <AlertCircle className="w-4 h-4" />
+            {printError}
+          </div>
+        )}
+
         {loading ? (
           <NewsListSkeleton />
         ) : items.length === 0 ? (
@@ -165,37 +248,43 @@ export default function InspectionPage() {
             <p>점검항목이 없습니다.</p>
           </div>
         ) : (
-          <Card>
-            <CardHeader className="pb-4">
-              <CardTitle className="text-center text-lg">
-                {category === "all"
-                  ? "위생 자율점검표"
-                  : `${categoryLabel} 자율 위생관리 점검표`}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {/* 업소 정보 입력 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 border rounded-lg p-4 bg-gray-50">
+          <Card className="print-card">
+            <CardContent className="p-6">
+              {/* 인쇄용 제목 (화면에서는 숨김) */}
+              <div className="hidden print:block text-center mb-4">
+                <h1 style={{ fontSize: "16pt", fontWeight: "bold", marginBottom: "4px" }}>
+                  {categoryLabel} 자율 위생관리 점검표
+                </h1>
+                <p style={{ fontSize: "9pt", color: "#666" }}>AI-FX Food Intelligence Platform</p>
+              </div>
+
+              {/* 화면용 제목 */}
+              <h3 className="text-center text-lg font-bold mb-4 print:hidden">
+                {categoryLabel} 자율 위생관리 점검표
+              </h3>
+
+              {/* 업소 정보 — 화면용 입력 */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 border rounded-lg p-4 bg-gray-50 no-print">
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1 block">
-                    상호 (업소명)
+                    상호 (업소명) <span className="text-red-500">*</span>
                   </label>
                   <Input
                     value={shopName}
-                    onChange={(e) => setShopName(e.target.value)}
-                    placeholder="업소명 입력"
-                    className="bg-white"
+                    onChange={(e) => { setShopName(e.target.value); setPrintError(""); }}
+                    placeholder="업소명 입력 (인쇄 필수)"
+                    className={`bg-white ${!shopName.trim() && printError ? "border-red-400" : ""}`}
                   />
                 </div>
                 <div>
                   <label className="text-xs font-medium text-gray-500 mb-1 block">
-                    주소
+                    주소 <span className="text-red-500">*</span>
                   </label>
                   <Input
                     value={shopAddress}
-                    onChange={(e) => setShopAddress(e.target.value)}
-                    placeholder="주소 입력"
-                    className="bg-white"
+                    onChange={(e) => { setShopAddress(e.target.value); setPrintError(""); }}
+                    placeholder="주소 입력 (인쇄 필수)"
+                    className={`bg-white ${!shopAddress.trim() && printError ? "border-red-400" : ""}`}
                   />
                 </div>
                 <div>
@@ -210,6 +299,22 @@ export default function InspectionPage() {
                   />
                 </div>
               </div>
+
+              {/* 인쇄용 업소 정보 테이블 (화면에서 숨김) */}
+              <table className="hidden print:table print-info w-full mb-3" style={{ borderCollapse: "collapse" }}>
+                <tbody>
+                  <tr>
+                    <td className="label">상 호</td>
+                    <td>{shopName || ""}</td>
+                    <td className="label">점검일자</td>
+                    <td>{inspectionDate}</td>
+                  </tr>
+                  <tr>
+                    <td className="label">주 소</td>
+                    <td colSpan={3}>{shopAddress || ""}</td>
+                  </tr>
+                </tbody>
+              </table>
 
               {/* 점검표 테이블 */}
               <table className="w-full border-collapse print-table text-sm">
@@ -230,12 +335,9 @@ export default function InspectionPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(grouped).map(([criteria, groupItems]) => (
+                  {Object.entries(grouped).map(([criteria, groupItems]) =>
                     groupItems.map((item, idx) => (
-                      <tr
-                        key={item.id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
+                      <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                         {idx === 0 && (
                           <td
                             className="border border-gray-300 px-3 py-2 font-medium text-gray-700 bg-gray-50 align-top text-xs"
@@ -250,7 +352,8 @@ export default function InspectionPage() {
                           </span>
                           {item.content}
                         </td>
-                        <td className="border border-gray-300 px-2 py-2 text-center check-cell">
+                        {/* 화면용 O/X 버튼 */}
+                        <td className="border border-gray-300 px-2 py-2 text-center print:hidden">
                           <button
                             onClick={() => handleCheck(item.id, "O")}
                             className={`w-7 h-7 rounded border-2 text-sm font-bold transition-colors ${
@@ -262,7 +365,7 @@ export default function InspectionPage() {
                             O
                           </button>
                         </td>
-                        <td className="border border-gray-300 px-2 py-2 text-center check-cell">
+                        <td className="border border-gray-300 px-2 py-2 text-center print:hidden">
                           <button
                             onClick={() => handleCheck(item.id, "X")}
                             className={`w-7 h-7 rounded border-2 text-sm font-bold transition-colors ${
@@ -274,24 +377,57 @@ export default function InspectionPage() {
                             X
                           </button>
                         </td>
+                        {/* 인쇄용 O/X 표시 */}
+                        <td className="hidden print:table-cell border border-gray-300 text-center">
+                          {checks[item.id] === "O" ? (
+                            <span className="print-check print-check-o">O</span>
+                          ) : (
+                            <span className="print-check-empty" />
+                          )}
+                        </td>
+                        <td className="hidden print:table-cell border border-gray-300 text-center">
+                          {checks[item.id] === "X" ? (
+                            <span className="print-check print-check-x">X</span>
+                          ) : (
+                            <span className="print-check-empty" />
+                          )}
+                        </td>
                       </tr>
                     ))
-                  ))}
+                  )}
                 </tbody>
               </table>
 
-              {/* 하단 서명란 */}
-              <div className="mt-6 grid grid-cols-3 gap-4 text-sm text-gray-500">
-                <div className="border-t pt-2 text-center">
-                  <p className="text-xs text-gray-400 mb-4">점검자</p>
-                  <p className="text-gray-300">(서명)</p>
-                </div>
-                <div className="border-t pt-2 text-center">
-                  <p className="text-xs text-gray-400 mb-4">확인자</p>
-                  <p className="text-gray-300">(서명)</p>
-                </div>
-                <div className="border-t pt-2 text-center">
-                  <p className="text-xs text-gray-400 mb-4">비고</p>
+              {/* 서명란 */}
+              <div className="mt-6 print-signature">
+                <table className="w-full border-collapse hidden print:table" style={{ borderCollapse: "collapse" }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ border: "1px solid #333", width: "33%", padding: "8px", textAlign: "center", height: "60px", verticalAlign: "top", fontSize: "9pt" }}>
+                        <strong>점검자</strong><br /><br />(서명)
+                      </td>
+                      <td style={{ border: "1px solid #333", width: "33%", padding: "8px", textAlign: "center", height: "60px", verticalAlign: "top", fontSize: "9pt" }}>
+                        <strong>확인자</strong><br /><br />(서명)
+                      </td>
+                      <td style={{ border: "1px solid #333", width: "34%", padding: "8px", textAlign: "center", height: "60px", verticalAlign: "top", fontSize: "9pt" }}>
+                        <strong>비고</strong>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+                {/* 화면용 서명란 */}
+                <div className="grid grid-cols-3 gap-4 text-sm text-gray-500 print:hidden">
+                  <div className="border-t pt-2 text-center">
+                    <p className="text-xs text-gray-400 mb-4">점검자</p>
+                    <p className="text-gray-300">(서명)</p>
+                  </div>
+                  <div className="border-t pt-2 text-center">
+                    <p className="text-xs text-gray-400 mb-4">확인자</p>
+                    <p className="text-gray-300">(서명)</p>
+                  </div>
+                  <div className="border-t pt-2 text-center">
+                    <p className="text-xs text-gray-400 mb-4">비고</p>
+                  </div>
                 </div>
               </div>
             </CardContent>
