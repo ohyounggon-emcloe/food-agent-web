@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Pagination } from "@/components/pagination";
 import { NewsListSkeleton } from "@/components/skeleton-loader";
@@ -231,14 +232,12 @@ function NewsFeed() {
                     {article.risk_level || "-"}
                   </Badge>
                   <div className="flex-1 min-w-0">
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <Link
+                      href={`/user/news/${article.id}`}
                       className="text-sm font-medium hover:text-emerald-600"
                     >
                       {highlightText(article.title)}
-                    </a>
+                    </Link>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-gray-500">
                         {article.site_name}
