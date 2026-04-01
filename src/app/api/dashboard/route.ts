@@ -9,8 +9,8 @@ export async function GET() {
   try {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
       return NextResponse.json({
         totalArticles: 0,
         todayArticles: 0,

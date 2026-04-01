@@ -7,10 +7,11 @@ export const revalidate = 30;
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) {
     return NextResponse.json([], { status: 200 });
   }
+  const user = session.user;
 
   const { searchParams } = new URL(request.url);
   const riskLevel = searchParams.get("risk_level");

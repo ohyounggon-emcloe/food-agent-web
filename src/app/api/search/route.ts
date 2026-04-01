@@ -4,8 +4,8 @@ import { query, queryOne, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user) {
     return NextResponse.json([], { status: 200 });
   }
 

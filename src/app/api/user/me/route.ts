@@ -4,11 +4,12 @@ import { queryOne, useNcloudDb } from "@/lib/ncloud-db";
 
 export async function GET() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: { session } } = await supabase.auth.getSession();
 
-  if (!user) {
+  if (!session?.user) {
     return NextResponse.json(null);
   }
+  const user = session.user;
 
   if (useNcloudDb()) {
     const profile = await queryOne(
