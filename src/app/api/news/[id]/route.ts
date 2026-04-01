@@ -20,10 +20,9 @@ export async function GET(
   try {
     if (useNcloudDb()) {
       const article = await queryOne(
-        `SELECT id, title, url, site_name, board_name, publish_date, risk_level,
-                summary, content, region, industry_tags, source_type,
-                has_attachments, attachment_names, image_urls,
-                created_at
+        `SELECT id, title, url, site_name, publish_date, risk_level,
+                summary, content, region, source_type,
+                has_attachments, created_at
          FROM collected_info WHERE id = $1`,
         [numId]
       );
