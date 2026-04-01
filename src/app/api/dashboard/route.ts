@@ -39,8 +39,9 @@ export async function GET() {
         queryOne<{ count: string }>(
           "SELECT count(*) FROM collected_info WHERE risk_level IS NULL OR risk_level IN ('미분류', '')"
         ),
-        queryOne<{ level1: string; level2: string }>(
+        queryOne<{ today_count: string; level1: string; level2: string }>(
           `SELECT
+            count(*) as today_count,
             count(*) FILTER (WHERE risk_level = 'Level1') as level1,
             count(*) FILTER (WHERE risk_level = 'Level2') as level2
           FROM collected_info WHERE created_at >= CURRENT_DATE`
@@ -62,7 +63,7 @@ export async function GET() {
       const headers = { "Cache-Control": "s-maxage=30, stale-while-revalidate=60" };
       return NextResponse.json({
         totalArticles: cache.total_articles,
-        todayArticles: cache.today_articles,
+        todayArticles: Number(todayHighRisk?.today_count || 0),
         riskDistribution: [
           { risk_level: "Level1", count: Number(todayHighRisk?.level1 || 0) },
           { risk_level: "Level2", count: Number(todayHighRisk?.level2 || 0) },
