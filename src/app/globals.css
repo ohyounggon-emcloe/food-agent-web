@@ -175,18 +175,11 @@
 
 /* 모바일 반응형 */
 @media (max-width: 768px) {
-  aside {
-    width: 0 !important;
-    display: none !important;
-  }
-  main > div {
-    padding: 1rem !important;
-  }
   [data-slot="card"] {
     border-radius: 8px;
   }
   table {
-    font-size: 0.75rem;
+    font-size: 0.8rem;
   }
   .recharts-responsive-container {
     min-height: 180px !important;

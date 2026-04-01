@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/user-menu";
+import { MobileMenu } from "@/components/mobile-menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
 import {
@@ -80,7 +81,20 @@ export default function UserLayout({
 
   return (
     <div className="flex h-screen">
-      <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
+      {/* 모바일 헤더 */}
+      <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 md:hidden">
+        <MobileMenu navItems={navItems} role={role}>
+          <UserMenu />
+        </MobileMenu>
+        <h1 className="text-lg font-bold">
+          <span className="text-white">AI</span>
+          <span className="text-emerald-400">-FX</span>
+        </h1>
+        <NotificationBell />
+      </div>
+
+      {/* 데스크톱 사이드바 */}
+      <aside className="hidden md:flex w-64 border-r border-slate-800 bg-slate-900 flex-col">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-extrabold tracking-tight">
@@ -141,8 +155,8 @@ export default function UserLayout({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto bg-slate-50">
-        <div className="max-w-6xl mx-auto p-6 lg:p-8">{children}</div>
+      <main className="flex-1 overflow-auto bg-slate-50 pt-14 md:pt-0">
+        <div className="max-w-6xl mx-auto p-4 md:p-6 lg:p-8">{children}</div>
         <FloatingChat />
       </main>
     </div>

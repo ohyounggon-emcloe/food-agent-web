@@ -344,7 +344,8 @@ export default function InspectionPage() {
               </table>
 
               {/* 점검표 테이블 */}
-              <table className="w-full border-collapse print-table text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full border-collapse print-table text-sm min-w-[600px]">
                 <thead>
                   <tr className="bg-gray-100">
                     <th className="border border-gray-300 px-3 py-2 text-center w-28">
@@ -430,6 +431,7 @@ export default function InspectionPage() {
                   })()}
                 </tbody>
               </table>
+              </div>
 
               {/* 서명란 */}
               <div className="mt-6 print-signature">

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/user-menu";
+import { MobileMenu } from "@/components/mobile-menu";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -92,7 +93,30 @@ export default function AdminLayout({
 
   return (
     <div className="flex h-screen">
-      <aside className="w-64 border-r border-slate-800 bg-slate-900 flex flex-col">
+      {/* 모바일 헤더 */}
+      <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 md:hidden">
+        <MobileMenu navItems={navItems} role="admin" brandSub="Admin System">
+          <Link
+            href="/user/dashboard"
+            className="flex items-center gap-2 px-3 py-2 rounded-md text-sm text-slate-400 hover:bg-slate-800 hover:text-emerald-400 mb-2"
+          >
+            <span>←</span>
+            <span>사용자 페이지</span>
+          </Link>
+          <UserMenu />
+        </MobileMenu>
+        <div>
+          <h1 className="text-lg font-bold">
+            <span className="text-white">AI</span>
+            <span className="text-emerald-400">-FX</span>
+          </h1>
+          <p className="text-[8px] text-amber-400 font-medium text-center">Admin</p>
+        </div>
+        <div className="w-10" />
+      </div>
+
+      {/* 데스크톱 사이드바 */}
+      <aside className="hidden md:flex w-64 border-r border-slate-800 bg-slate-900 flex-col">
         <div className="p-6 border-b border-slate-800">
           <h1 className="text-xl font-extrabold tracking-tight">
             <span className="text-white">AI</span>
@@ -136,8 +160,8 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      <main className="flex-1 overflow-auto bg-slate-50">
-        <div className="p-8">{children}</div>
+      <main className="flex-1 overflow-auto bg-slate-50 pt-14 md:pt-0">
+        <div className="p-4 md:p-8">{children}</div>
       </main>
     </div>
   );
