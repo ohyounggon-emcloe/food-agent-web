@@ -194,10 +194,16 @@ export default function InspectionPage() {
             text-align: center;
           }
           /* 페이지 설정 */
+          /* 챗봇 아이콘 숨김 */
+          .floating-chat, [class*="floating"], [class*="chat-button"],
+          button[aria-label*="chat"], [id*="chat"] {
+            display: none !important;
+          }
           @page {
             size: A4 portrait;
             margin: 12mm 10mm;
           }
+          /* 브라우저 URL 헤더/푸터 제거 (사용자 설정에 따라) */
         }
       `}</style>
 
