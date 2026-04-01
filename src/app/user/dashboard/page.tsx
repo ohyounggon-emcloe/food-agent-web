@@ -130,16 +130,18 @@ export default function UserDashboard() {
               </Link>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {insights.map((ins) => {
-              const icon = ins.category === "핵심이슈" ? "🔴" : ins.category === "법규변경" ? "🔵" : "🟡";
-              return (
-                <Link key={ins.id} href="/user/insights" className="flex items-center gap-2 py-1 hover:bg-gray-50 rounded px-1">
-                  <span className="text-xs">{icon}</span>
-                  <p className="text-sm text-gray-800 truncate">{ins.title}</p>
-                </Link>
-              );
-            })}
+          <CardContent>
+            <div className="grid grid-cols-2 gap-2">
+              {insights.map((ins) => {
+                const icon = ins.category === "핵심이슈" ? "🔴" : ins.category === "법규변경" ? "🔵" : "🟡";
+                return (
+                  <Link key={ins.id} href="/user/insights" className="flex items-center gap-1.5 py-1.5 px-2 hover:bg-gray-50 rounded border border-gray-100">
+                    <span className="text-xs shrink-0">{icon}</span>
+                    <p className="text-sm text-gray-800 truncate">{ins.title}</p>
+                  </Link>
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
       )}
