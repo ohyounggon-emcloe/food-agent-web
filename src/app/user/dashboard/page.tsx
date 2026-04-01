@@ -82,30 +82,30 @@ export default function UserDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="py-3">
-          <CardContent className="pb-0 pt-0">
-            <p className="text-xs font-medium text-gray-500">{"총 수집 게시글"}</p>
-            <div className="text-2xl font-bold mt-1">{data.totalArticles}</div>
+      <div className="grid grid-cols-3 gap-2 md:gap-4">
+        <Card className="py-2 md:py-3">
+          <CardContent className="pb-0 pt-0 px-2 md:px-4">
+            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"총 수집"}</p>
+            <div className="text-lg md:text-2xl font-bold mt-0.5">{data.totalArticles}</div>
           </CardContent>
         </Card>
 
-        <Card className="py-3">
-          <CardContent className="pb-0 pt-0">
-            <p className="text-xs font-medium text-gray-500">{"오늘 수집"}</p>
-            <div className="text-2xl font-bold mt-1">{data.todayArticles}</div>
+        <Card className="py-2 md:py-3">
+          <CardContent className="pb-0 pt-0 px-2 md:px-4">
+            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"오늘 수집"}</p>
+            <div className="text-lg md:text-2xl font-bold mt-0.5">{data.todayArticles}</div>
           </CardContent>
         </Card>
 
-        <Card className={`py-3 ${highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}`}>
-          <CardContent className="pb-0 pt-0">
-            <p className="text-xs font-medium text-gray-500">{"고위험 게시글"}</p>
-            <div className={`text-2xl font-bold mt-1 ${highRiskCount > 0 ? "text-red-600" : ""}`}>
+        <Card className={`py-2 md:py-3 ${highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}`}>
+          <CardContent className="pb-0 pt-0 px-2 md:px-4">
+            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"고위험"}</p>
+            <div className={`text-lg md:text-2xl font-bold mt-0.5 ${highRiskCount > 0 ? "text-red-600" : ""}`}>
               {highRiskCount}
             </div>
             {highRiskCount > 0 && (
-              <Link href="/user/news?risk_level=Level1" className="text-xs text-red-500 hover:underline">
-                {"확인하기 →"}
+              <Link href="/user/news?risk_level=Level1" className="text-[10px] md:text-xs text-red-500 hover:underline">
+                {"확인 →"}
               </Link>
             )}
           </CardContent>
@@ -150,14 +150,12 @@ export default function UserDashboard() {
                     {news.risk_level || "-"}
                   </Badge>
                   <div className="flex-1 min-w-0">
-                    <a
-                      href={news.url}
-                      target="_blank"
-                      rel="noreferrer"
+                    <Link
+                      href={`/user/news/${news.id}`}
                       className="text-sm font-medium hover:text-teal-600 line-clamp-1"
                     >
                       {news.title}
-                    </a>
+                    </Link>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {news.site_name} | {news.publish_date}
                     </p>
