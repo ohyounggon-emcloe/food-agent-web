@@ -20,17 +20,23 @@ export async function GET(request: NextRequest) {
   const limit = Number(searchParams.get("limit")) || 100;
   const personalized = searchParams.get("personalized") !== "false";
 
+  const sourceType = searchParams.get("source_type");
+
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - days);
   const cutoffStr = cutoff.toISOString().split("T")[0];
 
   if (useNcloudDb()) {
-    const conditions: string[] = ["publish_date >= $1"];
+    const conditions: string[] = ["(publish_date >= $1 OR publish_date IS NULL)"];
     const params: unknown[] = [cutoffStr];
     let paramIdx = 2;
 
-    // API 수집 데이터(제품 검사 결과 등)는 뉴스에서 제외
-    conditions.push("(source_type IS NULL OR source_type != 'api_feed')");
+    // source_type 필터
+    if (sourceType === "api_feed") {
+      conditions.push("source_type = 'api_feed'");
+    } else {
+      conditions.push("(source_type IS NULL OR source_type != 'api_feed')");
+    }
 
     if (riskLevel && riskLevel !== "all") {
       conditions.push(`risk_level = $${paramIdx}`);

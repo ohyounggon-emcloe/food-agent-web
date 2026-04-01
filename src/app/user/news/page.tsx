@@ -80,6 +80,7 @@ function NewsFeed() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [sourceTab, setSourceTab] = useState<"news" | "api">("news");
   const [riskFilter, setRiskFilter] = useState(
     searchParams.get("risk_level") || "전체"
   );
@@ -108,13 +109,14 @@ function NewsFeed() {
     if (search) params.set("search", search);
     params.set("days", daysValue);
     params.set("limit", "500");
+    if (sourceTab === "api") params.set("source_type", "api_feed");
 
     const res = await fetch(`/api/news?${params}`);
     const data = await res.json();
     setArticles(Array.isArray(data) ? data : []);
     setLoading(false);
     setCurrentPage(1);
-  }, [riskFilter, search, daysFilter]);
+  }, [riskFilter, search, daysFilter, sourceTab]);
 
   useEffect(() => {
     fetchNews();
@@ -138,8 +140,32 @@ function NewsFeed() {
 
   return (
     <div className="space-y-6">
+      {/* 뉴스 / 식품안전 데이터 탭 */}
+      <div className="flex gap-1 border-b">
+        <button
+          onClick={() => setSourceTab("news")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            sourceTab === "news"
+              ? "border-teal-500 text-teal-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          뉴스
+        </button>
+        <button
+          onClick={() => setSourceTab("api")}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            sourceTab === "api"
+              ? "border-teal-500 text-teal-600"
+              : "border-transparent text-gray-400 hover:text-gray-600"
+          }`}
+        >
+          식품안전 데이터
+        </button>
+      </div>
+
       <div>
-        <h2 className="text-2xl font-bold">{"뉴스 피드"}</h2>
+        <h2 className="text-2xl font-bold">{sourceTab === "news" ? "뉴스 피드" : "식품안전 데이터"}</h2>
         <p className="text-gray-500 text-sm mt-1">
           {`${riskFilter} · ${daysFilter === "오늘" ? "오늘" : `최근 ${daysFilter}`} · ${filtered.length}건${search ? ` (검색: "${search}")` : ""}`}
         </p>
