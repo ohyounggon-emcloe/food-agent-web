@@ -121,17 +121,17 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className={data.unclassifiedCount > 0 ? "border-amber-200 bg-amber-50/30" : ""}>
+        <Card className={(data.unclassifiedCount ?? 0) > 0 ? "border-amber-200 bg-amber-50/30" : ""}>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">
               미분류 게시글
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className={`text-3xl font-bold ${data.unclassifiedCount > 0 ? "text-amber-600" : "text-gray-400"}`}>
-              {data.unclassifiedCount || 0}
+            <div className={`text-3xl font-bold ${(data.unclassifiedCount ?? 0) > 0 ? "text-amber-600" : "text-gray-400"}`}>
+              {(data.unclassifiedCount ?? 0) || 0}
             </div>
-            {data.unclassifiedCount > 0 && (
+            {(data.unclassifiedCount ?? 0) > 0 && (
               <Link href="/admin/review?filter=미분류">
                 <p className="text-xs text-amber-600 mt-1 hover:underline">
                   검토하기 →
