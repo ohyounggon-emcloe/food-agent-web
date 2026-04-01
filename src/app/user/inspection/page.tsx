@@ -332,10 +332,10 @@ export default function InspectionPage() {
               <table className="w-full border-collapse print-table text-sm">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-3 py-2 text-left w-28">
+                    <th className="border border-gray-300 px-3 py-2 text-center w-28">
                       구분
                     </th>
-                    <th className="border border-gray-300 px-3 py-2 text-left">
+                    <th className="border border-gray-300 px-3 py-2 text-center">
                       점검사항
                     </th>
                     <th className="border border-gray-300 px-2 py-2 text-center w-16">
@@ -347,8 +347,12 @@ export default function InspectionPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {Object.entries(grouped).map(([criteria, groupItems]) =>
-                    groupItems.map((item, idx) => (
+                  {(() => {
+                    let globalSeq = 0;
+                    return Object.entries(grouped).map(([criteria, groupItems]) =>
+                      groupItems.map((item, idx) => {
+                        globalSeq++;
+                        return (
                       <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                         {idx === 0 && (
                           <td
@@ -360,7 +364,7 @@ export default function InspectionPage() {
                         )}
                         <td className="border border-gray-300 px-3 py-2 text-gray-600">
                           <span className="text-gray-400 mr-1 text-xs">
-                            {idx + 1}.
+                            {globalSeq}.
                           </span>
                           {item.content}
                         </td>
@@ -405,8 +409,10 @@ export default function InspectionPage() {
                           )}
                         </td>
                       </tr>
-                    ))
-                  )}
+                        );
+                      })
+                    );
+                  })()}
                 </tbody>
               </table>
 
