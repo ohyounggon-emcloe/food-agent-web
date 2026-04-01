@@ -54,8 +54,8 @@ export async function GET(request: NextRequest) {
       paramIdx++;
     }
 
-    if (region) {
-      conditions.push(`(region IS NULL OR region = $${paramIdx})`);
+    if (region && region !== "전국") {
+      conditions.push(`region = $${paramIdx}`);
       params.push(region);
       paramIdx++;
     }
