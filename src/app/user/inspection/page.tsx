@@ -24,10 +24,10 @@ interface InspectionItem {
 
 const CATEGORIES = [
   { value: "all", label: "전체" },
-  { value: "단식", label: "단식 (배달·간편음식점)" },
-  { value: "복식", label: "복식 (일반음식점)" },
-  { value: "제조사", label: "제조사 (식품제조가공)" },
-  { value: "공통", label: "공통" },
+  { value: "외식", label: "일반음식점" },
+  { value: "급식", label: "단체급식" },
+  { value: "공급사", label: "식자재납품" },
+  { value: "제조", label: "식품공장" },
 ];
 
 export default function InspectionPage() {
@@ -245,9 +245,6 @@ export default function InspectionPage() {
                           </td>
                         )}
                         <td className="border border-gray-300 px-3 py-2 text-gray-600">
-                          <span className="text-gray-400 mr-1 text-xs">
-                            {item.seq ? `${item.seq}.` : ""}
-                          </span>
                           {item.content}
                         </td>
                         <td className="border border-gray-300 px-2 py-2 text-center check-cell">
