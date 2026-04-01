@@ -45,43 +45,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useCallback(
     async (currentUser: User) => {
       try {
-        const { data, error } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("id", currentUser.id)
-          .single();
-
-        if (data && !error) {
-          setProfile(data);
-          return;
+        // NCloud DB에서 profile 조회 (API 경유)
+        const res = await fetch("/api/user/me");
+        if (res.ok) {
+          const data = await res.json();
+          if (data) {
+            setProfile(data);
+            return;
+          }
         }
-
-        console.warn("Profile not found, creating:", error?.message);
-        const nickname = currentUser.user_metadata?.nickname || null;
-        const { data: newProfile, error: upsertError } = await supabase
-          .from("user_profiles")
-          .upsert({
-            id: currentUser.id,
-            email: currentUser.email || "",
-            nickname,
-            role: "regular",
-          })
-          .select()
-          .single();
-
-        if (newProfile && !upsertError) {
-          setProfile(newProfile);
-        } else {
-          console.error("Profile upsert failed:", upsertError?.message);
-          setProfile({
-            id: currentUser.id,
-            email: currentUser.email || "",
-            nickname: null,
-            role: "regular",
-          });
-        }
+        // API 실패 시 기본값
+        setProfile({
+          id: currentUser.id,
+          email: currentUser.email || "",
+          nickname: currentUser.user_metadata?.nickname || null,
+          role: "regular",
+        });
       } catch (err) {
-        console.error("Profile fetch exception:", err);
+        console.error("Profile fetch error:", err);
         setProfile({
           id: currentUser.id,
           email: currentUser.email || "",
@@ -90,7 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       }
     },
-    [supabase]
+    []
   );
 
   // 초기화
