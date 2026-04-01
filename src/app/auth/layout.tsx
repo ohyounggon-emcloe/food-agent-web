@@ -27,6 +27,7 @@ export default function AuthLayout({
       <div className="relative z-10 w-full max-w-md px-6">
         {/* 브랜드 */}
         <div className="text-center mb-10">
+          <Image src="/images/logo.png" alt="AI-FX" width={80} height={80} className="mx-auto mb-4" />
           <h1 className="text-5xl font-extrabold tracking-tight">
             <span className="text-white">AI</span>
             <span className="text-emerald-400">-</span>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
@@ -63,10 +64,13 @@ export default function UserLayout({
           )}
           <UserMenu />
         </MobileMenu>
-        <h1 className="text-lg font-bold">
-          <span className="text-white">AI</span>
-          <span className="text-emerald-400">-FX</span>
-        </h1>
+        <div className="flex items-center gap-2">
+          <Image src="/images/logo.png" alt="AI-FX" width={28} height={28} />
+          <h1 className="text-lg font-bold">
+            <span className="text-white">AI</span>
+            <span className="text-emerald-400">-FX</span>
+          </h1>
+        </div>
         <NotificationBell />
       </div>
 
@@ -74,10 +78,13 @@ export default function UserLayout({
       <aside className="hidden lg:flex w-64 border-r border-slate-800 bg-slate-900 flex-col">
         <div className="p-6 border-b border-slate-800">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-extrabold tracking-tight">
-              <span className="text-white">AI</span>
-              <span className="text-emerald-400">-FX</span>
-            </h1>
+            <div className="flex items-center gap-2">
+              <Image src="/images/logo.png" alt="AI-FX" width={32} height={32} />
+              <h1 className="text-xl font-extrabold tracking-tight">
+                <span className="text-white">AI</span>
+                <span className="text-emerald-400">-FX</span>
+              </h1>
+            </div>
             <NotificationBell />
           </div>
           <p className="text-xs text-slate-300 tracking-[0.15em] mt-1">{"Food Intelligence Platform"}</p>
