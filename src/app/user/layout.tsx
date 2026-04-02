@@ -64,10 +64,10 @@ export default function UserLayout({
           )}
           <UserMenu />
         </MobileMenu>
-        <h1 className="text-lg font-bold">
+        <Link href="/user/dashboard" className="text-lg font-bold">
           <span className="text-white">AI</span>
           <span className="text-emerald-400">-FX</span>
-        </h1>
+        </Link>
         <NotificationBell />
       </div>
 
