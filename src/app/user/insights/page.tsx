@@ -18,6 +18,8 @@ interface Insight {
   affected_industries: string[];
   action_items: string[] | { [key: string]: string }[];
   source_article_ids: number[];
+  source_articles: { id: number; title: string }[];
+  cost_breakdown: string | null;
   severity: string | null;
   risk_score: number | null;
   estimated_cost: number | null;
@@ -213,6 +215,11 @@ export default function InsightsPage() {
                                     ? `${(ins.estimated_cost / 10000).toFixed(0)}억원`
                                     : `${ins.estimated_cost}만원`}
                                 </div>
+                                {ins.cost_breakdown && (
+                                  <div className="text-[10px] text-gray-400 mt-1 text-left leading-tight">
+                                    {ins.cost_breakdown}
+                                  </div>
+                                )}
                               </div>
                             )}
                             {ins.penalty_amount && (
@@ -243,15 +250,24 @@ export default function InsightsPage() {
 
                         {/* 근거 뉴스 + 피드백 */}
                         <div className="mt-2 flex items-center justify-between">
-                          <div className="flex flex-wrap gap-1.5">
-                            {ins.source_article_ids?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+                            {ins.source_articles?.length > 0 ? (
+                              <>
+                                <span className="text-xs text-gray-400 shrink-0">근거:</span>
+                                {ins.source_articles.map((sa) => (
+                                  <a key={sa.id} href={`/user/news/${sa.id}`} className="text-xs text-blue-500 hover:underline truncate max-w-[200px]" title={sa.title}>
+                                    {sa.title.length > 25 ? sa.title.slice(0, 25) + "..." : sa.title}
+                                  </a>
+                                ))}
+                              </>
+                            ) : ins.source_article_ids?.length > 0 ? (
                               <>
                                 <span className="text-xs text-gray-400">근거:</span>
                                 {ins.source_article_ids.map((aid) => (
                                   <a key={aid} href={`/user/news/${aid}`} className="text-xs text-blue-500 hover:underline">#{aid}</a>
                                 ))}
                               </>
-                            )}
+                            ) : null}
                           </div>
                           <div className="flex items-center gap-2">
                             <button
