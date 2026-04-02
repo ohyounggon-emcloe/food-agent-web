@@ -149,8 +149,8 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4 text-sm">
-              <span>👍 <span className="font-bold text-green-600">{(data as Record<string, unknown>).insightFeedback ? ((data as Record<string, unknown>).insightFeedback as {helpful: number}).helpful : 0}</span></span>
-              <span>👎 <span className="font-bold text-red-600">{(data as Record<string, unknown>).insightFeedback ? ((data as Record<string, unknown>).insightFeedback as {notHelpful: number}).notHelpful : 0}</span></span>
+              <span>👍 <span className="font-bold text-green-600">{data.insightFeedback?.helpful ?? 0}</span></span>
+              <span>👎 <span className="font-bold text-red-600">{data.insightFeedback?.notHelpful ?? 0}</span></span>
             </div>
           </CardContent>
         </Card>

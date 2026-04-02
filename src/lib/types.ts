@@ -65,4 +65,5 @@ export interface DashboardData {
   unclassifiedCount?: number;
   safetyScore?: number;
   riskSavings?: { totalSavings: number; insightCount: number };
+  insightFeedback?: { total: number; helpful: number; notHelpful: number; topRejected: string | null };
 }
