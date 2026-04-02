@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     if (useNcloudDb()) {
-      const [cache, agentStats, unclassified, todayHighRisk] = await Promise.all([
+      const [cache, agentStats, unclassified, todayHighRisk, riskSavings, safetyScore] = await Promise.all([
         queryOne<{
           total_articles: number;
           today_articles: number;
@@ -45,6 +45,23 @@ export async function GET() {
             count(*) FILTER (WHERE risk_level = 'Level1') as level1,
             count(*) FILTER (WHERE risk_level = 'Level2') as level2
           FROM collected_info WHERE created_at >= CURRENT_DATE`
+        ),
+        // 이번 달 절감 비용 합계
+        queryOne<{ total_savings: string; insight_count: string }>(
+          `SELECT COALESCE(SUM(estimated_cost), 0) as total_savings,
+                  count(*) as insight_count
+           FROM daily_insights
+           WHERE insight_date >= date_trunc('month', CURRENT_DATE)
+           AND estimated_cost IS NOT NULL`
+        ),
+        // 종합 안전점수 (100 - 위험도)
+        queryOne<{ score: string }>(
+          `SELECT GREATEST(0, 100 - (
+            count(*) FILTER (WHERE risk_level = 'Level1') * 10 +
+            count(*) FILTER (WHERE risk_level = 'Level2') * 3
+          )) as score
+          FROM collected_info
+          WHERE created_at >= CURRENT_DATE - interval '7 days'`
         ),
       ]);
 
@@ -81,6 +98,11 @@ export async function GET() {
         },
         cachedAt: cache.updated_at,
         unclassifiedCount: parseInt(unclassified?.count || "0"),
+        safetyScore: parseInt(safetyScore?.score || "85"),
+        riskSavings: {
+          totalSavings: parseInt(riskSavings?.total_savings || "0"),
+          insightCount: parseInt(riskSavings?.insight_count || "0"),
+        },
       }, { headers });
     }
 

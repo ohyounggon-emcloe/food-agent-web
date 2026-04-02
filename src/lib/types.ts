@@ -63,4 +63,6 @@ export interface DashboardData {
   siteCounts: { active: number; error: number; inactive: number };
   pendingSuggestions: { sites: number; keywords: number };
   unclassifiedCount?: number;
+  safetyScore?: number;
+  riskSavings?: { totalSavings: number; insightCount: number };
 }

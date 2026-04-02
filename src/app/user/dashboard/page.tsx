@@ -89,6 +89,39 @@ export default function UserDashboard() {
         </p>
       </div>
 
+      {/* 종합 안전점수 + 절감 비용 */}
+      <div className="grid grid-cols-2 gap-3">
+        <Card className={`py-3 ${(data.safetyScore ?? 85) >= 80 ? "border-emerald-200 bg-emerald-50/50" : (data.safetyScore ?? 85) >= 50 ? "border-amber-200 bg-amber-50/50" : "border-red-200 bg-red-50/50"}`}>
+          <CardContent className="pb-0 pt-0 px-4">
+            <p className="text-xs font-medium text-gray-500">{"종합 안전점수"}</p>
+            <div className="flex items-end gap-2 mt-1">
+              <span className={`text-3xl font-bold ${(data.safetyScore ?? 85) >= 80 ? "text-emerald-600" : (data.safetyScore ?? 85) >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                {data.safetyScore ?? 85}
+              </span>
+              <span className="text-sm text-gray-400 mb-1">/100</span>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-0.5">최근 7일 위험 게시글 기반</p>
+          </CardContent>
+        </Card>
+
+        <Card className="py-3 border-blue-200 bg-blue-50/50">
+          <CardContent className="pb-0 pt-0 px-4">
+            <p className="text-xs font-medium text-gray-500">{"이번 달 절감 효과"}</p>
+            <div className="flex items-end gap-1 mt-1">
+              <span className="text-3xl font-bold text-blue-600">
+                {((data.riskSavings?.totalSavings ?? 0) >= 10000)
+                  ? `${((data.riskSavings?.totalSavings ?? 0) / 10000).toFixed(1)}억`
+                  : `${(data.riskSavings?.totalSavings ?? 0).toLocaleString()}`}
+              </span>
+              <span className="text-sm text-gray-400 mb-1">만원</span>
+            </div>
+            <p className="text-[10px] text-gray-400 mt-0.5">
+              {data.riskSavings?.insightCount ?? 0}건 인사이트 기반 예방 효과
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid grid-cols-3 gap-2 md:gap-4">
         <Card className="py-2 md:py-3">
           <CardContent className="pb-0 pt-0 px-2 md:px-4">
