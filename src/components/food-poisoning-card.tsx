@@ -16,9 +16,21 @@ export function FoodPoisoningCard({ className }: { className?: string }) {
   const [data, setData] = useState<FoodPoisoningData | null>(null);
 
   useEffect(() => {
-    fetch("/api/food-poisoning?year=2025")
+    // 최신 연도 데이터 우선 시도 (2026 → 2025 폴백)
+    const currentYear = new Date().getFullYear();
+    fetch(`/api/food-poisoning?year=${currentYear}`)
       .then((r) => (r.ok ? r.json() : null))
-      .then(setData)
+      .then((d) => {
+        if (d && d.totalIncidents > 0) {
+          setData(d);
+        } else {
+          // 올해 데이터 없으면 작년 조회
+          fetch(`/api/food-poisoning?year=${currentYear - 1}`)
+            .then((r) => (r.ok ? r.json() : null))
+            .then(setData)
+            .catch(() => setData(null));
+        }
+      })
       .catch(() => setData(null));
   }, []);
 
@@ -31,9 +43,9 @@ export function FoodPoisoningCard({ className }: { className?: string }) {
     <Card className={className}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center justify-between">
-          <span>식중독 발생 현황</span>
+          <span>최신 연간 식중독 발생현황</span>
           <Badge variant="outline" className="text-xs font-normal">
-            {data.year}년
+            {data.year}년 확정 통계
           </Badge>
         </CardTitle>
       </CardHeader>
