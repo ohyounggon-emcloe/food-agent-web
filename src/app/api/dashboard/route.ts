@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     if (useNcloudDb()) {
-      const [cache, agentStats, unclassified, todayHighRisk, riskSavings, safetyScore] = await Promise.all([
+      const [cache, agentStats, unclassified, todayHighRisk, riskSavings, safetyScore, insightFeedback] = await Promise.all([
         queryOne<{
           total_articles: number;
           today_articles: number;
@@ -63,6 +63,16 @@ export async function GET() {
           FROM collected_info
           WHERE created_at >= CURRENT_DATE - interval '7 days'`
         ),
+        // 인사이트 피드백 통계
+        queryOne<{ total: string; helpful: string; not_helpful: string; top_rejected: string }>(
+          `SELECT
+            count(*) as total,
+            COALESCE(SUM(feedback_helpful), 0) as helpful,
+            COALESCE(SUM(feedback_not_helpful), 0) as not_helpful,
+            (SELECT title FROM daily_insights WHERE feedback_not_helpful > 0 ORDER BY feedback_not_helpful DESC LIMIT 1) as top_rejected
+          FROM daily_insights
+          WHERE insight_date >= CURRENT_DATE - interval '30 days'`
+        ),
       ]);
 
       if (!cache) {
@@ -102,6 +112,12 @@ export async function GET() {
         riskSavings: {
           totalSavings: parseInt(riskSavings?.total_savings || "0"),
           insightCount: parseInt(riskSavings?.insight_count || "0"),
+        },
+        insightFeedback: {
+          total: parseInt(insightFeedback?.total || "0"),
+          helpful: parseInt(insightFeedback?.helpful || "0"),
+          notHelpful: parseInt(insightFeedback?.not_helpful || "0"),
+          topRejected: insightFeedback?.top_rejected || null,
         },
       }, { headers });
     }
