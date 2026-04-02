@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { insightId, helpful, reason } = body;
+  const { insightId, helpful, reason, cancel } = body;
 
   if (!insightId || typeof helpful !== "boolean") {
     return NextResponse.json({ error: "insightId and helpful are required" }, { status: 400 });
@@ -18,9 +18,10 @@ export async function POST(request: NextRequest) {
 
   if (useNcloudDb()) {
     const column = helpful ? "feedback_helpful" : "feedback_not_helpful";
+    const delta = cancel ? -1 : 1;
     await execute(
-      `UPDATE daily_insights SET ${column} = COALESCE(${column}, 0) + 1 WHERE id = $1`,
-      [insightId]
+      `UPDATE daily_insights SET ${column} = GREATEST(0, COALESCE(${column}, 0) + $1) WHERE id = $2`,
+      [delta, insightId]
     );
 
     // "도움안됨" 시 피드백 메모리에도 저장 (자가 학습 루프)

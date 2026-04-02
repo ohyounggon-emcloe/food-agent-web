@@ -44,6 +44,51 @@ export default function InsightsPage() {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
   const [days, setDays] = useState("7");
+  // 피드백 토글 상태: insightId → "helpful" | "not_helpful" | null
+  const [feedbackState, setFeedbackState] = useState<Record<number, string | null>>({});
+
+  const toggleFeedback = async (insightId: number, type: "helpful" | "not_helpful") => {
+    const current = feedbackState[insightId];
+    const isCancel = current === type;
+
+    // 즉시 UI 반영
+    setFeedbackState((prev) => ({
+      ...prev,
+      [insightId]: isCancel ? null : type,
+    }));
+
+    // 카운트 즉시 업데이트
+    setInsights((prev) =>
+      prev.map((ins) => {
+        if (ins.id !== insightId) return ins;
+        const delta = isCancel ? -1 : 1;
+        // 이전에 다른 버튼 눌렀으면 그쪽 -1
+        const prevDelta = current && current !== type ? -1 : 0;
+        return {
+          ...ins,
+          feedback_helpful:
+            ins.feedback_helpful +
+            (type === "helpful" ? delta : 0) +
+            (current === "helpful" && type !== "helpful" ? prevDelta : 0),
+          feedback_not_helpful:
+            ins.feedback_not_helpful +
+            (type === "not_helpful" ? delta : 0) +
+            (current === "not_helpful" && type !== "not_helpful" ? prevDelta : 0),
+        };
+      })
+    );
+
+    // 서버 전송
+    fetch("/api/insights/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        insightId,
+        helpful: type === "helpful",
+        cancel: isCancel,
+      }),
+    }).catch(() => {});
+  };
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -271,22 +316,22 @@ export default function InsightsPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => fetch("/api/insights/feedback", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ insightId: ins.id, helpful: true }),
-                              })}
-                              className="text-xs text-gray-400 hover:text-green-600 transition-colors"
+                              onClick={() => toggleFeedback(ins.id, "helpful")}
+                              className={`text-xs px-2 py-1 rounded transition-colors ${
+                                feedbackState[ins.id] === "helpful"
+                                  ? "bg-green-100 text-green-700 font-semibold"
+                                  : "text-gray-400 hover:text-green-600"
+                              }`}
                             >
                               👍 도움됨{ins.feedback_helpful > 0 ? ` (${ins.feedback_helpful})` : ""}
                             </button>
                             <button
-                              onClick={() => fetch("/api/insights/feedback", {
-                                method: "POST",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({ insightId: ins.id, helpful: false }),
-                              })}
-                              className="text-xs text-gray-400 hover:text-red-600 transition-colors"
+                              onClick={() => toggleFeedback(ins.id, "not_helpful")}
+                              className={`text-xs px-2 py-1 rounded transition-colors ${
+                                feedbackState[ins.id] === "not_helpful"
+                                  ? "bg-red-100 text-red-700 font-semibold"
+                                  : "text-gray-400 hover:text-red-600"
+                              }`}
                             >
                               👎 도움안됨{ins.feedback_not_helpful > 0 ? ` (${ins.feedback_not_helpful})` : ""}
                             </button>
