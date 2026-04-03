@@ -35,7 +35,7 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: "AI-FX 정보서비스",
+    title: "🤖 AI-FX 정보서비스",
     items: [
       { href: "/user/dashboard", label: "AI 식품안전 모니터링", icon: LayoutDashboard },
       { href: "/user/insights", label: "AI 식품 인사이트", icon: Lightbulb },
