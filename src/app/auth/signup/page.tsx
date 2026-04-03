@@ -27,12 +27,22 @@ export default function SignupPage() {
 
   useEffect(() => {
     fetch("/api/regions").then(r => r.json()).then(data => {
-      const sidos = [...new Set((data || []).map((r: RegionItem) => r.sido))];
-      setRegions(sidos.map((s, i) => ({ id: i, sido: s as string })));
+      let sidos: string[] = [];
+      if (Array.isArray(data)) {
+        sidos = [...new Set(data.map((r: RegionItem) => r.sido))];
+      } else if (data && typeof data === "object") {
+        sidos = Object.keys(data);
+      }
+      setRegions(sidos.map((s, i) => ({ id: i, sido: s })));
     }).catch(() => {});
     fetch("/api/industries").then(r => r.json()).then(data => {
-      const cats = [...new Set((data || []).map((i: IndustryItem) => i.category))];
-      setIndustries(cats.map((c, i) => ({ id: i, category: c as string, sub_type: "" })));
+      let cats: string[] = [];
+      if (Array.isArray(data)) {
+        cats = [...new Set(data.map((i: IndustryItem) => i.category))];
+      } else if (data && typeof data === "object") {
+        cats = Object.keys(data);
+      }
+      setIndustries(cats.map((c, i) => ({ id: i, category: c, sub_type: "" })));
     }).catch(() => {});
   }, []);
 
