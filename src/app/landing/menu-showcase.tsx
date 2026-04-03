@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import {
   LayoutDashboard,
@@ -116,21 +119,11 @@ function MenuCard({
 }
 
 function ImageWithFallback({ item }: { item: (typeof menuItems)[number] }) {
+  const [error, setError] = useState(false);
+
   return (
     <>
-      {/* 실제 이미지 (존재하면 표시) */}
-      <Image
-        src={item.image}
-        alt={item.title}
-        fill
-        className="object-cover object-top"
-        sizes="(max-width: 768px) 100vw, 60vw"
-        onError={(e) => {
-          // 이미지 로드 실패 시 숨김
-          (e.target as HTMLImageElement).style.display = "none";
-        }}
-      />
-      {/* 플레이스홀더 (이미지 없을 때 보임) */}
+      {/* 플레이스홀더 (항상 바닥에 깔림) */}
       <div
         className={`absolute inset-0 bg-gradient-to-br ${item.gradient} flex flex-col items-center justify-center gap-4`}
       >
@@ -139,6 +132,17 @@ function ImageWithFallback({ item }: { item: (typeof menuItems)[number] }) {
           {item.title} 화면
         </span>
       </div>
+      {/* 실제 이미지 (플레이스홀더 위에 표시) */}
+      {!error && (
+        <Image
+          src={item.image}
+          alt={item.title}
+          fill
+          className="object-cover object-top relative z-10"
+          sizes="(max-width: 768px) 100vw, 60vw"
+          onError={() => setError(true)}
+        />
+      )}
     </>
   );
 }

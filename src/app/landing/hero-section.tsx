@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export function HeroSection() {
   return (
@@ -21,14 +21,6 @@ export function HeroSection() {
 
       {/* 콘텐츠 */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 text-center pt-20">
-        {/* 뱃지 */}
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 mb-8">
-          <Shield className="w-4 h-4 text-emerald-400" />
-          <span className="text-emerald-300 text-sm font-medium">
-            AI 기반 식품안전 인텔리전스
-          </span>
-        </div>
-
         {/* 메인 카피 */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6">
           식품 안전,{" "}

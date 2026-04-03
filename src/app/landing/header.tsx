@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/providers/auth-provider";
-import { LogIn, UserPlus, LayoutDashboard } from "lucide-react";
+import { LogIn, UserPlus, LayoutDashboard, Shield } from "lucide-react";
 
 export function LandingHeader() {
   const { user, loading } = useAuth();
@@ -26,11 +26,17 @@ export function LandingHeader() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1">
+          <Link href="/" className="flex items-center gap-3">
             <span className="text-2xl sm:text-3xl font-extrabold tracking-tight">
               <span className="text-white">AI</span>
               <span className="text-emerald-400">-</span>
               <span className="text-emerald-400">FX</span>
+            </span>
+            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+              <Shield className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="text-emerald-300 text-xs font-medium">
+                AI 기반 식품안전 인텔리전스
+              </span>
             </span>
           </Link>
 
