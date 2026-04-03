@@ -83,10 +83,20 @@ const RISK_LABEL_COLORS: Record<string, string> = {
   "안전": "bg-emerald-50 text-emerald-700",
 };
 
+const SIDO_TO_REGION: Record<string, string> = {
+  "서울특별시": "서울", "경기도": "경기", "인천광역시": "인천",
+  "부산광역시": "부산", "대구광역시": "대구", "광주광역시": "광주",
+  "대전광역시": "대전", "울산광역시": "울산", "세종특별자치시": "세종",
+  "강원특별자치도": "강원", "충청북도": "충북", "충청남도": "충남",
+  "전북특별자치도": "전북", "전라남도": "전남",
+  "경상북도": "경북", "경상남도": "경남", "제주특별자치도": "제주",
+};
+
 export function KoreaMap({ className }: KoreaMapProps) {
   const [alerts, setAlerts] = useState<CrackdownAlert[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
   const [mapTab, setMapTab] = useState<"crackdown" | "poison">("crackdown");
+  const [poisonDay, setPoisonDay] = useState<"today" | "tomorrow" | "after">("today");
   const [poisonData, setPoisonData] = useState<PoisonRisk[]>([]);
   const [poisonBaseDate, setPoisonBaseDate] = useState("");
 
@@ -201,48 +211,36 @@ export function KoreaMap({ className }: KoreaMapProps) {
             )}
           </>
         ) : (
-          /* 식중독 예측지수 테이블 */
-          <div className="p-3">
-            {poisonData.filter(d => d.today >= 51).length > 0 && (
-              <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-xs font-semibold text-red-600 mb-1">
-                  ⚠️ 주의 이상 {poisonData.filter(d => d.today >= 51).length}개 지역
-                </p>
-                <div className="flex flex-wrap gap-1">
-                  {poisonData.filter(d => d.today >= 51).sort((a, b) => b.today - a.today).map(d => (
-                    <span key={d.sido} className={`text-[10px] px-1.5 py-0.5 rounded ${RISK_LABEL_COLORS[d.todayLabel] || ""}`}>
-                      {d.sido.replace(/특별시|광역시|특별자치시|특별자치도/g, "")} {d.today}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            <div className="space-y-1 max-h-[280px] overflow-y-auto">
-              <div className="grid grid-cols-4 text-[10px] text-gray-400 font-medium pb-1 border-b sticky top-0 bg-white">
-                <span>지역</span>
-                <span className="text-center">오늘</span>
-                <span className="text-center">내일</span>
-                <span className="text-center">모레</span>
-              </div>
-              {[...poisonData].sort((a, b) => b.today - a.today).map(r => (
-                <div key={r.sido} className="grid grid-cols-4 text-xs items-center py-0.5">
-                  <span className="text-gray-700 font-medium truncate text-[11px]">
-                    {r.sido.replace(/특별시|광역시|특별자치시|특별자치도/g, "")}
-                  </span>
-                  <div className="flex justify-center">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${RISK_LABEL_COLORS[r.todayLabel] || ""}`}>{r.today}</span>
-                  </div>
-                  <div className="flex justify-center">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${RISK_LABEL_COLORS[r.tomorrowLabel] || ""}`}>{r.tomorrow}</span>
-                  </div>
-                  <div className="flex justify-center">
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${RISK_LABEL_COLORS[r.afterTomorrowLabel] || ""}`}>{r.afterTomorrow}</span>
-                  </div>
-                </div>
+          /* 식중독 예측 지도 */
+          <>
+            {/* 오늘/내일/모레 서브탭 */}
+            <div className="flex gap-1 px-3 pt-2 pb-1">
+              {([["today", "오늘"], ["tomorrow", "내일"], ["after", "모레"]] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setPoisonDay(key)}
+                  className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                    poisonDay === key ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {label}
+                </button>
               ))}
             </div>
-            <p className="text-[9px] text-gray-400 mt-2 text-right">출처: 식중독예측지도 (poisonmap.mfds.go.kr)</p>
-          </div>
+            <LeafletMap
+              markers={[]}
+              onMarkerClick={() => {}}
+              mode="poison"
+              poisonMarkers={poisonData.map(d => {
+                const regionKey = SIDO_TO_REGION[d.sido] || d.sido;
+                const coords = REGION_COORDS[regionKey];
+                if (!coords) return null;
+                const score = poisonDay === "today" ? d.today : poisonDay === "tomorrow" ? d.tomorrow : d.afterTomorrow;
+                const label = poisonDay === "today" ? d.todayLabel : poisonDay === "tomorrow" ? d.tomorrowLabel : d.afterTomorrowLabel;
+                return { lat: coords.lat, lng: coords.lng, region: regionKey, score, label };
+              }).filter(Boolean) as { lat: number; lng: number; region: string; score: number; label: string }[]}
+            />
+          </>
         )}
       </CardContent>
     </Card>

@@ -124,16 +124,109 @@ function LegendControl() {
   return null;
 }
 
+/* ── 식중독 예측 마커 ── */
+
+interface PoisonMarker {
+  lat: number;
+  lng: number;
+  region: string;
+  score: number;
+  label: string;
+}
+
+const POISON_COLORS: Record<string, string> = {
+  "위험": "#ef4444",
+  "경고": "#f97316",
+  "주의": "#f59e0b",
+  "관심": "#eab308",
+  "안전": "#22c55e",
+};
+
+function PoisonLabels({ markers }: { markers: PoisonMarker[] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const labelMarkers: L.Marker[] = [];
+
+    for (const m of markers) {
+      const color = POISON_COLORS[m.label] || "#22c55e";
+      const icon = L.divIcon({
+        className: "",
+        html: `
+          <div style="
+            display:flex;flex-direction:column;align-items:center;
+            pointer-events:none;transform:translateY(-28px);
+          ">
+            <span style="
+              font-size:11px;font-weight:700;color:#1e293b;
+              text-shadow:0 0 3px white,0 0 3px white;
+              white-space:nowrap;
+            ">${m.region}</span>
+            <span style="
+              font-size:11px;font-weight:800;color:white;
+              background:${color};border-radius:8px;padding:1px 6px;
+              box-shadow:0 1px 3px rgba(0,0,0,0.2);
+              margin-top:1px;white-space:nowrap;
+            ">${m.score}</span>
+          </div>
+        `,
+        iconSize: [60, 36],
+        iconAnchor: [30, 18],
+      });
+
+      const marker = L.marker([m.lat, m.lng], { icon, interactive: false });
+      marker.addTo(map);
+      labelMarkers.push(marker);
+    }
+
+    return () => {
+      for (const lm of labelMarkers) map.removeLayer(lm);
+    };
+  }, [map, markers]);
+
+  return null;
+}
+
+function PoisonLegend() {
+  const map = useMap();
+
+  useEffect(() => {
+    const legend = new L.Control({ position: "bottomleft" });
+    legend.onAdd = () => {
+      const div = L.DomUtil.create("div");
+      div.innerHTML = `
+        <div style="background:white;padding:8px 12px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.12);font-size:11px;line-height:1.6;">
+          <div style="font-weight:700;margin-bottom:4px;color:#334155;">식중독 예측지수</div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#ef4444;display:inline-block;"></span>86+ 위험</div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block;"></span>71-85 경고</div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#f59e0b;display:inline-block;"></span>51-70 주의</div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#eab308;display:inline-block;"></span>36-50 관심</div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="width:10px;height:10px;border-radius:50%;background:#22c55e;display:inline-block;"></span>0-35 안전</div>
+        </div>
+      `;
+      return div;
+    };
+    legend.addTo(map);
+    return () => { legend.remove(); };
+  }, [map]);
+
+  return null;
+}
+
 /* ── 메인 컴포넌트 ── */
 
 interface LeafletMapProps {
   markers: MapMarker[];
   onMarkerClick: (marker: MapMarker) => void;
+  poisonMarkers?: PoisonMarker[];
+  mode?: "crackdown" | "poison";
 }
 
 export default function LeafletMapComponent({
   markers,
   onMarkerClick,
+  poisonMarkers = [],
+  mode = "crackdown",
 }: LeafletMapProps) {
   return (
     <MapContainer
@@ -148,44 +241,58 @@ export default function LeafletMapComponent({
         url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
-      {markers.map((marker) => {
-        const color = RISK_COLORS[marker.maxRisk] || "#14b8a6";
-        const radius = Math.min(8 + marker.count * 2, 24);
-
-        return (
-          <CircleMarker
-            key={marker.region}
-            center={[marker.lat, marker.lng]}
-            radius={radius}
-            pathOptions={{
-              color,
-              fillColor: color,
-              fillOpacity: 0.6,
-              weight: 2,
-            }}
-            eventHandlers={{
-              click: () => onMarkerClick(marker),
-            }}
-          >
-            <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
-              <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
-                <div style={{ fontWeight: 700 }}>
-                  {marker.region} — {marker.count}건
-                </div>
-                <div style={{ color: "#64748b", fontSize: "11px" }}>
-                  최고 위험: {RISK_LABELS[marker.maxRisk] || marker.maxRisk}
-                </div>
-              </div>
-            </Tooltip>
-          </CircleMarker>
-        );
-      })}
-
-      {/* 지역명 + 건수 라벨 (항상 표시) */}
-      <RegionLabels markers={markers} />
-
-      {/* 범례 */}
-      <LegendControl />
+      {mode === "crackdown" ? (
+        <>
+          {markers.map((marker) => {
+            const color = RISK_COLORS[marker.maxRisk] || "#14b8a6";
+            const radius = Math.min(8 + marker.count * 2, 24);
+            return (
+              <CircleMarker
+                key={marker.region}
+                center={[marker.lat, marker.lng]}
+                radius={radius}
+                pathOptions={{ color, fillColor: color, fillOpacity: 0.6, weight: 2 }}
+                eventHandlers={{ click: () => onMarkerClick(marker) }}
+              >
+                <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
+                  <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
+                    <div style={{ fontWeight: 700 }}>{marker.region} — {marker.count}건</div>
+                    <div style={{ color: "#64748b", fontSize: "11px" }}>
+                      최고 위험: {RISK_LABELS[marker.maxRisk] || marker.maxRisk}
+                    </div>
+                  </div>
+                </Tooltip>
+              </CircleMarker>
+            );
+          })}
+          <RegionLabels markers={markers} />
+          <LegendControl />
+        </>
+      ) : (
+        <>
+          {poisonMarkers.map((pm) => {
+            const color = POISON_COLORS[pm.label] || "#22c55e";
+            const radius = Math.max(12, Math.min(pm.score / 4, 25));
+            return (
+              <CircleMarker
+                key={pm.region}
+                center={[pm.lat, pm.lng]}
+                radius={radius}
+                pathOptions={{ color, fillColor: color, fillOpacity: 0.5, weight: 2 }}
+              >
+                <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
+                  <div style={{ fontSize: "12px", lineHeight: 1.5 }}>
+                    <div style={{ fontWeight: 700 }}>{pm.region} — {pm.score}점</div>
+                    <div style={{ color: "#64748b", fontSize: "11px" }}>{pm.label}</div>
+                  </div>
+                </Tooltip>
+              </CircleMarker>
+            );
+          })}
+          <PoisonLabels markers={poisonMarkers} />
+          <PoisonLegend />
+        </>
+      )}
     </MapContainer>
   );
 }
