@@ -33,18 +33,17 @@ export function ShieldSection() {
             </div>
 
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white leading-tight mb-5">
-              구청 위생과 점검반이
+              갑작스러운 위생 점검에도
               <br />
-              들이닥쳐도{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-400">
-                당황하지 마세요.
+                자신 있게 대응하세요.
               </span>
             </h2>
 
             <p className="text-base sm:text-lg text-slate-400 leading-relaxed mb-6 max-w-lg lg:mx-0 mx-auto">
               버튼 하나로 모든 증빙 서류가 완벽히 정렬됩니다.
               직원 보건증, 위생교육 이수증, 온도기록부, 점검일지까지
-              즉시 제출 가능한 형태로 정리됩니다.
+              즉시 제출 가능한 형태로 준비해드립니다.
             </p>
 
             <Link
