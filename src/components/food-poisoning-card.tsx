@@ -4,107 +4,119 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-interface FoodPoisoningData {
-  year: string;
-  totalIncidents: number;
-  totalPatients: number;
-  byRegion: { region: string; incidents: number; patients: number }[];
-  byMonth: { month: string; incidents: number; patients: number }[];
+interface SidoRisk {
+  sido: string;
+  today: number;
+  todayLabel: string;
+  tomorrow: number;
+  tomorrowLabel: string;
+  afterTomorrow: number;
+  afterTomorrowLabel: string;
+  baseDate: string;
 }
 
+interface RealtimeData {
+  summary: SidoRisk[];
+  totalRegions: number;
+  baseDate: string;
+}
+
+const RISK_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  "위험": { bg: "bg-red-100", text: "text-red-700", border: "border-red-300" },
+  "경고": { bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-300" },
+  "주의": { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-300" },
+  "관심": { bg: "bg-yellow-50", text: "text-yellow-700", border: "border-yellow-200" },
+  "안전": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" },
+};
+
+const formatBaseDate = (d: string) => {
+  if (!d || d.length < 8) return d;
+  return `${d.slice(0, 4)}.${d.slice(4, 6)}.${d.slice(6, 8)}`;
+};
+
 export function FoodPoisoningCard({ className }: { className?: string }) {
-  const [data, setData] = useState<FoodPoisoningData | null>(null);
+  const [data, setData] = useState<RealtimeData | null>(null);
 
   useEffect(() => {
-    // 최신 연도 데이터 우선 시도 (2026 → 2025 폴백)
-    const currentYear = new Date().getFullYear();
-    fetch(`/api/food-poisoning?year=${currentYear}`)
+    fetch("/api/food-poisoning/realtime")
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => {
-        if (d && d.totalIncidents > 0) {
-          setData(d);
-        } else {
-          // 올해 데이터 없으면 작년 조회
-          fetch(`/api/food-poisoning?year=${currentYear - 1}`)
-            .then((r) => (r.ok ? r.json() : null))
-            .then(setData)
-            .catch(() => setData(null));
-        }
-      })
+      .then(setData)
       .catch(() => setData(null));
   }, []);
 
-  if (!data) return null;
+  if (!data || !data.summary?.length) return null;
 
-  const topRegions = data.byRegion.slice(0, 5);
-  const recentMonths = data.byMonth.slice(-3);
+  // 위험도 높은 순 정렬
+  const sorted = [...data.summary].sort((a, b) => b.today - a.today);
+  const warnings = sorted.filter((s) => s.today >= 51);
+  const topRegions = sorted.slice(0, 8);
 
   return (
     <Card className={className}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center justify-between">
-          <span>최신 연간 식중독 발생현황</span>
+          <span>오늘의 식중독 예측지수</span>
           <Badge variant="outline" className="text-xs font-normal">
-            {data.year}년 확정 통계
+            기준일 {formatBaseDate(data.baseDate)} · 실시간
           </Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {/* 총계 */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="bg-red-50 rounded-lg p-3 text-center">
-            <p className="text-2xl font-bold text-red-600">{data.totalIncidents}</p>
-            <p className="text-xs text-red-400">발생 건수</p>
-          </div>
-          <div className="bg-amber-50 rounded-lg p-3 text-center">
-            <p className="text-2xl font-bold text-amber-600">{data.totalPatients.toLocaleString()}</p>
-            <p className="text-xs text-amber-400">환자 수</p>
-          </div>
-        </div>
-
-        {/* 월별 추이 (최근 3개월) */}
-        {recentMonths.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs font-medium text-gray-500 mb-2">최근 월별 추이</p>
-            <div className="flex gap-2">
-              {recentMonths.map((m) => (
-                <div key={m.month} className="flex-1 bg-gray-50 rounded p-2 text-center">
-                  <p className="text-xs text-gray-400">{m.month}월</p>
-                  <p className="text-sm font-bold">{m.incidents}건</p>
-                  <p className="text-xs text-gray-500">{m.patients}명</p>
-                </div>
-              ))}
+        {/* 주의 이상 지역 경고 */}
+        {warnings.length > 0 && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-xs font-semibold text-red-600 mb-1">
+              ⚠️ 주의 이상 지역 {warnings.length}곳
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {warnings.map((w) => {
+                const style = RISK_COLORS[w.todayLabel] || RISK_COLORS["관심"];
+                return (
+                  <span
+                    key={w.sido}
+                    className={`text-xs px-2 py-0.5 rounded-full border ${style.bg} ${style.text} ${style.border}`}
+                  >
+                    {w.sido} {w.today}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* 지역별 TOP 5 */}
-        <div>
-          <p className="text-xs font-medium text-gray-500 mb-2">지역별 발생 TOP 5</p>
-          <div className="space-y-1.5">
-            {topRegions.map((r, i) => {
-              const maxInc = topRegions[0]?.incidents || 1;
-              const width = Math.max((r.incidents / maxInc) * 100, 8);
-              return (
-                <div key={r.region} className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500 w-10 shrink-0">{r.region}</span>
-                  <div className="flex-1 bg-gray-100 rounded-full h-4 overflow-hidden">
-                    <div
-                      className={`h-full rounded-full ${
-                        i === 0 ? "bg-red-400" : i === 1 ? "bg-amber-400" : "bg-teal-400"
-                      }`}
-                      style={{ width: `${width}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium w-16 text-right">
-                    {r.incidents}건 / {r.patients}명
-                  </span>
-                </div>
-              );
-            })}
+        {/* 지역별 예측지수 */}
+        <div className="space-y-1.5">
+          <div className="grid grid-cols-4 text-xs text-gray-400 font-medium pb-1 border-b">
+            <span>지역</span>
+            <span className="text-center">오늘</span>
+            <span className="text-center">내일</span>
+            <span className="text-center">모레</span>
           </div>
+          {topRegions.map((r) => (
+            <div key={r.sido} className="grid grid-cols-4 text-xs items-center py-1">
+              <span className="text-gray-700 font-medium truncate">{r.sido.replace("특별시", "").replace("광역시", "").replace("특별자치시", "").replace("특별자치도", "")}</span>
+              <RiskCell score={r.today} label={r.todayLabel} />
+              <RiskCell score={r.tomorrow} label={r.tomorrowLabel} />
+              <RiskCell score={r.afterTomorrow} label={r.afterTomorrowLabel} />
+            </div>
+          ))}
         </div>
+
+        <p className="text-[10px] text-gray-400 mt-3 text-right">
+          출처: 식중독예측지도 (poisonmap.mfds.go.kr)
+        </p>
       </CardContent>
     </Card>
+  );
+}
+
+function RiskCell({ score, label }: { score: number; label: string }) {
+  const style = RISK_COLORS[label] || RISK_COLORS["안전"];
+  return (
+    <div className="flex justify-center">
+      <span className={`px-1.5 py-0.5 rounded text-center min-w-[40px] ${style.bg} ${style.text} font-medium`}>
+        {score}
+      </span>
+    </div>
   );
 }
