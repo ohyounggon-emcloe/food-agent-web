@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import dynamic from "next/dynamic";
@@ -131,16 +132,16 @@ export function KoreaMap({ className }: KoreaMapProps) {
               <span className="text-xs text-gray-400">{selectedMarker.count}건</span>
             </div>
             <div className="space-y-1 mt-2">
-              {selectedMarker.alerts.slice(0, 3).map((alert) => (
-                <div key={alert.id} className="text-xs">
+              {selectedMarker.alerts.slice(0, 5).map((alert) => (
+                <Link key={alert.id} href={`/user/crackdown?id=${alert.id}`} className="block text-xs hover:bg-gray-50 rounded px-1 py-0.5 -mx-1 transition-colors">
                   <span className="text-gray-400 mr-1">{alert.alert_type}</span>
-                  <span className="text-gray-700 line-clamp-1">{alert.title}</span>
-                </div>
+                  <span className="text-blue-600 hover:underline line-clamp-1">{alert.title}</span>
+                </Link>
               ))}
-              {selectedMarker.alerts.length > 3 && (
-                <p className="text-xs text-gray-400">
-                  외 {selectedMarker.alerts.length - 3}건
-                </p>
+              {selectedMarker.alerts.length > 5 && (
+                <Link href={`/user/crackdown?region=${selectedMarker.region}`} className="text-xs text-teal-600 hover:underline block mt-1">
+                  전체 {selectedMarker.alerts.length}건 보기 →
+                </Link>
               )}
             </div>
           </div>
