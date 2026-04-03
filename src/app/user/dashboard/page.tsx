@@ -14,6 +14,8 @@ interface DashboardData {
   todayArticles: number;
   riskDistribution: { risk_level: string; count: number }[];
   agentStats: { agent_name: string; success_rate: number | null; last_run_at: string | null }[];
+  safetyScore?: number;
+  riskSavings?: { totalSavings: number; insightCount: number };
 }
 
 const RISK_COLORS: Record<string, string> = {
