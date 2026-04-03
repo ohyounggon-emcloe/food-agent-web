@@ -64,15 +64,47 @@ interface KoreaMapProps {
   className?: string;
 }
 
+interface PoisonRisk {
+  sido: string;
+  today: number;
+  todayLabel: string;
+  tomorrow: number;
+  tomorrowLabel: string;
+  afterTomorrow: number;
+  afterTomorrowLabel: string;
+  baseDate: string;
+}
+
+const RISK_LABEL_COLORS: Record<string, string> = {
+  "위험": "bg-red-100 text-red-700",
+  "경고": "bg-orange-100 text-orange-700",
+  "주의": "bg-amber-100 text-amber-700",
+  "관심": "bg-yellow-50 text-yellow-700",
+  "안전": "bg-emerald-50 text-emerald-700",
+};
+
 export function KoreaMap({ className }: KoreaMapProps) {
   const [alerts, setAlerts] = useState<CrackdownAlert[]>([]);
   const [selectedMarker, setSelectedMarker] = useState<MapMarker | null>(null);
+  const [mapTab, setMapTab] = useState<"crackdown" | "poison">("crackdown");
+  const [poisonData, setPoisonData] = useState<PoisonRisk[]>([]);
+  const [poisonBaseDate, setPoisonBaseDate] = useState("");
 
   useEffect(() => {
     fetch("/api/crackdown?days=90")
       .then((r) => (r.ok ? r.json() : []))
       .then((d) => setAlerts(Array.isArray(d) ? d : []))
       .catch(() => setAlerts([]));
+
+    fetch("/api/food-poisoning/realtime")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.summary) {
+          setPoisonData(d.summary);
+          setPoisonBaseDate(d.baseDate || "");
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // 지역별 집계 → 마커 데이터 생성
@@ -104,46 +136,112 @@ export function KoreaMap({ className }: KoreaMapProps) {
   return (
     <Card className={className}>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center justify-between">
-          <span>전국 단속 현황</span>
+        <div className="flex items-center justify-between">
+          {/* 탭 */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => { setMapTab("crackdown"); setSelectedMarker(null); }}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                mapTab === "crackdown" ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              단속 현황
+            </button>
+            <button
+              onClick={() => { setMapTab("poison"); setSelectedMarker(null); }}
+              className={`px-3 py-1 text-xs font-medium rounded-full transition-colors ${
+                mapTab === "poison" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+              }`}
+            >
+              식중독 예측
+            </button>
+          </div>
           <span className="text-xs text-gray-400 font-normal">
-            최근 90일 · {markers.reduce((s, m) => s + m.count, 0)}건 ({markers.length}개 지역)
+            {mapTab === "crackdown"
+              ? `최근 90일 · ${markers.reduce((s, m) => s + m.count, 0)}건`
+              : `기준일 ${poisonBaseDate.slice(0,4)}.${poisonBaseDate.slice(4,6)}.${poisonBaseDate.slice(6,8)}`}
           </span>
-        </CardTitle>
+        </div>
       </CardHeader>
       <CardContent className="p-0 overflow-hidden rounded-b-xl">
-        <LeafletMap markers={markers} onMarkerClick={setSelectedMarker} />
-
-        {selectedMarker && (
-          <div className="p-3 border-t bg-white">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge
-                className={
-                  selectedMarker.maxRisk === "Level1"
-                    ? "bg-red-500 text-white"
-                    : selectedMarker.maxRisk === "Level2"
-                    ? "bg-amber-500 text-white"
-                    : "bg-blue-100 text-blue-700"
-                }
-              >
-                {selectedMarker.maxRisk}
-              </Badge>
-              <span className="font-semibold text-sm">{selectedMarker.region}</span>
-              <span className="text-xs text-gray-400">{selectedMarker.count}건</span>
-            </div>
-            <div className="space-y-1 mt-2">
-              {selectedMarker.alerts.slice(0, 5).map((alert) => (
-                <Link key={alert.id} href={`/user/crackdown?id=${alert.id}`} className="block text-xs hover:bg-gray-50 rounded px-1 py-0.5 -mx-1 transition-colors">
-                  <span className="text-gray-400 mr-1">{alert.alert_type}</span>
-                  <span className="text-blue-600 hover:underline line-clamp-1">{alert.title}</span>
-                </Link>
+        {mapTab === "crackdown" ? (
+          <>
+            <LeafletMap markers={markers} onMarkerClick={setSelectedMarker} />
+            {selectedMarker && (
+              <div className="p-3 border-t bg-white">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge
+                    className={
+                      selectedMarker.maxRisk === "Level1"
+                        ? "bg-red-500 text-white"
+                        : selectedMarker.maxRisk === "Level2"
+                        ? "bg-amber-500 text-white"
+                        : "bg-blue-100 text-blue-700"
+                    }
+                  >
+                    {selectedMarker.maxRisk}
+                  </Badge>
+                  <span className="font-semibold text-sm">{selectedMarker.region}</span>
+                  <span className="text-xs text-gray-400">{selectedMarker.count}건</span>
+                </div>
+                <div className="space-y-1 mt-2">
+                  {selectedMarker.alerts.slice(0, 5).map((alert) => (
+                    <Link key={alert.id} href={`/user/crackdown?id=${alert.id}`} className="block text-xs hover:bg-gray-50 rounded px-1 py-0.5 -mx-1 transition-colors">
+                      <span className="text-gray-400 mr-1">{alert.alert_type}</span>
+                      <span className="text-blue-600 hover:underline line-clamp-1">{alert.title}</span>
+                    </Link>
+                  ))}
+                  {selectedMarker.alerts.length > 5 && (
+                    <Link href={`/user/crackdown?region=${selectedMarker.region}`} className="text-xs text-teal-600 hover:underline block mt-1">
+                      전체 {selectedMarker.alerts.length}건 보기 →
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          /* 식중독 예측지수 테이블 */
+          <div className="p-3">
+            {poisonData.filter(d => d.today >= 51).length > 0 && (
+              <div className="mb-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-xs font-semibold text-red-600 mb-1">
+                  ⚠️ 주의 이상 {poisonData.filter(d => d.today >= 51).length}개 지역
+                </p>
+                <div className="flex flex-wrap gap-1">
+                  {poisonData.filter(d => d.today >= 51).sort((a, b) => b.today - a.today).map(d => (
+                    <span key={d.sido} className={`text-[10px] px-1.5 py-0.5 rounded ${RISK_LABEL_COLORS[d.todayLabel] || ""}`}>
+                      {d.sido.replace(/특별시|광역시|특별자치시|특별자치도/g, "")} {d.today}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div className="space-y-1 max-h-[280px] overflow-y-auto">
+              <div className="grid grid-cols-4 text-[10px] text-gray-400 font-medium pb-1 border-b sticky top-0 bg-white">
+                <span>지역</span>
+                <span className="text-center">오늘</span>
+                <span className="text-center">내일</span>
+                <span className="text-center">모레</span>
+              </div>
+              {[...poisonData].sort((a, b) => b.today - a.today).map(r => (
+                <div key={r.sido} className="grid grid-cols-4 text-xs items-center py-0.5">
+                  <span className="text-gray-700 font-medium truncate text-[11px]">
+                    {r.sido.replace(/특별시|광역시|특별자치시|특별자치도/g, "")}
+                  </span>
+                  <div className="flex justify-center">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${RISK_LABEL_COLORS[r.todayLabel] || ""}`}>{r.today}</span>
+                  </div>
+                  <div className="flex justify-center">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${RISK_LABEL_COLORS[r.tomorrowLabel] || ""}`}>{r.tomorrow}</span>
+                  </div>
+                  <div className="flex justify-center">
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${RISK_LABEL_COLORS[r.afterTomorrowLabel] || ""}`}>{r.afterTomorrow}</span>
+                  </div>
+                </div>
               ))}
-              {selectedMarker.alerts.length > 5 && (
-                <Link href={`/user/crackdown?region=${selectedMarker.region}`} className="text-xs text-teal-600 hover:underline block mt-1">
-                  전체 {selectedMarker.alerts.length}건 보기 →
-                </Link>
-              )}
             </div>
+            <p className="text-[9px] text-gray-400 mt-2 text-right">출처: 식중독예측지도 (poisonmap.mfds.go.kr)</p>
           </div>
         )}
       </CardContent>

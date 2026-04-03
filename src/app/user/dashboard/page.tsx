@@ -7,7 +7,7 @@ import { DashboardSkeleton } from "@/components/skeleton-loader";
 import { Badge } from "@/components/ui/badge";
 import { CrackdownCalendar } from "@/components/crackdown-calendar";
 import { KoreaMap } from "@/components/korea-map";
-import { FoodPoisoningCard } from "@/components/food-poisoning-card";
+// FoodPoisoningCard는 KoreaMap에 통합됨
 
 interface DashboardData {
   totalArticles: number;
@@ -165,9 +165,6 @@ export default function UserDashboard() {
         <CrackdownCalendar />
         <KoreaMap />
       </div>
-
-      {/* 식중독 현황 */}
-      <FoodPoisoningCard />
 
       <Card>
         <CardHeader>
