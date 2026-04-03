@@ -32,9 +32,9 @@ export function LandingHeader() {
               <span className="text-emerald-400">-</span>
               <span className="text-emerald-400">FX</span>
             </span>
-            <span className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-              <Shield className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-emerald-300 text-xs font-medium">
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 self-end mb-0.5">
+              <Shield className="w-3 h-3 text-emerald-400" />
+              <span className="text-emerald-300 text-[10px] font-medium">
                 AI 기반 식품안전 인텔리전스
               </span>
             </span>

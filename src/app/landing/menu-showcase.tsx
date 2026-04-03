@@ -10,6 +10,13 @@ import {
   Search,
   ShieldAlert,
   ClipboardCheck,
+  Store,
+  CheckSquare,
+  BarChart3,
+  FolderOpen,
+  Heart,
+  Receipt,
+  ShieldCheck,
 } from "lucide-react";
 
 const menuItems = [
@@ -75,6 +82,51 @@ const menuItems = [
       "법적 기준에 맞는 위생 점검 체크리스트를 디지털로 관리하고 이력 보관",
     image: "/images/landing/inspection.png",
     gradient: "from-rose-600 to-pink-700",
+  },
+];
+
+const storeMenuItems = [
+  {
+    icon: Store,
+    title: "가게 현황",
+    description: "우리 가게 위생 현황을 한눈에 확인",
+    gradient: "from-emerald-500 to-teal-600",
+  },
+  {
+    icon: CheckSquare,
+    title: "일일 점검",
+    description: "매일 체크해야 할 위생 항목을 간편하게",
+    gradient: "from-blue-500 to-indigo-600",
+  },
+  {
+    icon: BarChart3,
+    title: "점검 현황",
+    description: "점검 이력과 통계를 한눈에 파악",
+    gradient: "from-violet-500 to-purple-600",
+  },
+  {
+    icon: FolderOpen,
+    title: "서류함",
+    description: "영업 관련 서류를 디지털로 보관·관리",
+    gradient: "from-cyan-500 to-blue-600",
+  },
+  {
+    icon: Heart,
+    title: "직원 보건증",
+    description: "직원 보건증 만료일 자동 알림",
+    gradient: "from-rose-500 to-pink-600",
+  },
+  {
+    icon: Receipt,
+    title: "식재료 증빙",
+    description: "식재료 입고 내역과 증빙 자료 관리",
+    gradient: "from-amber-500 to-orange-600",
+  },
+  {
+    icon: ShieldCheck,
+    title: "점검 대응",
+    description: "갑작스런 점검에도 빠르게 대응",
+    gradient: "from-slate-500 to-slate-700",
   },
 ];
 
@@ -157,15 +209,48 @@ export function MenuShowcase() {
             주요 서비스
           </h2>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            식품업에 꼭 필요한 7가지 핵심 기능을 제공합니다
+            식품업에 꼭 필요한 핵심 기능을 제공합니다
           </p>
         </div>
 
-        {/* 메뉴 카드 목록 */}
+        {/* AI-FX 정보서비스 */}
+        <h3 className="text-2xl font-bold text-slate-800 mb-12 text-center">
+          AI-FX 정보서비스
+        </h3>
         <div className="flex flex-col gap-20 sm:gap-28">
           {menuItems.map((item, index) => (
             <MenuCard key={item.id} item={item} index={index} />
           ))}
+        </div>
+
+        {/* 우리가게 위생관리 */}
+        <div className="mt-28 sm:mt-36">
+          <h3 className="text-2xl font-bold text-slate-800 mb-4 text-center">
+            🏠 우리가게 위생관리
+          </h3>
+          <p className="text-lg text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+            매장 위생을 체계적으로 관리하는 7가지 도구
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {storeMenuItems.map((item) => (
+              <div
+                key={item.title}
+                className="p-6 rounded-2xl bg-white border border-slate-100 hover:shadow-xl transition-all duration-300"
+              >
+                <div
+                  className={`w-12 h-12 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center mb-4`}
+                >
+                  <item.icon className="w-6 h-6 text-white" />
+                </div>
+                <h4 className="text-lg font-bold text-slate-900 mb-2">
+                  {item.title}
+                </h4>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
