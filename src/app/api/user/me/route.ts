@@ -13,7 +13,7 @@ export async function GET() {
 
   if (useNcloudDb()) {
     const profile = await queryOne(
-      "SELECT id, email, nickname, role FROM user_profiles WHERE id = $1",
+      "SELECT id, email, nickname, role, user_type, business_role FROM user_profiles WHERE id = $1",
       [user.id]
     );
 
@@ -31,7 +31,7 @@ export async function GET() {
     );
 
     const newProfile = await queryOne(
-      "SELECT id, email, nickname, role FROM user_profiles WHERE id = $1",
+      "SELECT id, email, nickname, role, user_type, business_role FROM user_profiles WHERE id = $1",
       [user.id]
     );
     return NextResponse.json(newProfile);

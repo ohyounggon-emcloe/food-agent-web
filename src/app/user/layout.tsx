@@ -69,7 +69,8 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { role, loading, user } = useAuth();
+  const { role, loading, user, profile } = useAuth();
+  const userType = (profile as Record<string, unknown>)?.user_type as string || "personal";
 
   // 로딩 완료 후 user가 없으면 로그인으로
   if (!loading && !user) {
@@ -116,7 +117,13 @@ export default function UserLayout({
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navSections.map((section, sIdx) => (
+          {navSections.map((section, sIdx) => {
+            // 우리가게 위생관리는 관리자 또는 사업자만 표시
+            const isStoreSection = section.items.some((i) => i.businessOnly);
+            const showSection = !isStoreSection || userType === "business" || ["admin", "super_admin"].includes(role);
+            if (!showSection) return null;
+
+            return (
             <div key={section.title}>
               {sIdx > 0 && <div className="border-t border-slate-800 my-3" />}
               <p className="text-xs text-slate-400 font-bold tracking-wide px-3 mb-2">
@@ -151,7 +158,8 @@ export default function UserLayout({
                 );
               })}
             </div>
-          ))}
+            );
+          })}
 
           <div className="border-t border-slate-800 my-3" />
           <Link
