@@ -14,6 +14,8 @@ export function middleware(request: NextRequest) {
       url.pathname = "/auth/callback";
       return NextResponse.redirect(url);
     }
+    // 루트는 랜딩 페이지 — 인증 불필요
+    return NextResponse.next();
   }
 
   // /admin/*, /user/* — 세션 쿠키 없으면 로그인 페이지로

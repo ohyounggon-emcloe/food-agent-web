@@ -165,7 +165,7 @@ export default function StoreHistoryPage() {
                             <Clock className="w-4 h-4 text-gray-300 shrink-0" />
                           )}
                           <span className="text-gray-600">{(item as Record<string, unknown>).content as string}</span>
-                          {(item as Record<string, unknown>).photo_url && (
+                          {!!(item as Record<string, unknown>).photo_url && (
                             <span className="text-blue-500">📷</span>
                           )}
                         </div>
