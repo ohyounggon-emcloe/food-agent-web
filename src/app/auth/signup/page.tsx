@@ -33,7 +33,7 @@ export default function SignupPage() {
       } else if (data && typeof data === "object") {
         sidos = Object.keys(data);
       }
-      setRegions(sidos.map((s, i) => ({ id: i, sido: s })));
+      setRegions([{ id: -1, sido: "전체" }, ...sidos.map((s, i) => ({ id: i, sido: s }))]);
     }).catch(() => {});
     fetch("/api/industries").then(r => r.json()).then(data => {
       let cats: string[] = [];
@@ -42,20 +42,30 @@ export default function SignupPage() {
       } else if (data && typeof data === "object") {
         cats = Object.keys(data);
       }
-      setIndustries(cats.map((c, i) => ({ id: i, category: c, sub_type: "" })));
+      setIndustries([{ id: -1, category: "전체", sub_type: "" }, ...cats.map((c, i) => ({ id: i, category: c, sub_type: "" }))]);
     }).catch(() => {});
   }, []);
 
   const toggleRegion = (sido: string) => {
-    setSelectedRegions(prev =>
-      prev.includes(sido) ? prev.filter(r => r !== sido) : [...prev, sido]
-    );
+    if (sido === "전체") {
+      setSelectedRegions(prev => prev.includes("전체") ? [] : ["전체"]);
+    } else {
+      setSelectedRegions(prev => {
+        const without = prev.filter(r => r !== "전체" && r !== sido);
+        return prev.includes(sido) ? without : [...without, sido];
+      });
+    }
   };
 
   const toggleIndustry = (cat: string) => {
-    setSelectedIndustries(prev =>
-      prev.includes(cat) ? prev.filter(i => i !== cat) : [...prev, cat]
-    );
+    if (cat === "전체") {
+      setSelectedIndustries(prev => prev.includes("전체") ? [] : ["전체"]);
+    } else {
+      setSelectedIndustries(prev => {
+        const without = prev.filter(i => i !== "전체" && i !== cat);
+        return prev.includes(cat) ? without : [...without, cat];
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
