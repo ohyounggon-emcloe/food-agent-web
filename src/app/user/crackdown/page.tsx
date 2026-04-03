@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { NewsListSkeleton } from "@/components/skeleton-loader";
 import { Badge } from "@/components/ui/badge";
@@ -64,6 +65,15 @@ const REGIONS = [
 /* ── 페이지 ── */
 
 export default function CrackdownPage() {
+  return (
+    <Suspense>
+      <CrackdownContent />
+    </Suspense>
+  );
+}
+
+function CrackdownContent() {
+  const searchParams = useSearchParams();
   const [alerts, setAlerts] = useState<CrackdownAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("전체 유형");
@@ -80,7 +90,15 @@ export default function CrackdownPage() {
       const res = await fetch(`/api/crackdown?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setAlerts(Array.isArray(data) ? data : []);
+        const list = Array.isArray(data) ? data : [];
+        setAlerts(list);
+
+        // URL에 id가 있으면 해당 글 자동 선택
+        const targetId = searchParams.get("id");
+        if (targetId) {
+          const found = list.find((a: CrackdownAlert) => a.id === Number(targetId));
+          if (found) setSelectedAlert(found);
+        }
       }
     } catch (err) {
       console.error("단속 정보 로드 실패:", err);
