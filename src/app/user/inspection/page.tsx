@@ -345,19 +345,19 @@ export default function InspectionPage() {
 
               {/* 점검표 테이블 */}
               <div className="overflow-x-auto">
-              <table className="w-full border-collapse print-table text-sm min-w-[600px]">
+              <table className="w-full border-collapse print-table text-sm">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border border-gray-300 px-3 py-2 text-center w-28">
+                    <th className="border border-gray-300 px-1 md:px-3 py-2 text-center w-16 md:w-28 text-xs">
                       구분
                     </th>
-                    <th className="border border-gray-300 px-3 py-2 text-center">
+                    <th className="border border-gray-300 px-2 md:px-3 py-2 text-center text-xs">
                       점검사항
                     </th>
-                    <th className="border border-gray-300 px-2 py-2 text-center w-16">
+                    <th className="border border-gray-300 px-1 md:px-2 py-2 text-center w-10 md:w-16 text-xs">
                       적합
                     </th>
-                    <th className="border border-gray-300 px-2 py-2 text-center w-16">
+                    <th className="border border-gray-300 px-1 md:px-2 py-2 text-center w-10 md:w-16 text-xs">
                       부적합
                     </th>
                   </tr>
@@ -372,13 +372,13 @@ export default function InspectionPage() {
                       <tr key={item.id} className="hover:bg-gray-50 transition-colors">
                         {idx === 0 && (
                           <td
-                            className="border border-gray-300 px-3 py-2 font-medium text-gray-700 bg-gray-50 align-top text-xs"
+                            className="border border-gray-300 px-1 md:px-3 py-2 font-medium text-gray-700 bg-gray-50 align-top text-[10px] md:text-xs"
                             rowSpan={groupItems.length}
                           >
                             {criteria}
                           </td>
                         )}
-                        <td className="border border-gray-300 px-3 py-2 text-gray-600">
+                        <td className="border border-gray-300 px-2 md:px-3 py-2 text-gray-600 text-xs md:text-sm">
                           <span className="text-gray-400 mr-1 text-xs">
                             {globalSeq}.
                           </span>
@@ -388,7 +388,7 @@ export default function InspectionPage() {
                         <td className="border border-gray-300 px-2 py-2 text-center print:hidden">
                           <button
                             onClick={() => handleCheck(item.id, "O")}
-                            className={`w-7 h-7 rounded border-2 text-sm font-bold transition-colors ${
+                            className={`w-6 h-6 md:w-7 md:h-7 rounded border-2 text-xs md:text-sm font-bold transition-colors ${
                               checks[item.id] === "O"
                                 ? "bg-teal-500 border-teal-500 text-white"
                                 : "border-gray-300 text-gray-300 hover:border-teal-400"
@@ -400,7 +400,7 @@ export default function InspectionPage() {
                         <td className="border border-gray-300 px-2 py-2 text-center print:hidden">
                           <button
                             onClick={() => handleCheck(item.id, "X")}
-                            className={`w-7 h-7 rounded border-2 text-sm font-bold transition-colors ${
+                            className={`w-6 h-6 md:w-7 md:h-7 rounded border-2 text-xs md:text-sm font-bold transition-colors ${
                               checks[item.id] === "X"
                                 ? "bg-red-500 border-red-500 text-white"
                                 : "border-gray-300 text-gray-300 hover:border-red-400"
