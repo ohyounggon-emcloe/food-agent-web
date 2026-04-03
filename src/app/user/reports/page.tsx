@@ -143,7 +143,7 @@ export default function ReportsPage() {
                         {report.article_count}건
                         {report.high_risk_count > 0 && (
                           <span className="text-red-500 ml-1">
-                            (고위험 {report.high_risk_count})
+                            (Level1·2 {report.high_risk_count}건)
                           </span>
                         )}
                       </span>
@@ -163,15 +163,26 @@ export default function ReportsPage() {
                 {isExpanded && (
                   <CardContent className="pt-0 border-t">
                     <div
-                      className="prose prose-sm max-w-none mt-4"
+                      className="mt-4 text-sm leading-relaxed text-gray-700 space-y-1"
                       dangerouslySetInnerHTML={{
                         __html: (report.content || "")
-                          .replace(/^### (.*)/gm, "<h3>$1</h3>")
-                          .replace(/^## (.*)/gm, "<h2>$1</h2>")
-                          .replace(/^# (.*)/gm, "<h1>$1</h1>")
-                          .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                          .replace(/^- (.*)/gm, "<li>$1</li>")
-                          .replace(/\n/g, "<br/>"),
+                          // 제목 스타일링
+                          .replace(/^### (.*)/gm, '<h4 class="text-sm font-semibold text-gray-800 mt-4 mb-1">$1</h4>')
+                          .replace(/^## (.*)/gm, '<h3 class="text-base font-bold text-gray-900 mt-5 mb-2 pb-1 border-b">$1</h3>')
+                          .replace(/^# (.*)/gm, '<h2 class="text-lg font-bold text-gray-900 mt-4 mb-2">$1</h2>')
+                          // 강조
+                          .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+                          // Level 아이콘
+                          .replace(/🔴\s*/g, '<span class="inline-block w-3 h-3 bg-red-500 rounded-full mr-1 align-middle"></span>')
+                          .replace(/🟡\s*/g, '<span class="inline-block w-3 h-3 bg-amber-400 rounded-full mr-1 align-middle"></span>')
+                          .replace(/🔵\s*/g, '<span class="inline-block w-3 h-3 bg-blue-500 rounded-full mr-1 align-middle"></span>')
+                          .replace(/🟢\s*/g, '<span class="inline-block w-3 h-3 bg-green-500 rounded-full mr-1 align-middle"></span>')
+                          // 리스트
+                          .replace(/^- (.*)/gm, '<div class="flex items-start gap-2 py-0.5"><span class="text-teal-500 mt-1 shrink-0">•</span><span>$1</span></div>')
+                          .replace(/^• (.*)/gm, '<div class="flex items-start gap-2 py-0.5"><span class="text-teal-500 mt-1 shrink-0">•</span><span>$1</span></div>')
+                          // 줄바꿈
+                          .replace(/\n\n/g, '<div class="h-3"></div>')
+                          .replace(/\n/g, '<br/>'),
                       }}
                     />
                   </CardContent>
