@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 
 const navItems: { href: string; label: string; icon: LucideIcon; pro?: boolean }[] = [
-  { href: "/user/dashboard", label: "대시보드", icon: LayoutDashboard },
+  { href: "/user/dashboard", label: "AI 식품안전 모니터링", icon: LayoutDashboard },
   { href: "/user/insights", label: "AI 식품 인사이트", icon: Lightbulb },
   { href: "/user/news", label: "뉴스 피드", icon: Rss },
   { href: "/user/reports", label: "식품안전리포트", icon: FileText },
