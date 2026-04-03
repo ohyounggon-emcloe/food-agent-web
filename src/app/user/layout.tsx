@@ -119,7 +119,7 @@ export default function UserLayout({
           {navSections.map((section, sIdx) => (
             <div key={section.title}>
               {sIdx > 0 && <div className="border-t border-slate-800 my-3" />}
-              <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider px-3 mb-2">
+              <p className="text-xs text-slate-400 font-bold tracking-wide px-3 mb-2">
                 {section.title}
               </p>
               {section.items.map((item) => {
