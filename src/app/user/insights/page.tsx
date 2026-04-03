@@ -44,8 +44,8 @@ export default function InsightsPage() {
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
   const [days, setDays] = useState("7");
-  // 피드백 토글 상태: insightId → "helpful" | "not_helpful" | null
   const [feedbackState, setFeedbackState] = useState<Record<number, string | null>>({});
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
 
   const toggleFeedback = async (insightId: number, type: "helpful" | "not_helpful") => {
     const current = feedbackState[insightId];
@@ -114,16 +114,16 @@ export default function InsightsPage() {
 
   const formatDate = (dateStr: string) => {
     try {
-      const d = new Date(dateStr);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const target = new Date(dateStr);
-      target.setHours(0, 0, 0, 0);
-      const diff = Math.floor((today.getTime() - target.getTime()) / 86400000);
+      const parts = dateStr.split("-");
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]);
+      const day = parseInt(parts[2]);
 
-      if (diff === 0) return "오늘";
-      if (diff === 1) return "어제";
-      return `${d.getMonth() + 1}월 ${d.getDate()}일`;
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
+      if (dateStr === todayStr) return `오늘 (${month}월 ${day}일)`;
+      return `${year}년 ${month}월 ${day}일`;
     } catch {
       return dateStr;
     }
@@ -181,12 +181,20 @@ export default function InsightsPage() {
           해당 기간에 생성된 인사이트가 없습니다
         </div>
       ) : (
-        Object.entries(grouped).map(([date, items]) => (
+        Object.entries(grouped).map(([date, items], groupIdx) => {
+          const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}-${String(new Date().getDate()).padStart(2, "0")}`;
+          const isExpanded = expandedDates[date] ?? (groupIdx === 0 || date === todayStr);
+
+          return (
           <div key={date}>
-            <h3 className="text-sm font-semibold text-gray-500 mb-3 border-b pb-1">
-              {formatDate(date)}
-            </h3>
-            <div className="space-y-4">
+            <button
+              onClick={() => setExpandedDates((prev) => ({ ...prev, [date]: !isExpanded }))}
+              className="w-full flex items-center justify-between text-sm font-semibold text-gray-500 mb-3 border-b pb-1 hover:text-gray-700 transition-colors"
+            >
+              <span>{formatDate(date)} ({items.length}건)</span>
+              <span className="text-xs">{isExpanded ? "▲ 접기" : "▼ 펼치기"}</span>
+            </button>
+            {isExpanded && <div className="space-y-4">
               {items.map((ins) => {
                 const style = CATEGORY_STYLE[ins.category] || {
                   label: ins.category, icon: "⚪", bg: "bg-gray-50 border-gray-200", text: "text-gray-700",
@@ -342,9 +350,10 @@ export default function InsightsPage() {
                   </div>
                 );
               })}
-            </div>
+            </div>}
           </div>
-        ))
+          );
+        })
       )}
     </div>
   );
