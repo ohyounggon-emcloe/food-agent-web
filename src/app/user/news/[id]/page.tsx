@@ -195,8 +195,10 @@ export default function NewsDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap leading-relaxed">
-              {article.content}
+            <div className="prose prose-sm max-w-none text-gray-700 leading-relaxed">
+              {(article.content || "").split(/(?<=[.!?。])\s+/).map((sentence: string, i: number) => (
+                <p key={i} className="mb-2 text-sm">{sentence}</p>
+              ))}
             </div>
           </CardContent>
         </Card>

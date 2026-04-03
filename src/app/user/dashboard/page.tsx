@@ -103,35 +103,19 @@ export default function UserDashboard() {
           ※ 현재 데이터 부족으로 과대 추정 가능성 → 충분한 데이터 축적 후 표시
       */}
 
-      <div className="grid grid-cols-3 gap-2 md:gap-4">
-        <Card className="py-2 md:py-3">
-          <CardContent className="pb-0 pt-0 px-2 md:px-4">
-            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"총 수집"}</p>
-            <div className="text-lg md:text-2xl font-bold mt-0.5">{data.totalArticles}</div>
-          </CardContent>
-        </Card>
-
-        <Card className="py-2 md:py-3">
-          <CardContent className="pb-0 pt-0 px-2 md:px-4">
-            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"오늘 수집"}</p>
-            <div className="text-lg md:text-2xl font-bold mt-0.5">{data.todayArticles}</div>
-          </CardContent>
-        </Card>
-
-        <Card className={`py-2 md:py-3 ${highRiskCount > 0 ? "border-red-200 bg-red-50" : ""}`}>
-          <CardContent className="pb-0 pt-0 px-2 md:px-4">
-            <p className="text-[10px] md:text-xs font-medium text-gray-500">{"오늘 고위험"}</p>
-            <div className={`text-lg md:text-2xl font-bold mt-0.5 ${highRiskCount > 0 ? "text-red-600" : ""}`}>
-              {highRiskCount}
+      {/* 오늘 고위험 알림 (있을 때만) */}
+      {highRiskCount > 0 && (
+        <Card className="border-red-200 bg-red-50 py-2">
+          <CardContent className="pb-0 pt-0 px-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-red-600">오늘 고위험 {highRiskCount}건 감지</p>
             </div>
-            {highRiskCount > 0 && (
-              <Link href="/user/news?risk_level=Level1" className="text-[10px] md:text-xs text-red-500 hover:underline">
-                {"확인 →"}
-              </Link>
-            )}
+            <Link href="/user/news?risk_level=Level1" className="text-xs text-red-500 hover:underline">
+              {"확인 →"}
+            </Link>
           </CardContent>
         </Card>
-      </div>
+      )}
 
       {/* AI 식품 인사이트 요약 */}
       {insights.length > 0 && (
