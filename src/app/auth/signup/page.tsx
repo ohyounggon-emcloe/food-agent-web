@@ -73,7 +73,7 @@ export default function SignupPage() {
           preferred_regions: selectedRegions.map(s => ({ sido: s })),
           preferred_industries: selectedIndustries.map(c => ({ category: c })),
         },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: "https://aifx.kr/auth/callback",
       },
     });
 

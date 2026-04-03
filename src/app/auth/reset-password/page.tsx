@@ -22,7 +22,7 @@ export default function ResetPasswordPage() {
       const supabase = createClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(
         email,
-        { redirectTo: `${window.location.origin}/auth/update-password` }
+        { redirectTo: "https://aifx.kr/auth/update-password" }
       );
 
       if (resetError) {
