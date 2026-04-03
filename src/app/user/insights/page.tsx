@@ -199,10 +199,22 @@ export default function InsightsPage() {
           <div key={date}>
             <button
               onClick={() => setExpandedDates((prev) => ({ ...prev, [date]: !isExpanded }))}
-              className="w-full flex items-center justify-between text-sm font-semibold text-gray-500 mb-3 border-b pb-1 hover:text-gray-700 transition-colors"
+              className="w-full flex items-center justify-between py-2.5 px-4 rounded-lg bg-slate-50 hover:bg-slate-100 transition-colors mb-3"
             >
-              <span>{formatDate(date)} ({items.length}건)</span>
-              <span className="text-xs">{isExpanded ? "▲ 접기" : "▼ 펼치기"}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center">
+                  <span className="text-teal-600 text-xs font-bold">
+                    {date.split("-")[2]?.replace(/^0/, "")}
+                  </span>
+                </div>
+                <div className="text-left">
+                  <span className="text-sm font-semibold text-gray-700">{formatDate(date)}</span>
+                  <span className="text-xs text-gray-400 ml-2">{items.length}건의 인사이트</span>
+                </div>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded-full ${isExpanded ? "bg-teal-100 text-teal-700" : "bg-gray-200 text-gray-500"}`}>
+                {isExpanded ? "접기" : "펼치기"}
+              </span>
             </button>
             {isExpanded && <div className="space-y-4">
               {items.map((ins) => {
