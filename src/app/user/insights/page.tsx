@@ -43,7 +43,11 @@ export default function InsightsPage() {
   const [insights, setInsights] = useState<Insight[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
-  const [days, setDays] = useState("7");
+  const today = new Date();
+  const weekAgo = new Date(today);
+  weekAgo.setDate(weekAgo.getDate() - 6);
+  const [startDate, setStartDate] = useState(weekAgo.toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(today.toISOString().split("T")[0]);
   const [feedbackState, setFeedbackState] = useState<Record<number, string | null>>({});
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
 
@@ -91,8 +95,10 @@ export default function InsightsPage() {
   };
 
   useEffect(() => {
+    setLoading(true);
     const params = new URLSearchParams();
-    params.set("days", days);
+    params.set("start", startDate);
+    params.set("end", endDate);
     if (category !== "all") params.set("category", category);
 
     fetch(`/api/insights?${params}`)
@@ -102,7 +108,7 @@ export default function InsightsPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [category, days]);
+  }, [category, startDate, endDate]);
 
   // 날짜별 그룹핑
   const grouped: Record<string, Insight[]> = {};
@@ -149,7 +155,7 @@ export default function InsightsPage() {
         </p>
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3 items-center">
         <Select value={category} onValueChange={(v) => setCategory(v || "all")}>
           <SelectTrigger className="w-36">
             <SelectValue>{category === "all" ? "전체" : category === "핵심이슈" ? "핵심 이슈" : category === "업종체크" ? "업종 체크" : "법규 변경"}</SelectValue>
@@ -161,17 +167,21 @@ export default function InsightsPage() {
             <SelectItem value="법규변경">법규 변경</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={days} onValueChange={(v) => setDays(v || "7")}>
-          <SelectTrigger className="w-28">
-            <SelectValue>{days === "1" ? "오늘" : `${days}일`}</SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="1">오늘</SelectItem>
-            <SelectItem value="3">3일</SelectItem>
-            <SelectItem value="7">7일</SelectItem>
-            <SelectItem value="30">30일</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="h-9 px-3 rounded-md border border-gray-300 text-sm"
+          />
+          <span className="text-gray-400 text-sm">~</span>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="h-9 px-3 rounded-md border border-gray-300 text-sm"
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -226,11 +236,6 @@ export default function InsightsPage() {
                         <h4 className="font-semibold text-gray-900 mb-1">
                           {ins.title}
                         </h4>
-                        <p className="text-xs text-gray-400 mb-2">
-                          {ins.created_at ? new Date(ins.created_at).toLocaleString("ko-KR", {
-                            month: "long", day: "numeric", hour: "2-digit", minute: "2-digit"
-                          }) + " 생성" : ""}
-                        </p>
                         <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
                           {ins.content}
                         </p>

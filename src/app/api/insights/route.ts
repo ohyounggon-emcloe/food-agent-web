@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
   }
 
   const { searchParams } = new URL(request.url);
+  const startDate = searchParams.get("start");
+  const endDate = searchParams.get("end");
   const days = Number(searchParams.get("days")) || 7;
   const category = searchParams.get("category");
 
@@ -24,10 +26,19 @@ export async function GET(request: NextRequest) {
                penalty_amount, efficiency_tip, logic, confidence,
                feedback_helpful, feedback_not_helpful, created_at
         FROM daily_insights
-        WHERE insight_date >= CURRENT_DATE - $1::integer
       `;
-      const params: unknown[] = [days];
-      let paramIdx = 2;
+      const params: unknown[] = [];
+      let paramIdx = 1;
+
+      if (startDate && endDate) {
+        sql += ` WHERE insight_date >= $${paramIdx} AND insight_date <= $${paramIdx + 1}`;
+        params.push(startDate, endDate);
+        paramIdx += 2;
+      } else {
+        sql += ` WHERE insight_date >= CURRENT_DATE - $${paramIdx}::integer`;
+        params.push(days);
+        paramIdx++;
+      }
 
       if (category && category !== "all") {
         sql += ` AND category = $${paramIdx}`;
