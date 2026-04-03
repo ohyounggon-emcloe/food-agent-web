@@ -70,7 +70,7 @@ export default function UserLayout({
 }) {
   const pathname = usePathname();
   const { role, loading, user, profile } = useAuth();
-  const userType = (profile as Record<string, unknown>)?.user_type as string || "personal";
+  const userType = (profile as unknown as Record<string, unknown>)?.user_type as string || "personal";
 
   // 로딩 완료 후 user가 없으면 로그인으로
   if (!loading && !user) {

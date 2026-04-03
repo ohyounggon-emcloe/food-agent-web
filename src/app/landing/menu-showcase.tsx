@@ -225,8 +225,9 @@ export function MenuShowcase() {
 
         {/* 우리가게 위생관리 */}
         <div className="mt-28 sm:mt-36">
-          <h3 className="text-2xl font-bold text-slate-800 mb-4 text-center">
-            🏠 우리가게 위생관리
+          <h3 className="text-2xl font-bold text-slate-800 mb-4 text-center inline-flex items-center justify-center gap-2 w-full">
+            <Store className="w-7 h-7 text-emerald-600" />
+            우리가게 위생관리
           </h3>
           <p className="text-lg text-slate-600 text-center mb-12 max-w-2xl mx-auto">
             매장 위생을 체계적으로 관리하는 7가지 도구

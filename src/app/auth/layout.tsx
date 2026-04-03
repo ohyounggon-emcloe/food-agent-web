@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AuthLayout({
   children,
@@ -27,11 +28,13 @@ export default function AuthLayout({
       <div className="relative z-10 w-full max-w-md px-6">
         {/* 브랜드 */}
         <div className="text-center mb-10">
-          <h1 className="text-5xl font-extrabold tracking-tight">
-            <span className="text-white">AI</span>
-            <span className="text-emerald-400">-</span>
-            <span className="text-emerald-400">FX</span>
-          </h1>
+          <Link href="/">
+            <h1 className="text-5xl font-extrabold tracking-tight hover:opacity-80 transition-opacity cursor-pointer">
+              <span className="text-white">AI</span>
+              <span className="text-emerald-400">-</span>
+              <span className="text-emerald-400">FX</span>
+            </h1>
+          </Link>
           <p className="text-sm text-slate-200 tracking-[0.25em] uppercase mt-3 font-medium">
             Food Intelligence Platform
           </p>
