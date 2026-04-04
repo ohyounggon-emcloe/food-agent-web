@@ -111,6 +111,14 @@ export default function UserLayout({
   // 로딩 완료 후 user가 없으면 로그인으로
   if (!user) {
     if (typeof window !== "undefined") {
+      // sb- 쿠키 삭제 후 리다이렉트 (미들웨어 리다이렉트 루프 방지)
+      document.cookie.split(";").forEach((c) => {
+        const name = c.trim().split("=")[0];
+        if (name.startsWith("sb-")) {
+          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}`;
+          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+        }
+      });
       window.location.href = "/auth/login";
     }
     return null;

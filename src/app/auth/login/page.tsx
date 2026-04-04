@@ -34,6 +34,8 @@ function LoginForm() {
       setInfo("이메일 인증이 완료되었습니다. 로그인해주세요.");
     } else if (searchParams.get("error") === "expired") {
       setError("인증 링크가 만료되었습니다. 다시 요청해주세요.");
+    } else if (searchParams.get("error") === "unverified") {
+      setError("이메일 인증이 필요합니다. 가입 시 입력한 이메일의 메일함을 확인해주세요.");
     }
   }, [searchParams]);
 
