@@ -184,9 +184,9 @@ export function AgentArchitecture() {
         </div>
 
         {/* 3단계 파이프라인 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-0 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-0 items-stretch relative">
           {stages.map((stage, index) => (
-            <div key={stage.id} className="relative flex flex-col items-center">
+            <div key={stage.id} className="relative flex flex-col">
               {/* 연결 화살표 (데스크톱) */}
               {index < stages.length - 1 && (
                 <div className="hidden lg:flex absolute top-1/3 -right-3 z-10">
@@ -197,7 +197,7 @@ export function AgentArchitecture() {
               {/* 스테이지 카드 */}
               <button
                 onClick={() => setActiveStage(stage)}
-                className={`w-full p-6 sm:p-8 rounded-2xl border ${stage.borderColor} ${stage.bgColor} hover:scale-[1.02] transition-all duration-300 cursor-pointer text-left group`}
+                className={`w-full flex-1 flex flex-col p-6 sm:p-8 rounded-2xl border ${stage.borderColor} ${stage.bgColor} hover:scale-[1.02] transition-all duration-300 cursor-pointer text-left group`}
               >
                 {/* 상단: 단계 + 개수 */}
                 <div className="flex items-center justify-between mb-5">
@@ -229,7 +229,7 @@ export function AgentArchitecture() {
                 </div>
 
                 {/* 클릭 안내 */}
-                <p className="text-xs text-slate-500 group-hover:text-slate-300 transition-colors">
+                <p className="text-xs text-slate-500 group-hover:text-slate-300 transition-colors mt-auto">
                   클릭하여 상세 보기 →
                 </p>
 
@@ -264,12 +264,6 @@ export function AgentArchitecture() {
           ))}
         </div>
 
-        {/* 하단 요약 */}
-        <div className="mt-12 text-center">
-          <p className="text-slate-500 text-sm">
-            모든 에이전트는 매일 08:00 / 16:00에 자동 실행되며, 피드백을 학습하여 스스로 진화합니다
-          </p>
-        </div>
       </div>
 
       {/* 모달 */}

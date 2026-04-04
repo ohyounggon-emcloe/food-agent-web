@@ -24,17 +24,9 @@ export function HeroSection() {
         <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           {/* 좌측: 텍스트 */}
           <div className="flex-1 text-center lg:text-left">
-            {/* 경고 뱃지 */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-red-500/15 border border-red-500/25 mb-6">
-              <ShieldAlert className="w-4 h-4 text-red-400" />
-              <span className="text-red-300 text-sm font-medium">
-                식품업 과태료 평균 500만 원
-              </span>
-            </div>
-
             {/* 메인 카피 */}
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-6">
-              과태료 500만 원의 공포,
+              식품 안전,
               <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
                 AI-FX가 24시간
