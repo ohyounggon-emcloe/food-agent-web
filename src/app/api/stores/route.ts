@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { query, queryOne, execute, useNcloudDb } from "@/lib/ncloud-db";
+import { headers } from "next/headers";
 
 function generateStoreCode(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -20,7 +21,26 @@ export async function GET(request: NextRequest) {
   }
 
   if (useNcloudDb()) {
-    // 내가 소속된 매장 조회
+    // 관리자: X-Store-Id 헤더로 특정 가게 조회
+    const profile = await queryOne<{ role: string }>(
+      "SELECT role FROM user_profiles WHERE id = $1",
+      [session.user.id]
+    );
+    const isAdmin = profile?.role === "admin" || profile?.role === "super_admin";
+
+    if (isAdmin) {
+      const headerStore = await headers();
+      const selectedStoreId = headerStore.get("x-store-id");
+      if (selectedStoreId) {
+        const stores = await query(
+          `SELECT s.*, 'admin' as my_role FROM stores s WHERE s.id = $1`,
+          [Number(selectedStoreId)]
+        );
+        return NextResponse.json(stores || []);
+      }
+    }
+
+    // 일반 사용자: 내가 소속된 매장 조회
     const stores = await query(
       `SELECT s.*, sm.role as my_role
        FROM stores s

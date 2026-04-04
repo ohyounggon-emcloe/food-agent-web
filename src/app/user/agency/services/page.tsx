@@ -236,10 +236,15 @@ export default function AgencyServices() {
                   {s.staff_name && <Badge variant="outline" className="text-[10px]">{s.staff_name}</Badge>}
                   {s.cost > 0 && <span className="text-xs text-emerald-600">{s.cost.toLocaleString()}원</span>}
                 </div>
-                <div className="flex gap-1 shrink-0">
-                  {s.status === "requested" && <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(s.id, "confirmed")}>확정</Button>}
-                  {s.status === "confirmed" && <Button size="sm" variant="outline" className="text-xs h-7 text-green-600" onClick={() => updateStatus(s.id, "completed")}>완료</Button>}
-                  {s.status === "requested" && <Button size="sm" variant="ghost" className="text-xs h-7 text-red-400" onClick={() => updateStatus(s.id, "cancelled")}>취소</Button>}
+                <div className="flex gap-1 items-center shrink-0">
+                  <select
+                    value={s.status}
+                    onChange={e => updateStatus(s.id, e.target.value)}
+                    className="h-7 rounded border border-input bg-background px-2 text-xs"
+                  >
+                    {serviceStatuses.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+                    <option value="expired">미진행</option>
+                  </select>
                   {!["cancelled", "expired"].includes(s.status) && (
                     <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
                   )}
