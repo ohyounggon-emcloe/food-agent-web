@@ -244,10 +244,10 @@ export default function AgencyServices() {
                   >
                     {serviceStatuses.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
                   </select>
-                  {!["cancelled", "expired"].includes(s.status) && (
+                  {s.status !== "cancelled" && (
                     <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
                   )}
-                  {!["completed", "cancelled", "expired"].includes(s.status) && (
+                  {!["completed", "cancelled"].includes(s.status) && (
                     <button onClick={() => handleDelete(s)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
                   )}
                 </div>

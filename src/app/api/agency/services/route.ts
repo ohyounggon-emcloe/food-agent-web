@@ -12,14 +12,6 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
   const clientId = searchParams.get("client_id");
 
-  // 일자 지난 요청/확정 서비스를 미진행으로 자동 변경
-  await execute(
-    `UPDATE service_requests SET status = 'expired'
-     WHERE agency_id = $1 AND status IN ('requested', 'confirmed')
-     AND requested_date < CURRENT_DATE`,
-    [auth.agencyId]
-  );
-
   let sql = `SELECT sr.*, ac.client_name, si.item_name, as2.name as staff_name
     FROM service_requests sr
     LEFT JOIN agency_clients ac ON sr.client_id = ac.id
