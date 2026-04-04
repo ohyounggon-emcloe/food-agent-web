@@ -37,14 +37,22 @@ export default function AgencyRevenue() {
   const months = getRecentMonths(12);
   const currentMonth = months[0];
 
+  const [allRevenue, setAllRevenue] = useState<Revenue[]>([]);
+
   const fetchData = useCallback(async () => {
     const params = new URLSearchParams();
     if (typeFilter !== "all") params.set("client_type", typeFilter);
-    if (selectedClient) params.set("client_id", String(selectedClient.id));
+    // 전체 매출 조회 (고객사 리스트 평균 표시용)
     const res = await fetch(`/api/agency/revenue?${params}`);
     const data = await res.json();
     setClients(data.clients || []);
-    setRevenue(data.revenue || []);
+    setAllRevenue(data.revenue || []);
+    // 선택된 고객사 매출만 필터
+    if (selectedClient) {
+      setRevenue((data.revenue || []).filter((r: Revenue) => r.client_id === selectedClient.id));
+    } else {
+      setRevenue(data.revenue || []);
+    }
   }, [typeFilter, selectedClient]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
@@ -61,6 +69,16 @@ export default function AgencyRevenue() {
   const avg12 = selectedClient
     ? Math.round(months.reduce((sum, m) => sum + (revenueMap.get(m)?.amount || 0), 0) / 12)
     : 0;
+
+  // 고객사별 12개월 평균 계산
+  const clientAvgMap = new Map<number, number>();
+  for (const c of clients) {
+    const total = months.reduce((sum, m) => {
+      const r = allRevenue.find(rv => rv.client_id === c.id && rv.year_month === m);
+      return sum + (r?.amount || 0);
+    }, 0);
+    clientAvgMap.set(c.id, Math.round(total / 12 / 10000));
+  }
 
   const saveRevenue = async (yearMonth: string) => {
     if (!selectedClient) return;
@@ -112,8 +130,16 @@ export default function AgencyRevenue() {
                   selectedClient?.id === c.id ? "bg-emerald-50 border-l-2 border-emerald-500" : ""
                 }`}
               >
-                <p className="text-sm font-medium text-slate-800">{c.client_name}</p>
-                {c.client_type && <p className="text-[10px] text-slate-400">{c.client_type}</p>}
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-800">{c.client_name}</p>
+                    {c.client_type && <p className="text-[10px] text-slate-400">{c.client_type}</p>}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs font-semibold text-emerald-600">{(clientAvgMap.get(c.id) || 0).toLocaleString()}만원</p>
+                    <p className="text-[9px] text-slate-400">월평균</p>
+                  </div>
+                </div>
               </button>
             ))}
             {clients.length === 0 && (
