@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -29,9 +28,21 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
 };
 
 const EMPTY_FORM = {
-  client_id: "", service_type: "", title: "", requested_date: new Date().toISOString().split("T")[0],
+  client_id: "", service_type: "", title: "", requested_date: "",
   service_item_id: "", assigned_staff_id: "", quantity: "1", cost: "0", remarks: "",
 };
+
+function formatDateTime(dateStr: string) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const yy = String(d.getFullYear()).slice(2);
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yy}-${mm}-${dd} ${hh}:${mi}`;
+}
 
 export default function AgencyServices() {
   const [services, setServices] = useState<ServiceRequest[]>([]);
@@ -71,7 +82,6 @@ export default function AgencyServices() {
       });
       toast.success("서비스 수정 완료");
     } else {
-      // 중복 체크
       const checkRes = await fetch("/api/agency/calendar/check", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ requested_date: form.requested_date, service_item_id: form.service_item_id || null, assigned_staff_id: form.assigned_staff_id || null }),
@@ -103,7 +113,7 @@ export default function AgencyServices() {
       client_id: s.client_id ? String(s.client_id) : "",
       service_type: s.service_type || "",
       title: s.title,
-      requested_date: s.requested_date,
+      requested_date: s.requested_date ? s.requested_date.split("T")[0] : "",
       service_item_id: s.service_item_id ? String(s.service_item_id) : "",
       assigned_staff_id: s.assigned_staff_id ? String(s.assigned_staff_id) : "",
       quantity: String(s.quantity || 1),
@@ -123,6 +133,11 @@ export default function AgencyServices() {
     fetchAll();
   };
 
+  // native select용 헬퍼
+  const clientLabel = (id: string) => clients.find(c => String(c.id) === id)?.client_name || "";
+  const itemLabel = (id: string) => items.find(i => String(i.id) === id)?.item_name || "";
+  const staffLabel = (id: string) => staffList.find(s => String(s.id) === id)?.name || "";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -131,13 +146,14 @@ export default function AgencyServices() {
           <p className="text-gray-500 text-sm mt-1">부가서비스 요청 {services.length}건</p>
         </div>
         <div className="flex gap-2">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v || "all")}>
-            <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체</SelectItem>
-              {serviceStatuses.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="h-9 w-28 rounded-lg border border-input bg-background px-3 text-sm"
+          >
+            <option value="all">전체</option>
+            {serviceStatuses.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+          </select>
           <Dialog open={dialogOpen} onOpenChange={o => { if (!o) closeDialog(); else { setEditService(null); setForm(EMPTY_FORM); setDialogOpen(true); } }}>
             <DialogTrigger>
               <Button size="sm"><Plus className="w-4 h-4 mr-1" />서비스 등록</Button>
@@ -145,33 +161,58 @@ export default function AgencyServices() {
             <DialogContent className="max-w-lg">
               <DialogHeader><DialogTitle>{editService ? "서비스 수정" : "서비스 요청 등록"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
-                <Select value={form.client_id} onValueChange={v => setForm(p => ({...p, client_id: v || ""}))}>
-                  <SelectTrigger><SelectValue placeholder="고객사 선택" /></SelectTrigger>
-                  <SelectContent>{clients.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.client_name}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select value={form.service_type} onValueChange={v => setForm(p => ({...p, service_type: v || ""}))}>
-                  <SelectTrigger><SelectValue placeholder="서비스 유형 선택" /></SelectTrigger>
-                  <SelectContent>
-                    {serviceCategories.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Input placeholder="서비스 제목 *" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
-                <Input type="date" value={form.requested_date} onChange={e => setForm(p => ({...p, requested_date: e.target.value}))} />
-                <Select value={form.service_item_id} onValueChange={v => setForm(p => ({...p, service_item_id: v || ""}))}>
-                  <SelectTrigger><SelectValue placeholder="품목 선택 (선택)" /></SelectTrigger>
-                  <SelectContent>{items.filter(i => i.category === form.service_type).map(i => <SelectItem key={i.id} value={String(i.id)}>{i.item_name}</SelectItem>)}</SelectContent>
-                </Select>
-                {form.service_type === "인력" && (
-                  <Select value={form.assigned_staff_id} onValueChange={v => setForm(p => ({...p, assigned_staff_id: v || ""}))}>
-                    <SelectTrigger><SelectValue placeholder="인력 배정 (선택)" /></SelectTrigger>
-                    <SelectContent>{staffList.map(s => <SelectItem key={s.id} value={String(s.id)}>{s.name} ({s.job_type})</SelectItem>)}</SelectContent>
-                  </Select>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">고객사</label>
+                  <select value={form.client_id} onChange={e => setForm(p => ({...p, client_id: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="">고객사 선택</option>
+                    {clients.map(c => <option key={c.id} value={String(c.id)}>{c.client_name}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">서비스 유형</label>
+                  <select value={form.service_type} onChange={e => setForm(p => ({...p, service_type: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="">서비스 유형 선택</option>
+                    {serviceCategories.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">서비스 제목 *</label>
+                  <Input placeholder="서비스 제목" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">행사 일자</label>
+                  <Input type="datetime-local" value={form.requested_date} onChange={e => setForm(p => ({...p, requested_date: e.target.value}))} />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">품목 (선택)</label>
+                  <select value={form.service_item_id} onChange={e => setForm(p => ({...p, service_item_id: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="">품목 선택</option>
+                    {items.filter(i => !form.service_type || i.category === form.service_type).map(i => <option key={i.id} value={String(i.id)}>{i.item_name}</option>)}
+                  </select>
+                </div>
+                {(form.service_type === "인력" || form.assigned_staff_id) && (
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">인력 배정 (선택)</label>
+                    <select value={form.assigned_staff_id} onChange={e => setForm(p => ({...p, assigned_staff_id: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                      <option value="">인력 선택</option>
+                      {staffList.map(s => <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type})</option>)}
+                    </select>
+                  </div>
                 )}
                 <div className="grid grid-cols-2 gap-2">
-                  <Input type="number" placeholder="수량" value={form.quantity} onChange={e => setForm(p => ({...p, quantity: e.target.value}))} />
-                  <Input type="number" placeholder="비용 (원)" value={form.cost} onChange={e => setForm(p => ({...p, cost: e.target.value}))} />
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">수량</label>
+                    <Input type="number" value={form.quantity} onChange={e => setForm(p => ({...p, quantity: e.target.value}))} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">비용 (원)</label>
+                    <Input type="number" value={form.cost} onChange={e => setForm(p => ({...p, cost: e.target.value}))} />
+                  </div>
                 </div>
-                <Input placeholder="비고" value={form.remarks} onChange={e => setForm(p => ({...p, remarks: e.target.value}))} />
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">비고</label>
+                  <Input placeholder="비고" value={form.remarks} onChange={e => setForm(p => ({...p, remarks: e.target.value}))} />
+                </div>
                 <Button onClick={handleSubmit} className="w-full">{editService ? "수정" : "등록"}</Button>
               </div>
             </DialogContent>
@@ -187,7 +228,7 @@ export default function AgencyServices() {
               <CardContent className="py-3 flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-2 flex-1 min-w-0">
                   <Badge className={`text-[10px] shrink-0 ${st.color}`}>{st.label}</Badge>
-                  <span className="text-xs text-gray-400 shrink-0">{s.requested_date}</span>
+                  <span className="text-xs text-gray-400 shrink-0">{formatDateTime(s.requested_date)}</span>
                   <span className="text-sm font-medium truncate">{s.client_name || "미지정"}</span>
                   <span className="text-xs text-gray-500 truncate">{s.title}</span>
                   {s.item_name && <Badge variant="outline" className="text-[10px]">{s.item_name}</Badge>}
