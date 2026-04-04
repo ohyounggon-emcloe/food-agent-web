@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
   if (isAgencyAuthError(auth)) return auth;
 
   const body = await request.json();
-  const { requested_date, service_item_id, assigned_staff_id } = body;
+  const { requested_date, service_item_id, assigned_staff_id, quantity = 1 } = body;
+  const requestedQty = Number(quantity) || 1;
   const conflicts: string[] = [];
 
   // 기물 중복 체크
@@ -28,8 +29,8 @@ export async function POST(request: NextRequest) {
       const item = itemConflicts[0] as Record<string, unknown>;
       const used = Number(item.used || 0);
       const total = Number(item.total_quantity || 1);
-      if (used >= total) {
-        conflicts.push(`${item.item_name}: ${requested_date}에 재고 부족 (보유 ${total}대, 사용 중 ${used}대)`);
+      if ((used + requestedQty) > total) {
+        conflicts.push(`${item.item_name}: 재고 부족 (보유 ${total}, 사용중 ${used}, 요청 ${requestedQty})`);
       }
     }
   }

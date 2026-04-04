@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { query, execute } from "@/lib/ncloud-db";
+import { query, queryOne, execute } from "@/lib/ncloud-db";
 import { requireAgencyAuth, isAgencyAuthError } from "@/lib/agency-auth";
 
 export async function GET(request: NextRequest) {
@@ -47,6 +47,30 @@ export async function POST(request: NextRequest) {
 
   if (!title || !requested_date || !service_type) {
     return NextResponse.json({ error: "title, requested_date, service_type required" }, { status: 400 });
+  }
+
+  // 서버사이드 재고 검증
+  if (service_item_id) {
+    const stock = await queryOne<{ total_quantity: number; used: string }>(
+      `SELECT si.total_quantity,
+        (SELECT count(*) FROM service_requests sr2
+         WHERE sr2.service_item_id = si.id
+         AND sr2.requested_date = $2
+         AND sr2.status IN ('requested','confirmed')) as used
+       FROM service_items si
+       WHERE si.id = $1 AND si.agency_id = $3`,
+      [service_item_id, requested_date, auth.agencyId]
+    );
+    if (stock) {
+      const used = Number(stock.used || 0);
+      const reqQty = Number(quantity) || 1;
+      if ((used + reqQty) > stock.total_quantity) {
+        return NextResponse.json(
+          { error: `재고 부족 (보유 ${stock.total_quantity}, 사용중 ${used}, 요청 ${reqQty})` },
+          { status: 400 }
+        );
+      }
+    }
   }
 
   await execute(

@@ -18,8 +18,8 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // /admin/*, /user/* — 세션 쿠키 없으면 로그인 페이지로
-  if (pathname.startsWith("/admin") || pathname.startsWith("/user")) {
+  // /admin/*, /user/*, /agency/* — 세션 쿠키 없으면 로그인 페이지로
+  if (pathname.startsWith("/admin") || pathname.startsWith("/user") || pathname.startsWith("/agency")) {
     if (!hasSession) {
       const url = request.nextUrl.clone();
       url.pathname = "/auth/login";
@@ -48,5 +48,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/user/:path*", "/auth/login", "/auth/signup"],
+  matcher: ["/", "/admin/:path*", "/user/:path*", "/agency/:path*", "/auth/login", "/auth/signup"],
 };
