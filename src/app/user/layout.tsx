@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/user-menu";
@@ -30,6 +31,8 @@ import {
 
 interface NavSection {
   title: string;
+  agencyOnly?: boolean;
+  storeOnly?: boolean;
   items: { href: string; label: string; icon: LucideIcon; pro?: boolean; businessOnly?: boolean }[];
 }
 
@@ -48,6 +51,7 @@ const navSections: NavSection[] = [
   },
   {
     title: "📦 부가서비스 관리",
+    agencyOnly: true,
     items: [
       { href: "/user/agency/dashboard", label: "대리점 현황", icon: Store, businessOnly: true },
       { href: "/user/agency/clients", label: "고객사 관리", icon: UserCircle, businessOnly: true },
@@ -61,6 +65,7 @@ const navSections: NavSection[] = [
   },
   {
     title: "🏠 우리가게 위생관리",
+    storeOnly: true,
     items: [
       { href: "/user/store/dashboard", label: "가게 현황", icon: Store, businessOnly: true },
       { href: "/user/store/check", label: "일일 점검", icon: CheckSquare, businessOnly: true },
@@ -73,8 +78,7 @@ const navSections: NavSection[] = [
   },
 ];
 
-// 기존 호환용 (flat list)
-const navItems = navSections.flatMap((s) => s.items);
+// MobileMenu용 (동적으로 계산)
 
 export default function UserLayout({
   children,
@@ -82,8 +86,18 @@ export default function UserLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { role, loading, user, profile } = useAuth();
   const userType = (profile as unknown as Record<string, unknown>)?.user_type as string || "personal";
+  const isAdmin = ["admin", "super_admin"].includes(role);
+  const isAgency = userType === "agency";
+
+  // agency 유형이 /user/dashboard에 접근하면 /user/agency/dashboard로 리다이렉트
+  useEffect(() => {
+    if (!loading && user && isAgency && pathname === "/user/dashboard") {
+      router.replace("/user/agency/dashboard");
+    }
+  }, [loading, user, isAgency, pathname, router]);
 
   // 로딩 중이면 빈 화면 (깜빡임 방지)
   if (loading) {
@@ -102,11 +116,24 @@ export default function UserLayout({
     return null;
   }
 
+  // agency 유형: 부가서비스 섹션만 표시
+  const visibleSections = navSections.filter((section) => {
+    if (isAdmin) return true;
+    if (isAgency) {
+      // agency 유형은 부가서비스 관리 섹션만
+      return !!section.agencyOnly;
+    }
+    // 일반/사업자: AI-FX 정보서비스 + 해당 유형 섹션
+    if (section.agencyOnly) return false;
+    if (section.storeOnly) return userType === "business";
+    return true;
+  });
+
   return (
     <div className="flex h-screen">
       {/* 모바일 헤더 */}
       <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 lg:hidden">
-        <MobileMenu navItems={navItems} role={role}>
+        <MobileMenu navItems={visibleSections.flatMap((s) => s.items)} role={role}>
           {["admin", "super_admin"].includes(role) && (
             <Link
               href="/admin/dashboard"
@@ -118,7 +145,7 @@ export default function UserLayout({
           )}
           <UserMenu />
         </MobileMenu>
-        <Link href="/user/dashboard" className="text-lg font-bold">
+        <Link href={isAgency ? "/user/agency/dashboard" : "/user/dashboard"} className="text-lg font-bold">
           <span className="text-white">AI</span>
           <span className="text-emerald-400">-FX</span>
         </Link>
@@ -139,12 +166,7 @@ export default function UserLayout({
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {navSections.map((section, sIdx) => {
-            // 사업자/대리점 전용 섹션은 해당 유형 또는 관리자만 표시
-            const isStoreSection = section.items.some((i) => i.businessOnly);
-            const showSection = !isStoreSection || userType === "business" || userType === "agency" || ["admin", "super_admin"].includes(role);
-            if (!showSection) return null;
-
+          {visibleSections.map((section, sIdx) => {
             return (
             <div key={section.title}>
               {sIdx > 0 && <div className="border-t border-slate-800 my-3" />}

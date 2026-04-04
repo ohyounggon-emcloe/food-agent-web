@@ -8,7 +8,7 @@ export async function GET() {
   const auth = await requireAgencyAuth(supabase);
   if (isAgencyAuthError(auth)) return auth;
 
-  const [counts, thisMonth, staff, items] = await Promise.all([
+  const [counts, thisMonth, staff, items, clientCount, monthRevenue, recentCompleted, agencyInfo] = await Promise.all([
     queryOne(
       `SELECT
         count(*) FILTER (WHERE status = 'requested') as pending,
@@ -38,11 +38,39 @@ export async function GET() {
       ORDER BY si.category`,
       [auth.agencyId]
     ),
+    queryOne<{ count: string }>(
+      "SELECT count(*) FROM agency_clients WHERE agency_id = $1",
+      [auth.agencyId]
+    ),
+    queryOne<{ revenue: string }>(
+      `SELECT COALESCE(SUM(cost * quantity), 0) as revenue
+       FROM service_requests
+       WHERE agency_id = $1 AND status = 'completed'
+         AND completed_at >= date_trunc('month', CURRENT_DATE)`,
+      [auth.agencyId]
+    ),
+    query(
+      `SELECT sr.title, sr.service_type, sr.cost, sr.quantity, sr.completed_at,
+              ac.client_name
+       FROM service_requests sr
+       LEFT JOIN agency_clients ac ON sr.client_id = ac.id
+       WHERE sr.agency_id = $1 AND sr.status = 'completed'
+       ORDER BY sr.completed_at DESC LIMIT 5`,
+      [auth.agencyId]
+    ),
+    queryOne<{ agency_name: string }>(
+      "SELECT agency_name FROM agencies WHERE id = $1",
+      [auth.agencyId]
+    ),
   ]);
 
   return NextResponse.json({
+    agencyName: agencyInfo?.agency_name || "",
     counts,
+    clientCount: clientCount?.count || "0",
+    monthRevenue: monthRevenue?.revenue || "0",
     upcomingEvents: thisMonth,
+    recentCompleted: recentCompleted || [],
     availableStaff: staff,
     inventory: items,
   });
