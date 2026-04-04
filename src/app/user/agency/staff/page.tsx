@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,28 @@ export default function AgencyStaff() {
   const [form, setForm] = useState(EMPTY);
   const { codes: genders } = useCodes("gender");
   const { codes: jobTypes } = useCodes("job_type");
+  const [regionData, setRegionData] = useState<Record<string, string[]>>({});
+  const [selectedSido, setSelectedSido] = useState("");
+  const [selectedSigungu, setSelectedSigungu] = useState("");
+
+  useEffect(() => {
+    fetch("/api/regions").then(r => r.json()).then(setRegionData).catch(() => {});
+  }, []);
+
+  const sigungus = selectedSido ? regionData[selectedSido] || [] : [];
+
+  // 시/도 + 시/군/구를 region 문자열로 합치기
+  const updateRegion = useCallback((sido: string, sigungu: string) => {
+    const region = sigungu ? `${sido} ${sigungu}` : sido;
+    setForm(p => ({ ...p, region }));
+  }, []);
+
+  // region 문자열에서 시/도, 시/군/구 분리 (수정 시 복원용)
+  const parseRegion = (region: string) => {
+    if (!region) return { sido: "", sigungu: "" };
+    const parts = region.split(" ");
+    return { sido: parts[0] || "", sigungu: parts.slice(1).join(" ") || "" };
+  };
 
   const fetch_ = () => { fetch("/api/agency/staff").then(r => r.json()).then(d => setStaff((Array.isArray(d) ? d : []).filter((s: StaffMember) => s.status !== "inactive"))); };
   useEffect(() => { fetch_(); }, []);
@@ -45,11 +67,14 @@ export default function AgencyStaff() {
 
   const openEdit = (s: StaffMember) => {
     setEditStaff(s);
+    const parsed = parseRegion(s.region || "");
+    setSelectedSido(parsed.sido);
+    setSelectedSigungu(parsed.sigungu);
     setForm({ name: s.name, gender: s.gender || "", age: String(s.age || ""), region: s.region || "", has_vehicle: s.has_vehicle, job_type: s.job_type || "", phone: s.phone || "", unit_cost: String(s.unit_cost || 0) });
     setDialogOpen(true);
   };
 
-  const closeDialog = () => { setDialogOpen(false); setEditStaff(null); setForm(EMPTY); };
+  const closeDialog = () => { setDialogOpen(false); setEditStaff(null); setForm(EMPTY); setSelectedSido(""); setSelectedSigungu(""); };
 
   return (
     <div className="space-y-6">
@@ -78,8 +103,26 @@ export default function AgencyStaff() {
                 </div>
               </div>
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">지역 (시/구/동)</label>
-                <Input placeholder="예: 서울 강남구 역삼동" value={form.region} onChange={e => setForm(p => ({...p, region: e.target.value}))} />
+                <label className="text-xs text-slate-500 mb-1 block">지역</label>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedSido}
+                    onChange={e => { setSelectedSido(e.target.value); setSelectedSigungu(""); updateRegion(e.target.value, ""); }}
+                    className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm"
+                  >
+                    <option value="">시/도 선택</option>
+                    {Object.keys(regionData).map(sido => <option key={sido} value={sido}>{sido}</option>)}
+                  </select>
+                  <select
+                    value={selectedSigungu}
+                    onChange={e => { setSelectedSigungu(e.target.value); updateRegion(selectedSido, e.target.value); }}
+                    className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm"
+                    disabled={!selectedSido || sigungus.length === 0}
+                  >
+                    <option value="">전체</option>
+                    {sigungus.map(sg => <option key={sg} value={sg}>{sg}</option>)}
+                  </select>
+                </div>
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">직무</label>
