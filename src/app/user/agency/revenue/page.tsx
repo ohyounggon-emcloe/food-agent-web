@@ -85,7 +85,7 @@ export default function AgencyRevenue() {
       {/* 조회조건 */}
       <div className="flex gap-2">
         <Select value={typeFilter} onValueChange={v => { setTypeFilter(v || "all"); setSelectedClient(null); }}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-32"><SelectValue>{typeFilter === "all" ? "전체 업종" : clientTypes.find(c => c.code_value === typeFilter)?.code_label || typeFilter}</SelectValue></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">전체 업종</SelectItem>
             {clientTypes.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
