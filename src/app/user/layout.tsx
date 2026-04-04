@@ -284,11 +284,12 @@ export default function UserLayout({
   );
 }
 
-function AdminSearchSelector({ items, selectedId, onSelect, placeholder }: {
+function AdminSearchSelector({ items, selectedId, onSelect, placeholder, icon }: {
   items: { id: number; name: string; sub?: string }[];
   selectedId: number | null;
   onSelect: (id: number | null) => void;
   placeholder: string;
+  icon: string;
 }) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
@@ -301,45 +302,66 @@ function AdminSearchSelector({ items, selectedId, onSelect, placeholder }: {
   const selectedName = items.find((i) => i.id === selectedId)?.name || placeholder;
 
   return (
-    <div className="mb-3 px-3 relative">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full bg-slate-800 text-slate-200 text-xs rounded-md border border-amber-600/50 px-2 py-1.5 text-left truncate flex items-center justify-between"
-      >
-        <span className="truncate">{selectedName}</span>
-        <span className="text-amber-400 ml-1">{open ? "▲" : "▼"}</span>
-      </button>
+    <>
+      <div className="mb-3 px-3 flex items-center gap-1.5">
+        <div className="flex-1 bg-slate-800 text-slate-200 text-xs rounded-md border border-slate-700 px-2 py-1.5 truncate">
+          <span className="text-slate-500 mr-1">{icon}</span>
+          {selectedName}
+        </div>
+        <button
+          onClick={() => setOpen(true)}
+          className="shrink-0 bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-medium px-2 py-1.5 rounded-md transition-colors"
+        >
+          검색
+        </button>
+      </div>
+
+      {/* 검색 모달 */}
       {open && (
-        <div className="absolute left-3 right-3 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-xl z-50 max-h-60 overflow-hidden flex flex-col">
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="검색..."
-            autoFocus
-            className="w-full bg-slate-700 text-slate-200 text-xs px-2 py-1.5 border-b border-slate-600 outline-none placeholder:text-slate-500"
-          />
-          <div className="overflow-y-auto max-h-48">
-            {filtered.length === 0 ? (
-              <p className="text-xs text-slate-500 p-2 text-center">결과 없음</p>
-            ) : (
-              filtered.map((i) => (
-                <button key={i.id}
-                  onClick={() => { onSelect(i.id); setOpen(false); setSearch(""); }}
-                  className={cn(
-                    "w-full text-left px-2 py-1.5 text-xs hover:bg-slate-700 transition-colors",
-                    i.id === selectedId ? "text-amber-400 bg-slate-700/50" : "text-slate-300"
-                  )}
-                >
-                  <span className="block truncate">{i.name}</span>
-                  {i.sub && <span className="block text-[10px] text-slate-500 truncate">{i.sub}</span>}
-                </button>
-              ))
-            )}
+        <div className="fixed inset-0 z-[100] flex items-start justify-center pt-[15vh]" onClick={() => { setOpen(false); setSearch(""); }}>
+          <div className="absolute inset-0 bg-black/50" />
+          <div className="relative bg-white rounded-xl shadow-2xl w-80 max-h-[60vh] flex flex-col overflow-hidden"
+               onClick={(e) => e.stopPropagation()}>
+            <div className="p-3 border-b">
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={`${placeholder} 검색...`}
+                autoFocus
+                className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-emerald-500 placeholder:text-gray-400"
+              />
+            </div>
+            <div className="overflow-y-auto flex-1">
+              {filtered.length === 0 ? (
+                <p className="text-sm text-gray-400 p-4 text-center">검색 결과가 없습니다</p>
+              ) : (
+                filtered.map((i) => (
+                  <button key={i.id}
+                    onClick={() => { onSelect(i.id); setOpen(false); setSearch(""); }}
+                    className={cn(
+                      "w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors",
+                      i.id === selectedId ? "bg-emerald-50" : ""
+                    )}
+                  >
+                    <span className={cn("block text-sm", i.id === selectedId ? "text-emerald-700 font-semibold" : "text-gray-800")}>
+                      {i.name}
+                    </span>
+                    {i.sub && <span className="block text-xs text-gray-400 mt-0.5">{i.sub}</span>}
+                  </button>
+                ))
+              )}
+            </div>
+            <button
+              onClick={() => { setOpen(false); setSearch(""); }}
+              className="p-3 text-center text-sm text-gray-500 border-t hover:bg-gray-50"
+            >
+              닫기
+            </button>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
@@ -349,7 +371,7 @@ function AdminAgencySelector() {
 
   const items = agencies.map((a) => ({ id: a.id, name: a.agency_name, sub: a.representative || "" }));
   return (
-    <AdminSearchSelector items={items} selectedId={selectedAgencyId} onSelect={setSelectedAgencyId} placeholder="대리점 선택" />
+    <AdminSearchSelector items={items} selectedId={selectedAgencyId} onSelect={setSelectedAgencyId} placeholder="대리점 선택" icon="📦" />
   );
 }
 
@@ -359,6 +381,6 @@ function AdminStoreSelector() {
 
   const items = stores.map((s) => ({ id: s.id, name: s.store_name, sub: s.store_type || "" }));
   return (
-    <AdminSearchSelector items={items} selectedId={selectedStoreId} onSelect={setSelectedStoreId} placeholder="가게 선택" />
+    <AdminSearchSelector items={items} selectedId={selectedStoreId} onSelect={setSelectedStoreId} placeholder="가게 선택" icon="🏠" />
   );
 }
