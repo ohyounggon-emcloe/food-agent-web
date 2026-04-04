@@ -148,9 +148,10 @@ export default function AgencyRevenue() {
                   <div className="flex gap-2">
                     <Input
                       type="number"
+                      min="0"
                       placeholder="매출액 (원)"
                       value={editValues[currentMonth] ?? String(revenueMap.get(currentMonth)?.amount || "")}
-                      onChange={e => setEditValues(p => ({ ...p, [currentMonth]: e.target.value }))}
+                      onChange={e => { const v = e.target.value.replace(/-/g, ""); setEditValues(p => ({ ...p, [currentMonth]: v })); }}
                       className="flex-1"
                     />
                     <Button onClick={() => saveRevenue(currentMonth)} size="sm">
@@ -165,16 +166,16 @@ export default function AgencyRevenue() {
                 <CardContent className="py-4">
                   <p className="text-sm font-bold text-slate-700 mb-3">최근 12개월 매출</p>
                   <div className="space-y-2">
-                    {months.map(m => {
+                    {months.filter(m => m !== currentMonth).map(m => {
                       const rev = revenueMap.get(m);
-                      const isCurrent = m === currentMonth;
                       return (
-                        <div key={m} className={`flex items-center gap-3 px-3 py-2 rounded-lg ${isCurrent ? "bg-emerald-50" : "bg-slate-50"}`}>
+                        <div key={m} className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
                           <span className="text-xs text-slate-500 w-24">{formatMonth(m)}</span>
                           <Input
                             type="number"
+                            min="0"
                             value={editValues[m] ?? String(rev?.amount || "")}
-                            onChange={e => setEditValues(p => ({ ...p, [m]: e.target.value }))}
+                            onChange={e => { const v = e.target.value.replace(/-/g, ""); setEditValues(p => ({ ...p, [m]: v })); }}
                             placeholder="0"
                             className="flex-1 h-8 text-sm"
                           />
