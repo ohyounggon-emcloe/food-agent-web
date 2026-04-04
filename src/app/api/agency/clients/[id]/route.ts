@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (isAgencyAuthError(auth)) return auth;
 
   const body = await request.json();
-  const fields = ["client_name", "client_type", "contact_name", "contact_phone", "address", "contract_start", "contract_end", "supply_items", "notes"];
+  const fields = ["client_name", "client_type", "contact_name", "contact_phone", "address", "contract_start", "contract_end", "notes", "status"];
   const sets: string[] = [];
   const vals: unknown[] = [];
   let idx = 1;
@@ -49,6 +49,7 @@ export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id:
   const auth = await requireAgencyAuth(supabase);
   if (isAgencyAuthError(auth)) return auth;
 
-  await execute("DELETE FROM agency_clients WHERE id = $1 AND agency_id = $2", [id, auth.agencyId]);
+  // 실제 삭제 대신 거래중단 상태로 변경
+  await execute("UPDATE agency_clients SET status = 'inactive' WHERE id = $1 AND agency_id = $2", [id, auth.agencyId]);
   return NextResponse.json({ success: true });
 }
