@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, X } from "lucide-react";
 import { toast } from "sonner";
@@ -21,7 +20,6 @@ export default function AgencyStaff() {
   const [form, setForm] = useState(EMPTY);
   const { codes: genders } = useCodes("gender");
   const { codes: jobTypes } = useCodes("job_type");
-  const { codes: regions } = useCodes("region");
 
   const fetch_ = () => { fetch("/api/agency/staff").then(r => r.json()).then(d => setStaff((Array.isArray(d) ? d : []).filter((s: StaffMember) => s.status !== "inactive"))); };
   useEffect(() => { fetch_(); }, []);
@@ -62,24 +60,42 @@ export default function AgencyStaff() {
           <DialogContent>
             <DialogHeader><DialogTitle>{editStaff ? "인력 수정" : "인력 등록"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="이름 *" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} />
-              <div className="grid grid-cols-2 gap-2">
-                <Select value={form.gender} onValueChange={v => setForm(p => ({...p, gender: v || ""}))}>
-                  <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
-                  <SelectContent>{genders.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input placeholder="나이" type="number" value={form.age} onChange={e => setForm(p => ({...p, age: e.target.value}))} />
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">이름 *</label>
+                <Input value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} />
               </div>
-              <Select value={form.region} onValueChange={v => setForm(p => ({...p, region: v || ""}))}>
-                <SelectTrigger><SelectValue placeholder="지역 선택" /></SelectTrigger>
-                <SelectContent>{regions.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}</SelectContent>
-              </Select>
-              <Select value={form.job_type} onValueChange={v => setForm(p => ({...p, job_type: v || ""}))}>
-                <SelectTrigger><SelectValue placeholder="직무 선택" /></SelectTrigger>
-                <SelectContent>{jobTypes.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input placeholder="연락처" value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} />
-              <Input type="number" placeholder="일일 단가 (원)" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">성별</label>
+                  <select value={form.gender} onChange={e => setForm(p => ({...p, gender: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="">성별 선택</option>
+                    {genders.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">나이</label>
+                  <Input type="number" value={form.age} onChange={e => setForm(p => ({...p, age: e.target.value}))} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">지역 (시/구/동)</label>
+                <Input placeholder="예: 서울 강남구 역삼동" value={form.region} onChange={e => setForm(p => ({...p, region: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">직무</label>
+                <select value={form.job_type} onChange={e => setForm(p => ({...p, job_type: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                  <option value="">직무 선택</option>
+                  {jobTypes.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">연락처</label>
+                <Input value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">일일 단가 (원)</label>
+                <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
+              </div>
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.has_vehicle} onChange={e => setForm(p => ({...p, has_vehicle: e.target.checked}))} />차량 보유</label>
               <Button onClick={handleSubmit} className="w-full">{editStaff ? "수정" : "등록"}</Button>
             </div>
