@@ -243,7 +243,6 @@ export default function AgencyServices() {
                     className="h-7 rounded border border-input bg-background px-2 text-xs"
                   >
                     {serviceStatuses.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
-                    <option value="expired">미진행</option>
                   </select>
                   {!["cancelled", "expired"].includes(s.status) && (
                     <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
