@@ -46,7 +46,7 @@ function LoginForm() {
     try {
       const supabase = createClient();
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -55,7 +55,7 @@ function LoginForm() {
         if (signInError.message === "Invalid login credentials") {
           setError("이메일 또는 비밀번호가 잘못되었습니다.");
         } else if (signInError.message === "Email not confirmed") {
-          setError("이메일 인증이 필요합니다. 메일함을 확인해주세요.");
+          setError("이메일 인증이 필요합니다. 가입 시 입력한 이메일의 메일함을 확인해주세요.");
         } else {
           setError(signInError.message);
         }
@@ -63,8 +63,16 @@ function LoginForm() {
         return;
       }
 
-      // 로그인 성공 → 항상 사용자 대시보드로 이동 (관리자 페이지는 사이드바에서 접근)
-      // 프로필 조회 실패해도 리다이렉트 (AuthProvider가 재조회)
+      // 이메일 인증 여부 확인 (signIn 성공했지만 미인증인 경우)
+      const confirmedAt = signInData?.user?.email_confirmed_at;
+      if (!confirmedAt) {
+        await supabase.auth.signOut();
+        setError("이메일 인증이 필요합니다. 가입 시 입력한 이메일의 메일함을 확인해주세요.");
+        setLoading(false);
+        return;
+      }
+
+      // 로그인 성공 → 사용자 대시보드로 이동
       router.push("/user/dashboard");
       router.refresh();
     } catch {

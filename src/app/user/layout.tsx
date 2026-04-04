@@ -85,8 +85,17 @@ export default function UserLayout({
   const { role, loading, user, profile } = useAuth();
   const userType = (profile as unknown as Record<string, unknown>)?.user_type as string || "personal";
 
+  // 로딩 중이면 빈 화면 (깜빡임 방지)
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-sm text-gray-400">로딩 중...</div>
+      </div>
+    );
+  }
+
   // 로딩 완료 후 user가 없으면 로그인으로
-  if (!loading && !user) {
+  if (!user) {
     if (typeof window !== "undefined") {
       window.location.href = "/auth/login";
     }

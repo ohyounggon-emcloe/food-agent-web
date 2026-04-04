@@ -34,10 +34,17 @@ export function NotificationBell() {
 
   const unreadCount = notifications.filter((n) => !readIds.has(n.id)).length;
 
+  const authFailedRef = useRef(false);
+
   const fetchNotifications = useCallback(async () => {
+    if (authFailedRef.current) return;
     try {
       const params = lastChecked ? `?since=${lastChecked}&limit=20` : "?limit=20";
       const res = await fetch(`/api/notifications${params}`);
+      if (res.status === 401 || res.status === 403) {
+        authFailedRef.current = true;
+        return;
+      }
       if (!res.ok) return;
       const data = await res.json();
       if (data.notifications?.length > 0) {
