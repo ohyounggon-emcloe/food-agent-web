@@ -203,16 +203,15 @@ export default function UserLayout({
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {/* 관리자용 대리점 선택 */}
-          {isAdmin && <AdminAgencySelector />}
-
           {visibleSections.map((section, sIdx) => {
+            const showSelector = isAdmin && (section.agencyOnly || section.storeOnly);
             return (
             <div key={section.title}>
               {sIdx > 0 && <div className="border-t border-slate-800 my-3" />}
               <p className="text-xs text-slate-400 font-bold tracking-wide px-3 mb-2">
                 {section.title}
               </p>
+              {showSelector && section.agencyOnly && <AdminAgencySelector />}
               {section.items.map((item) => {
                 const isActive =
                   pathname === item.href || pathname.startsWith(item.href + "/");

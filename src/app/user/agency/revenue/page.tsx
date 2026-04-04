@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Save } from "lucide-react";
 import { toast } from "sonner";
 import { useCodes } from "@/hooks/use-codes";
@@ -84,13 +83,14 @@ export default function AgencyRevenue() {
 
       {/* 조회조건 */}
       <div className="flex gap-2">
-        <Select value={typeFilter} onValueChange={v => { setTypeFilter(v || "all"); setSelectedClient(null); }}>
-          <SelectTrigger className="w-32"><SelectValue>{typeFilter === "all" ? "전체 업종" : clientTypes.find(c => c.code_value === typeFilter)?.code_label || typeFilter}</SelectValue></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 업종</SelectItem>
-            {clientTypes.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
-          </SelectContent>
-        </Select>
+        <select
+          value={typeFilter}
+          onChange={e => { setTypeFilter(e.target.value); setSelectedClient(null); }}
+          className="h-9 w-32 rounded-lg border border-input bg-background px-3 text-sm"
+        >
+          <option value="all">전체 업종</option>
+          {clientTypes.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+        </select>
       </div>
 
       {/* 좌우 분할 */}
