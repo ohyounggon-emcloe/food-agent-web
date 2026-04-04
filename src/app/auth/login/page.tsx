@@ -48,7 +48,7 @@ function LoginForm() {
     try {
       const supabase = createClient();
 
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -61,15 +61,6 @@ function LoginForm() {
         } else {
           setError(signInError.message);
         }
-        setLoading(false);
-        return;
-      }
-
-      // 이메일 인증 여부 확인 (signIn 성공했지만 미인증인 경우)
-      const confirmedAt = signInData?.user?.email_confirmed_at;
-      if (!confirmedAt) {
-        await supabase.auth.signOut();
-        setError("이메일 인증이 필요합니다. 가입 시 입력한 이메일의 메일함을 확인해주세요.");
         setLoading(false);
         return;
       }

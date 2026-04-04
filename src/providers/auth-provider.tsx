@@ -93,27 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
         const currentUser = session?.user ?? null;
-
-        // 이메일 미인증 세션이면 강제 로그아웃 + 쿠키 직접 삭제
-        if (currentUser && !currentUser.email_confirmed_at) {
-          // sb- 쿠키 직접 삭제 (미들웨어 리다이렉트 루프 방지)
-          document.cookie.split(";").forEach((c) => {
-            const name = c.trim().split("=")[0];
-            if (name.startsWith("sb-")) {
-              document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}`;
-              document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-            }
-          });
-          await supabase.auth.signOut();
-          setUser(null);
-          setProfile(null);
-          if (mounted) setLoading(false);
-          if (!isAuthPage) {
-            window.location.href = "/auth/login?error=unverified";
-          }
-          return;
-        }
-
         setUser(currentUser);
 
         if (currentUser) {
@@ -142,15 +121,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "INITIAL_SESSION") return;
 
       const currentUser = session?.user ?? null;
-
-      // 미인증 세션 차단
-      if (currentUser && !currentUser.email_confirmed_at) {
-        await supabase.auth.signOut();
-        setUser(null);
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
 
       setUser(currentUser);
       if (currentUser) {
