@@ -75,15 +75,9 @@ export default function AgencyItems() {
                 <label className="text-xs text-gray-500 block mb-1">품목명 *</label>
                 <Input value={form.item_name} onChange={e => setForm(p => ({...p, item_name: e.target.value}))} />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs text-gray-500 block mb-1">보유 수량</label>
-                  <Input type="number" value={form.total_quantity} onChange={e => setForm(p => ({...p, total_quantity: e.target.value}))} />
-                </div>
-                <div>
-                  <label className="text-xs text-gray-500 block mb-1">단가 (원)</label>
-                  <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
-                </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">단가 (원)</label>
+                <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
               </div>
               <div>
                 <label className="text-xs text-gray-500 block mb-1">설명</label>
@@ -104,29 +98,16 @@ export default function AgencyItems() {
               <thead>
                 <tr className="border-b bg-gray-50 text-gray-500 text-xs">
                   <th className="text-left py-2 px-3">품목명</th>
-                  <th className="text-right py-2 px-3 w-20">보유</th>
-                  <th className="text-right py-2 px-3 w-20">사용중</th>
-                  <th className="text-right py-2 px-3 w-20">잔여</th>
                   <th className="text-right py-2 px-3 w-24">단가</th>
                   <th className="text-center py-2 px-3 w-16">관리</th>
                 </tr>
               </thead>
               <tbody>
-                {items.filter(i => i.category === cat).map(item => {
-                  const inUse = Number(item.in_use || 0);
-                  const available = item.total_quantity - inUse;
-                  return (
-                    <tr key={item.id} className={`border-b last:border-0 ${available <= 0 ? "bg-red-50" : "hover:bg-gray-50"}`}>
+                {items.filter(i => i.category === cat).map(item => (
+                    <tr key={item.id} className="border-b last:border-0 hover:bg-gray-50">
                       <td className="py-2.5 px-3">
                         <span className="font-medium text-gray-800">{item.item_name}</span>
                         {item.description && <span className="block text-[11px] text-gray-400 mt-0.5">{item.description}</span>}
-                      </td>
-                      <td className="py-2.5 px-3 text-right">{fmt(item.total_quantity)}</td>
-                      <td className="py-2.5 px-3 text-right">
-                        {inUse > 0 ? <Badge className="text-[10px] bg-amber-100 text-amber-700">{fmt(inUse)}</Badge> : <span className="text-gray-300">0</span>}
-                      </td>
-                      <td className="py-2.5 px-3 text-right">
-                        <span className={available <= 0 ? "text-red-600 font-bold" : "text-emerald-600 font-semibold"}>{fmt(available)}</span>
                       </td>
                       <td className="py-2.5 px-3 text-right text-gray-600">
                         {item.unit_cost > 0 ? `${fmt(item.unit_cost)}원` : <span className="text-gray-300">-</span>}
@@ -142,8 +123,7 @@ export default function AgencyItems() {
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
+                ))}
               </tbody>
             </table>
           </div>
