@@ -65,11 +65,11 @@ export default function AgencyRevenue() {
 
   const saveRevenue = async (yearMonth: string) => {
     if (!selectedClient) return;
-    const amount = Number(editValues[yearMonth] || 0);
+    const amountManwon = Number(editValues[yearMonth] || 0);
     await fetch("/api/agency/revenue", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ client_id: selectedClient.id, year_month: yearMonth, amount }),
+      body: JSON.stringify({ client_id: selectedClient.id, year_month: yearMonth, amount: amountManwon * 10000 }),
     });
     toast.success(`${formatMonth(yearMonth)} 매출 저장`);
     fetchData();
@@ -137,7 +137,7 @@ export default function AgencyRevenue() {
                     <p className="text-sm text-slate-500">12개월 평균 매출</p>
                     <p className="text-xs text-slate-400">{selectedClient.client_name}</p>
                   </div>
-                  <p className="text-2xl font-bold text-emerald-600">{avg12.toLocaleString()}원</p>
+                  <p className="text-2xl font-bold text-emerald-600">{Math.round(avg12 / 10000).toLocaleString()}만원</p>
                 </CardContent>
               </Card>
 
@@ -146,14 +146,17 @@ export default function AgencyRevenue() {
                 <CardContent className="py-4">
                   <p className="text-sm font-bold text-slate-700 mb-2">{formatMonth(currentMonth)} 매출 등록</p>
                   <div className="flex gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      placeholder="매출액 (원)"
-                      value={editValues[currentMonth] ?? String(revenueMap.get(currentMonth)?.amount || "")}
-                      onChange={e => { const v = e.target.value.replace(/-/g, ""); setEditValues(p => ({ ...p, [currentMonth]: v })); }}
-                      className="flex-1"
-                    />
+                    <div className="flex items-center gap-2 flex-1">
+                      <Input
+                        type="number"
+                        min="0"
+                        placeholder="매출액"
+                        value={editValues[currentMonth] ?? String(Math.round((revenueMap.get(currentMonth)?.amount || 0) / 10000) || "")}
+                        onChange={e => { const v = e.target.value.replace(/-/g, ""); setEditValues(p => ({ ...p, [currentMonth]: v })); }}
+                        className="flex-1"
+                      />
+                      <span className="text-sm text-slate-500 shrink-0">만원</span>
+                    </div>
                     <Button onClick={() => saveRevenue(currentMonth)} size="sm">
                       <Save className="w-4 h-4 mr-1" />저장
                     </Button>
@@ -174,13 +177,13 @@ export default function AgencyRevenue() {
                           <Input
                             type="number"
                             min="0"
-                            value={editValues[m] ?? String(rev?.amount || "")}
+                            value={editValues[m] ?? String(Math.round((rev?.amount || 0) / 10000) || "")}
                             onChange={e => { const v = e.target.value.replace(/-/g, ""); setEditValues(p => ({ ...p, [m]: v })); }}
                             placeholder="0"
                             className="flex-1 h-8 text-sm"
                           />
                           <span className="text-xs text-slate-400 w-20 text-right">
-                            {(rev?.amount || 0).toLocaleString()}원
+                            {Math.round((rev?.amount || 0) / 10000).toLocaleString()}만원
                           </span>
                           <button onClick={() => saveRevenue(m)} className="p-1 rounded hover:bg-emerald-100">
                             <Save className="w-3.5 h-3.5 text-emerald-600" />
