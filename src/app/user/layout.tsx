@@ -27,6 +27,7 @@ import {
   Heart,
   Receipt,
   ShieldCheck,
+  DollarSign,
   type LucideIcon,
 } from "lucide-react";
 
@@ -55,13 +56,14 @@ const navSections: NavSection[] = [
     agencyOnly: true,
     items: [
       { href: "/user/agency/dashboard", label: "대리점 현황", icon: Store, businessOnly: true },
-      { href: "/user/agency/clients", label: "고객사 관리", icon: UserCircle, businessOnly: true },
-      { href: "/user/agency/services", label: "서비스 관리", icon: ClipboardCheck, businessOnly: true },
       { href: "/user/agency/calendar", label: "행사 달력", icon: LayoutDashboard, businessOnly: true },
+      { href: "/user/agency/services", label: "서비스 관리", icon: ClipboardCheck, businessOnly: true },
+      { href: "/user/agency/revenue", label: "고객사 매출관리", icon: DollarSign, businessOnly: true },
+      { href: "/user/agency/reports", label: "정산 리포트", icon: FileText, businessOnly: true },
+      { href: "/user/agency/clients", label: "고객사 관리", icon: UserCircle, businessOnly: true },
       { href: "/user/agency/staff", label: "인력 관리", icon: Heart, businessOnly: true },
       { href: "/user/agency/items", label: "품목/기물 관리", icon: Receipt, businessOnly: true },
       { href: "/user/agency/vendors", label: "공급사 관리", icon: ShieldCheck, businessOnly: true },
-      { href: "/user/agency/reports", label: "정산 리포트", icon: FileText, businessOnly: true },
     ],
   },
   {
