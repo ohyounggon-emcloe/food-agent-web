@@ -4,16 +4,21 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useCodes } from "@/hooks/use-codes";
 
 interface StaffMember { id: number; name: string; gender: string; age: number; region: string; has_vehicle: boolean; job_type: string; phone: string; status: string; active_assignments: string; }
 
 export default function AgencyStaff() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", gender: "", age: "", region: "", has_vehicle: false, job_type: "조리사", phone: "" });
+  const [form, setForm] = useState({ name: "", gender: "", age: "", region: "", has_vehicle: false, job_type: "", phone: "" });
+  const { codes: genders } = useCodes("gender");
+  const { codes: jobTypes } = useCodes("job_type");
+  const { codes: regions } = useCodes("region");
 
   const fetch_ = () => { fetch("/api/agency/staff").then(r => r.json()).then(d => setStaff(Array.isArray(d) ? d : [])); };
   useEffect(() => { fetch_(); }, []);
@@ -35,11 +40,26 @@ export default function AgencyStaff() {
             <div className="space-y-3">
               <Input placeholder="이름 *" value={form.name} onChange={e => setForm(p => ({...p, name: e.target.value}))} />
               <div className="grid grid-cols-2 gap-2">
-                <Input placeholder="성별" value={form.gender} onChange={e => setForm(p => ({...p, gender: e.target.value}))} />
+                <Select value={form.gender} onValueChange={v => setForm(p => ({...p, gender: v || ""}))}>
+                  <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
+                  <SelectContent>
+                    {genders.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
                 <Input placeholder="나이" type="number" value={form.age} onChange={e => setForm(p => ({...p, age: e.target.value}))} />
               </div>
-              <Input placeholder="지역" value={form.region} onChange={e => setForm(p => ({...p, region: e.target.value}))} />
-              <Input placeholder="직무 (조리사, 행사지원 등)" value={form.job_type} onChange={e => setForm(p => ({...p, job_type: e.target.value}))} />
+              <Select value={form.region} onValueChange={v => setForm(p => ({...p, region: v || ""}))}>
+                <SelectTrigger><SelectValue placeholder="지역 선택" /></SelectTrigger>
+                <SelectContent>
+                  {regions.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={form.job_type} onValueChange={v => setForm(p => ({...p, job_type: v || ""}))}>
+                <SelectTrigger><SelectValue placeholder="직무 선택" /></SelectTrigger>
+                <SelectContent>
+                  {jobTypes.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
+                </SelectContent>
+              </Select>
               <Input placeholder="연락처" value={form.phone} onChange={e => setForm(p => ({...p, phone: e.target.value}))} />
               <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={form.has_vehicle} onChange={e => setForm(p => ({...p, has_vehicle: e.target.checked}))} />차량 보유</label>
               <Button onClick={handleSubmit} className="w-full">등록</Button>

@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useCodes } from "@/hooks/use-codes";
 
 interface Client {
   id: number;
@@ -16,7 +18,6 @@ interface Client {
   contact_name: string;
   contact_phone: string;
   address: string;
-  supply_items: string;
   notes: string;
 }
 
@@ -24,7 +25,8 @@ export default function AgencyClients() {
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", supply_items: "", notes: "" });
+  const [form, setForm] = useState({ client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", notes: "" });
+  const { codes: clientTypes } = useCodes("client_type");
 
   const fetchClients = () => {
     fetch("/api/agency/clients").then(r => r.json()).then(d => setClients(Array.isArray(d) ? d : [])).catch(() => {});
@@ -35,7 +37,7 @@ export default function AgencyClients() {
   const handleSubmit = async () => {
     if (!form.client_name) { toast.error("고객사명을 입력하세요"); return; }
     const res = await fetch("/api/agency/clients", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
-    if (res.ok) { toast.success("고객사 등록 완료"); setDialogOpen(false); setForm({ client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", supply_items: "", notes: "" }); fetchClients(); }
+    if (res.ok) { toast.success("고객사 등록 완료"); setDialogOpen(false); setForm({ client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", notes: "" }); fetchClients(); }
   };
 
   const filtered = clients.filter(c => !search || c.client_name.includes(search) || (c.contact_name || "").includes(search));
@@ -55,11 +57,17 @@ export default function AgencyClients() {
             <DialogHeader><DialogTitle>고객사 등록</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <Input placeholder="고객사명 *" value={form.client_name} onChange={e => setForm(p => ({...p, client_name: e.target.value}))} />
-              <Input placeholder="업종 (식당, 단체급식, 학교 등)" value={form.client_type} onChange={e => setForm(p => ({...p, client_type: e.target.value}))} />
+              <Select value={form.client_type} onValueChange={v => setForm(p => ({...p, client_type: v || ""}))}>
+                <SelectTrigger><SelectValue placeholder="업종 선택" /></SelectTrigger>
+                <SelectContent>
+                  {clientTypes.map(c => (
+                    <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <Input placeholder="담당자명" value={form.contact_name} onChange={e => setForm(p => ({...p, contact_name: e.target.value}))} />
               <Input placeholder="연락처" value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
               <Input placeholder="주소" value={form.address} onChange={e => setForm(p => ({...p, address: e.target.value}))} />
-              <Input placeholder="납품 품목" value={form.supply_items} onChange={e => setForm(p => ({...p, supply_items: e.target.value}))} />
               <Input placeholder="비고" value={form.notes} onChange={e => setForm(p => ({...p, notes: e.target.value}))} />
               <Button onClick={handleSubmit} className="w-full">등록</Button>
             </div>
@@ -81,7 +89,6 @@ export default function AgencyClients() {
             <CardContent className="text-xs space-y-1 text-gray-600">
               {c.contact_name && <p>담당: {c.contact_name} {c.contact_phone && `(${c.contact_phone})`}</p>}
               {c.address && <p>주소: {c.address}</p>}
-              {c.supply_items && <p>납품: {c.supply_items}</p>}
               {c.notes && <p className="text-gray-400">{c.notes}</p>}
             </CardContent>
           </Card>

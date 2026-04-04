@@ -8,13 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useCodes } from "@/hooks/use-codes";
 
 interface Item { id: number; item_name: string; category: string; total_quantity: number; unit_cost: number; vendor_name: string; in_use: string; }
 
 export default function AgencyItems() {
   const [items, setItems] = useState<Item[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ category: "기물대여", item_name: "", total_quantity: "1", unit_cost: "0", description: "" });
+  const [form, setForm] = useState({ category: "", item_name: "", total_quantity: "1", unit_cost: "0", description: "" });
+  const { codes: serviceCategories } = useCodes("service_category");
 
   const fetch_ = () => { fetch("/api/agency/items").then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : [])); };
   useEffect(() => { fetch_(); }, []);
@@ -37,12 +39,9 @@ export default function AgencyItems() {
             <DialogHeader><DialogTitle>품목 등록</DialogTitle></DialogHeader>
             <div className="space-y-3">
               <Select value={form.category} onValueChange={v => setForm(p => ({...p, category: v || ""}))}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="카테고리 선택" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="기물대여">기물 대여</SelectItem>
-                  <SelectItem value="행사">행사 지원</SelectItem>
-                  <SelectItem value="인력">인력 지원</SelectItem>
-                  <SelectItem value="현물">현물/배달</SelectItem>
+                  {serviceCategories.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Input placeholder="품목명 *" value={form.item_name} onChange={e => setForm(p => ({...p, item_name: e.target.value}))} />

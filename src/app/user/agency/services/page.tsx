@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useCodes } from "@/hooks/use-codes";
 
 interface ServiceRequest {
   id: number; title: string; service_type: string; requested_date: string;
@@ -33,8 +34,10 @@ export default function AgencyServices() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const { codes: serviceCategories } = useCodes("service_category");
+  const { codes: serviceStatuses } = useCodes("service_status");
   const [form, setForm] = useState({
-    client_id: "", service_type: "기물대여", title: "", requested_date: new Date().toISOString().split("T")[0],
+    client_id: "", service_type: "", title: "", requested_date: new Date().toISOString().split("T")[0],
     service_item_id: "", assigned_staff_id: "", quantity: "1", cost: "0", remarks: "",
   });
 
@@ -89,9 +92,7 @@ export default function AgencyServices() {
             <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">전체</SelectItem>
-              <SelectItem value="requested">요청</SelectItem>
-              <SelectItem value="confirmed">확정</SelectItem>
-              <SelectItem value="completed">완료</SelectItem>
+              {serviceStatuses.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
             </SelectContent>
           </Select>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -106,12 +107,9 @@ export default function AgencyServices() {
                   <SelectContent>{clients.map(c => <SelectItem key={c.id} value={String(c.id)}>{c.client_name}</SelectItem>)}</SelectContent>
                 </Select>
                 <Select value={form.service_type} onValueChange={v => setForm(p => ({...p, service_type: v || ""}))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="서비스 유형 선택" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="기물대여">기물 대여</SelectItem>
-                    <SelectItem value="행사">행사 지원</SelectItem>
-                    <SelectItem value="인력">인력 지원</SelectItem>
-                    <SelectItem value="현물">현물/배달</SelectItem>
+                    {serviceCategories.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Input placeholder="서비스 제목 *" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
