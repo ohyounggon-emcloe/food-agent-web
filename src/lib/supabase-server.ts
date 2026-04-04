@@ -1,7 +1,31 @@
 import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { cookies, headers } from "next/headers";
 
+/**
+ * Cookie 기반 Supabase 클라이언트 (웹 브라우저용)
+ * Bearer 토큰이 있으면 토큰 기반으로 전환 (앱용)
+ */
 export async function createClient() {
+  // Authorization 헤더 확인 (앱에서 Bearer 토큰 전송 시)
+  const headerStore = await headers();
+  const authHeader = headerStore.get("authorization");
+
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.slice(7);
+    const client = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        global: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      }
+    );
+    return client;
+  }
+
+  // Cookie 기반 (웹 브라우저용)
   const cookieStore = await cookies();
 
   return createServerClient(
