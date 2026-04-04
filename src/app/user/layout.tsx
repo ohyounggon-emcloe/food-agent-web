@@ -152,8 +152,8 @@ export default function UserLayout({
     return true;
   });
 
-  // 개별 권한이 설정되어 있으면 메뉴 항목 필터링
-  const visibleSections = allowedMenus
+  // 개별 권한이 설정되어 있으면 메뉴 항목 필터링 (admin은 모든 메뉴 표시)
+  const visibleSections = allowedMenus && !isAdmin
     ? baseSections
         .map((section) => ({
           ...section,
