@@ -93,6 +93,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!mounted) return;
         const currentUser = session?.user ?? null;
+
+        // 이메일 미인증 세션이면 강제 로그아웃
+        if (currentUser && !currentUser.email_confirmed_at) {
+          await supabase.auth.signOut();
+          setUser(null);
+          setProfile(null);
+          if (mounted) setLoading(false);
+          if (!isAuthPage) {
+            window.location.href = "/auth/login";
+          }
+          return;
+        }
+
         setUser(currentUser);
 
         if (currentUser) {
@@ -121,6 +134,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (event === "INITIAL_SESSION") return;
 
       const currentUser = session?.user ?? null;
+
+      // 미인증 세션 차단
+      if (currentUser && !currentUser.email_confirmed_at) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setProfile(null);
+        setLoading(false);
+        return;
+      }
+
       setUser(currentUser);
       if (currentUser) {
         await fetchProfile(currentUser);
