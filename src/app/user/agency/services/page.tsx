@@ -1,20 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCodes } from "@/hooks/use-codes";
 
 interface ServiceRequest {
   id: number; title: string; service_type: string; requested_date: string;
-  status: string; client_name: string; item_name: string; staff_name: string;
-  cost: number; remarks: string;
+  status: string; client_name: string; client_id: number; item_name: string;
+  service_item_id: number; staff_name: string; assigned_staff_id: number;
+  cost: number; remarks: string; quantity: number;
 }
 interface Client { id: number; client_name: string; }
 interface Item { id: number; item_name: string; category: string; }
@@ -27,6 +28,11 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   cancelled: { label: "취소", color: "bg-gray-100 text-gray-500" },
 };
 
+const EMPTY_FORM = {
+  client_id: "", service_type: "", title: "", requested_date: new Date().toISOString().split("T")[0],
+  service_item_id: "", assigned_staff_id: "", quantity: "1", cost: "0", remarks: "",
+};
+
 export default function AgencyServices() {
   const [services, setServices] = useState<ServiceRequest[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -34,17 +40,18 @@ export default function AgencyServices() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editService, setEditService] = useState<ServiceRequest | null>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
   const { codes: serviceCategories } = useCodes("service_category");
   const { codes: serviceStatuses } = useCodes("service_status");
-  const [form, setForm] = useState({
-    client_id: "", service_type: "", title: "", requested_date: new Date().toISOString().split("T")[0],
-    service_item_id: "", assigned_staff_id: "", quantity: "1", cost: "0", remarks: "",
-  });
 
   const fetchAll = () => {
     const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
     fetch(`/api/agency/services${params}`).then(r => r.json()).then(d => setServices(Array.isArray(d) ? d : []));
-    fetch("/api/agency/clients").then(r => r.json()).then(d => setClients(Array.isArray(d) ? d : []));
+    fetch("/api/agency/clients").then(r => r.json()).then(d => {
+      const data = d.data || d;
+      setClients(Array.isArray(data) ? data : []);
+    });
     fetch("/api/agency/items").then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : []));
     fetch("/api/agency/staff").then(r => r.json()).then(d => setStaffList(Array.isArray(d) ? d : []));
   };
@@ -54,23 +61,59 @@ export default function AgencyServices() {
   const handleSubmit = async () => {
     if (!form.title || !form.requested_date) { toast.error("제목과 날짜를 입력하세요"); return; }
 
-    // 중복 체크
-    const checkRes = await fetch("/api/agency/calendar/check", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ requested_date: form.requested_date, service_item_id: form.service_item_id || null, assigned_staff_id: form.assigned_staff_id || null }),
-    });
-    const checkData = await checkRes.json();
-    if (checkData.hasConflict) {
-      toast.error(`중복 경고: ${checkData.conflicts.join(", ")}`);
-      return;
-    }
+    if (editService) {
+      await fetch(`/api/agency/services/${editService.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form, client_id: form.client_id || null, service_item_id: form.service_item_id || null,
+          assigned_staff_id: form.assigned_staff_id || null, quantity: Number(form.quantity), cost: Number(form.cost),
+        }),
+      });
+      toast.success("서비스 수정 완료");
+    } else {
+      // 중복 체크
+      const checkRes = await fetch("/api/agency/calendar/check", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requested_date: form.requested_date, service_item_id: form.service_item_id || null, assigned_staff_id: form.assigned_staff_id || null }),
+      });
+      const checkData = await checkRes.json();
+      if (checkData.hasConflict) { toast.error(`중복 경고: ${checkData.conflicts.join(", ")}`); return; }
 
-    const res = await fetch("/api/agency/services", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, client_id: form.client_id || null, service_item_id: form.service_item_id || null, assigned_staff_id: form.assigned_staff_id || null, quantity: Number(form.quantity), cost: Number(form.cost) }),
-    });
-    if (res.ok) { toast.success("서비스 요청 등록 완료"); setDialogOpen(false); fetchAll(); }
+      await fetch("/api/agency/services", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form, client_id: form.client_id || null, service_item_id: form.service_item_id || null,
+          assigned_staff_id: form.assigned_staff_id || null, quantity: Number(form.quantity), cost: Number(form.cost),
+        }),
+      });
+      toast.success("서비스 등록 완료");
+    }
+    closeDialog(); fetchAll();
   };
+
+  const handleDelete = async (s: ServiceRequest) => {
+    if (!confirm(`"${s.title}" 서비스를 삭제하시겠습니까?`)) return;
+    await fetch(`/api/agency/services/${s.id}`, { method: "DELETE" });
+    toast.success("삭제 완료"); fetchAll();
+  };
+
+  const openEdit = (s: ServiceRequest) => {
+    setEditService(s);
+    setForm({
+      client_id: s.client_id ? String(s.client_id) : "",
+      service_type: s.service_type || "",
+      title: s.title,
+      requested_date: s.requested_date,
+      service_item_id: s.service_item_id ? String(s.service_item_id) : "",
+      assigned_staff_id: s.assigned_staff_id ? String(s.assigned_staff_id) : "",
+      quantity: String(s.quantity || 1),
+      cost: String(s.cost || 0),
+      remarks: s.remarks || "",
+    });
+    setDialogOpen(true);
+  };
+
+  const closeDialog = () => { setDialogOpen(false); setEditService(null); setForm(EMPTY_FORM); };
 
   const updateStatus = async (id: number, status: string) => {
     const body: Record<string, unknown> = { status };
@@ -95,12 +138,12 @@ export default function AgencyServices() {
               {serviceStatuses.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <Dialog open={dialogOpen} onOpenChange={o => { if (!o) closeDialog(); else { setEditService(null); setForm(EMPTY_FORM); setDialogOpen(true); } }}>
             <DialogTrigger>
               <Button size="sm"><Plus className="w-4 h-4 mr-1" />서비스 등록</Button>
             </DialogTrigger>
             <DialogContent className="max-w-lg">
-              <DialogHeader><DialogTitle>서비스 요청 대리 등록</DialogTitle></DialogHeader>
+              <DialogHeader><DialogTitle>{editService ? "서비스 수정" : "서비스 요청 등록"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <Select value={form.client_id} onValueChange={v => setForm(p => ({...p, client_id: v || ""}))}>
                   <SelectTrigger><SelectValue placeholder="고객사 선택" /></SelectTrigger>
@@ -129,7 +172,7 @@ export default function AgencyServices() {
                   <Input type="number" placeholder="비용 (원)" value={form.cost} onChange={e => setForm(p => ({...p, cost: e.target.value}))} />
                 </div>
                 <Input placeholder="비고" value={form.remarks} onChange={e => setForm(p => ({...p, remarks: e.target.value}))} />
-                <Button onClick={handleSubmit} className="w-full">등록</Button>
+                <Button onClick={handleSubmit} className="w-full">{editService ? "수정" : "등록"}</Button>
               </div>
             </DialogContent>
           </Dialog>
@@ -149,11 +192,14 @@ export default function AgencyServices() {
                   <span className="text-xs text-gray-500 truncate">{s.title}</span>
                   {s.item_name && <Badge variant="outline" className="text-[10px]">{s.item_name}</Badge>}
                   {s.staff_name && <Badge variant="outline" className="text-[10px]">{s.staff_name}</Badge>}
+                  {s.cost > 0 && <span className="text-xs text-emerald-600">{s.cost.toLocaleString()}원</span>}
                 </div>
                 <div className="flex gap-1 shrink-0">
                   {s.status === "requested" && <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(s.id, "confirmed")}>확정</Button>}
                   {s.status === "confirmed" && <Button size="sm" variant="outline" className="text-xs h-7 text-green-600" onClick={() => updateStatus(s.id, "completed")}>완료</Button>}
                   {s.status !== "completed" && s.status !== "cancelled" && <Button size="sm" variant="ghost" className="text-xs h-7 text-red-400" onClick={() => updateStatus(s.id, "cancelled")}>취소</Button>}
+                  <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
+                  <button onClick={() => handleDelete(s)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
                 </div>
               </CardContent>
             </Card>

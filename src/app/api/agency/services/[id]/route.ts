@@ -10,7 +10,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (isAgencyAuthError(auth)) return auth;
 
   const body = await request.json();
-  const fields = ["status", "vendor_id", "assigned_staff_id", "cost", "remarks", "completed_at"];
+  const fields = ["status", "client_id", "service_type", "title", "requested_date", "end_date", "service_item_id", "vendor_id", "assigned_staff_id", "quantity", "cost", "remarks", "completed_at"];
   const sets: string[] = [];
   const vals: unknown[] = [];
   let idx = 1;
@@ -27,5 +27,15 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
   vals.push(id, auth.agencyId);
   await execute(`UPDATE service_requests SET ${sets.join(", ")} WHERE id = $${idx} AND agency_id = $${idx + 1}`, vals);
+  return NextResponse.json({ success: true });
+}
+
+export async function DELETE(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const supabase = await createClient();
+  const auth = await requireAgencyAuth(supabase);
+  if (isAgencyAuthError(auth)) return auth;
+
+  await execute("DELETE FROM service_requests WHERE id = $1 AND agency_id = $2", [id, auth.agencyId]);
   return NextResponse.json({ success: true });
 }
