@@ -10,6 +10,7 @@ import { UserMenu } from "@/components/user-menu";
 import { MobileMenu } from "@/components/mobile-menu";
 import { NotificationBell } from "@/components/notification-bell";
 import { FloatingChat } from "@/components/floating-chat";
+import { AgencyProvider, useAgencyContext } from "@/providers/agency-context";
 import {
   LayoutDashboard,
   Rss,
@@ -163,6 +164,7 @@ export default function UserLayout({
     : baseSections;
 
   return (
+    <AgencyProvider>
     <div className="flex h-screen">
       {/* 모바일 헤더 */}
       <div className="fixed top-0 left-0 right-0 h-14 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-4 z-50 lg:hidden">
@@ -199,6 +201,9 @@ export default function UserLayout({
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          {/* 관리자용 대리점 선택 */}
+          {isAdmin && <AdminAgencySelector />}
+
           {visibleSections.map((section, sIdx) => {
             return (
             <div key={section.title}>
@@ -272,6 +277,29 @@ export default function UserLayout({
         <div className="max-w-6xl mx-auto p-4 lg:p-8">{children}</div>
         <FloatingChat />
       </main>
+    </div>
+    </AgencyProvider>
+  );
+}
+
+function AdminAgencySelector() {
+  const { agencies, selectedAgencyId, setSelectedAgencyId } = useAgencyContext();
+
+  if (agencies.length === 0) return null;
+
+  return (
+    <div className="mb-3 px-3">
+      <p className="text-[10px] text-amber-400 font-bold mb-1">관리자 모드</p>
+      <select
+        value={selectedAgencyId || ""}
+        onChange={(e) => setSelectedAgencyId(Number(e.target.value) || null)}
+        className="w-full bg-slate-800 text-slate-200 text-xs rounded-md border border-slate-700 px-2 py-1.5 focus:border-amber-500 focus:outline-none"
+      >
+        <option value="">대리점 선택</option>
+        {agencies.map((a) => (
+          <option key={a.id} value={a.id}>{a.agency_name}</option>
+        ))}
+      </select>
     </div>
   );
 }
