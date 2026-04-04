@@ -16,13 +16,18 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [passwordConfirm, setPasswordConfirm] = useState("");
   const [nickname, setNickname] = useState("");
-  const [userType, setUserType] = useState<"personal" | "business">("personal");
+  const [userType, setUserType] = useState<"personal" | "business" | "agency">("personal");
   const [businessRole, setBusinessRole] = useState<"owner" | "staff">("owner");
   const [storeName, setStoreName] = useState("");
   const [businessNumber, setBusinessNumber] = useState("");
   const [storeType, setStoreType] = useState("일반음식점");
   const [storeAddress, setStoreAddress] = useState("");
   const [storeCode, setStoreCode] = useState("");
+  const [agencyName, setAgencyName] = useState("");
+  const [agencyBusinessNo, setAgencyBusinessNo] = useState("");
+  const [agencyAddress, setAgencyAddress] = useState("");
+  const [agencyRepresentative, setAgencyRepresentative] = useState("");
+  const [agencyPhone, setAgencyPhone] = useState("");
   const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [regions, setRegions] = useState<RegionItem[]>([]);
@@ -89,6 +94,11 @@ export default function SignupPage() {
       return;
     }
 
+    if (userType === "agency" && !agencyName.trim()) {
+      setError("대리점명을 입력해주세요");
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.auth.signUp({
@@ -104,6 +114,11 @@ export default function SignupPage() {
           store_type: userType === "business" && businessRole === "owner" ? storeType : null,
           store_address: userType === "business" && businessRole === "owner" ? storeAddress : null,
           store_code: userType === "business" && businessRole === "staff" ? storeCode : null,
+          agency_name: userType === "agency" ? agencyName : null,
+          agency_business_no: userType === "agency" ? agencyBusinessNo : null,
+          agency_representative: userType === "agency" ? agencyRepresentative : null,
+          agency_phone: userType === "agency" ? agencyPhone : null,
+          agency_address: userType === "agency" ? agencyAddress : null,
           preferred_regions: selectedRegions.map(s => ({ sido: s })),
           preferred_industries: selectedIndustries.map(c => ({ category: c })),
         },
@@ -175,7 +190,7 @@ export default function SignupPage() {
             />
           </div>
 
-          {/* 개인/사업자 선택 */}
+          {/* 개인/사업자/대리점 선택 */}
           <div>
             <label className="text-sm font-medium block mb-2">{"가입 유형"}</label>
             <div className="flex gap-2">
@@ -186,7 +201,7 @@ export default function SignupPage() {
                   userType === "personal" ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"
                 }`}
               >
-                👤 개인
+                개인
               </button>
               <button
                 type="button"
@@ -195,7 +210,16 @@ export default function SignupPage() {
                   userType === "business" ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"
                 }`}
               >
-                🏪 사업자
+                사업자
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType("agency")}
+                className={`flex-1 py-2 text-sm rounded-lg border transition-colors ${
+                  userType === "agency" ? "bg-teal-600 text-white border-teal-600" : "bg-white text-gray-600 border-gray-300 hover:border-teal-400"
+                }`}
+              >
+                식자재 대리점
               </button>
             </div>
           </div>
@@ -264,6 +288,33 @@ export default function SignupPage() {
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 대리점 상세 정보 */}
+          {userType === "agency" && (
+            <div className="space-y-3 p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+              <p className="text-xs text-emerald-700 font-medium">식자재 대리점 정보</p>
+              <div>
+                <label className="text-xs text-gray-500">{"대리점명 *"}</label>
+                <Input value={agencyName} onChange={(e) => setAgencyName(e.target.value)} placeholder="대리점 이름" className="h-8 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">{"대표자명"}</label>
+                <Input value={agencyRepresentative} onChange={(e) => setAgencyRepresentative(e.target.value)} placeholder="대표자 성명" className="h-8 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">{"사업자등록번호"}</label>
+                <Input value={agencyBusinessNo} onChange={(e) => setAgencyBusinessNo(e.target.value)} placeholder="000-00-00000" className="h-8 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">{"연락처"}</label>
+                <Input value={agencyPhone} onChange={(e) => setAgencyPhone(e.target.value)} placeholder="010-0000-0000" className="h-8 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs text-gray-500">{"주소"}</label>
+                <Input value={agencyAddress} onChange={(e) => setAgencyAddress(e.target.value)} placeholder="대리점 주소" className="h-8 text-sm" />
+              </div>
             </div>
           )}
 
