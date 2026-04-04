@@ -1,18 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, X } from "lucide-react";
+import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCodes } from "@/hooks/use-codes";
 
 interface Item { id: number; item_name: string; category: string; total_quantity: number; unit_cost: number; vendor_name: string; in_use: string; is_active: boolean; description: string; }
 
 const EMPTY = { category: "", item_name: "", total_quantity: "1", unit_cost: "0", description: "" };
+
+const fmt = (n: number) => n.toLocaleString("ko-KR");
 
 export default function AgencyItems() {
   const [items, setItems] = useState<Item[]>([]);
@@ -61,46 +62,90 @@ export default function AgencyItems() {
           <DialogContent>
             <DialogHeader><DialogTitle>{editItem ? "품목 수정" : "품목 등록"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <Select value={form.category} onValueChange={v => setForm(p => ({...p, category: v || ""}))}>
-                <SelectTrigger><SelectValue placeholder="카테고리 선택" /></SelectTrigger>
-                <SelectContent>
-                  {serviceCategories.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Input placeholder="품목명 *" value={form.item_name} onChange={e => setForm(p => ({...p, item_name: e.target.value}))} />
-              <div className="grid grid-cols-2 gap-2">
-                <Input type="number" placeholder="보유 수량" value={form.total_quantity} onChange={e => setForm(p => ({...p, total_quantity: e.target.value}))} />
-                <Input type="number" placeholder="단가 (원)" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">카테고리</label>
+                <Select value={form.category} onValueChange={v => setForm(p => ({...p, category: v || ""}))}>
+                  <SelectTrigger><SelectValue placeholder="카테고리 선택" /></SelectTrigger>
+                  <SelectContent>
+                    {serviceCategories.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-              <Input placeholder="설명" value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} />
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">품목명 *</label>
+                <Input value={form.item_name} onChange={e => setForm(p => ({...p, item_name: e.target.value}))} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">보유 수량</label>
+                  <Input type="number" value={form.total_quantity} onChange={e => setForm(p => ({...p, total_quantity: e.target.value}))} />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">단가 (원)</label>
+                  <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 block mb-1">설명</label>
+                <Input value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} />
+              </div>
               <Button onClick={handleSubmit} className="w-full">{editItem ? "수정" : "등록"}</Button>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* 리스트형 테이블 */}
       {categories.map(cat => (
         <div key={cat}>
           <h3 className="text-sm font-semibold text-gray-600 mb-2">{cat}</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {items.filter(i => i.category === cat).map(item => {
-              const inUse = Number(item.in_use || 0);
-              const available = item.total_quantity - inUse;
-              return (
-                <Card key={item.id} className={available <= 0 ? "border-red-200" : ""}>
-                  <CardContent className="py-3 text-center relative">
-                    <div className="absolute top-1 right-1 flex gap-0.5">
-                      <button onClick={() => openEdit(item)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3 h-3 text-slate-400" /></button>
-                      <button onClick={() => handleDelete(item)} className="p-1 rounded hover:bg-slate-100"><X className="w-3 h-3 text-slate-400" /></button>
-                    </div>
-                    <p className="text-sm font-medium truncate">{item.item_name}</p>
-                    <p className="text-2xl font-bold mt-1">{available}<span className="text-xs text-gray-400">/{item.total_quantity}</span></p>
-                    {inUse > 0 && <Badge className="text-[10px] bg-amber-100 text-amber-700 mt-1">사용 중 {inUse}</Badge>}
-                    {item.unit_cost > 0 && <p className="text-[10px] text-gray-400 mt-1">{item.unit_cost.toLocaleString()}원</p>}
-                  </CardContent>
-                </Card>
-              );
-            })}
+          <div className="bg-white rounded-lg border overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-gray-50 text-gray-500 text-xs">
+                  <th className="text-left py-2 px-3">품목명</th>
+                  <th className="text-right py-2 px-3 w-20">보유</th>
+                  <th className="text-right py-2 px-3 w-20">사용중</th>
+                  <th className="text-right py-2 px-3 w-20">잔여</th>
+                  <th className="text-right py-2 px-3 w-24">단가</th>
+                  <th className="text-center py-2 px-3 w-16">관리</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.filter(i => i.category === cat).map(item => {
+                  const inUse = Number(item.in_use || 0);
+                  const available = item.total_quantity - inUse;
+                  return (
+                    <tr key={item.id} className={`border-b last:border-0 ${available <= 0 ? "bg-red-50" : "hover:bg-gray-50"}`}>
+                      <td className="py-2.5 px-3">
+                        <span className="font-medium text-gray-800">{item.item_name}</span>
+                        {item.description && <span className="block text-[11px] text-gray-400 mt-0.5">{item.description}</span>}
+                      </td>
+                      <td className="py-2.5 px-3 text-right">{fmt(item.total_quantity)}</td>
+                      <td className="py-2.5 px-3 text-right">
+                        {inUse > 0 ? <Badge className="text-[10px] bg-amber-100 text-amber-700">{fmt(inUse)}</Badge> : <span className="text-gray-300">0</span>}
+                      </td>
+                      <td className="py-2.5 px-3 text-right">
+                        <span className={available <= 0 ? "text-red-600 font-bold" : "text-emerald-600 font-semibold"}>{fmt(available)}</span>
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-gray-600">
+                        {item.unit_cost > 0 ? `${fmt(item.unit_cost)}원` : <span className="text-gray-300">-</span>}
+                      </td>
+                      <td className="py-2.5 px-3 text-center">
+                        <div className="flex justify-center gap-1">
+                          <button onClick={() => openEdit(item)} className="p-1 rounded hover:bg-slate-100" title="수정">
+                            <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                          </button>
+                          <button onClick={() => handleDelete(item)} className="p-1 rounded hover:bg-red-50" title="삭제">
+                            <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
         </div>
       ))}
