@@ -19,6 +19,7 @@ import {
   Users,
   ScrollText,
   SlidersHorizontal,
+  ShieldCheck,
   type LucideIcon,
 } from "lucide-react";
 
@@ -31,6 +32,7 @@ const navItems: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/inspection", label: "점검항목 관리", icon: ClipboardCheck },
   { href: "/admin/search", label: "AI 식품안전 검색", icon: Search },
   { href: "/admin/users", label: "사용자 관리", icon: Users },
+  { href: "/admin/permissions", label: "메뉴 권한", icon: ShieldCheck },
   { href: "/admin/logs", label: "시스템 로그", icon: ScrollText },
   { href: "/admin/settings", label: "설정", icon: SlidersHorizontal },
 ];
