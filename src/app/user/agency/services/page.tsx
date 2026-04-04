@@ -25,6 +25,7 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   confirmed: { label: "확정", color: "bg-blue-100 text-blue-700" },
   completed: { label: "완료", color: "bg-green-100 text-green-700" },
   cancelled: { label: "취소", color: "bg-gray-100 text-gray-500" },
+  expired: { label: "미진행", color: "bg-red-100 text-red-600" },
 };
 
 const EMPTY_FORM = {
@@ -113,7 +114,7 @@ export default function AgencyServices() {
       client_id: s.client_id ? String(s.client_id) : "",
       service_type: s.service_type || "",
       title: s.title,
-      requested_date: s.requested_date ? s.requested_date.split("T")[0] : "",
+      requested_date: s.requested_date ? s.requested_date.slice(0, 16) : "",
       service_item_id: s.service_item_id ? String(s.service_item_id) : "",
       assigned_staff_id: s.assigned_staff_id ? String(s.assigned_staff_id) : "",
       quantity: String(s.quantity || 1),
@@ -238,9 +239,13 @@ export default function AgencyServices() {
                 <div className="flex gap-1 shrink-0">
                   {s.status === "requested" && <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(s.id, "confirmed")}>확정</Button>}
                   {s.status === "confirmed" && <Button size="sm" variant="outline" className="text-xs h-7 text-green-600" onClick={() => updateStatus(s.id, "completed")}>완료</Button>}
-                  {s.status !== "completed" && s.status !== "cancelled" && <Button size="sm" variant="ghost" className="text-xs h-7 text-red-400" onClick={() => updateStatus(s.id, "cancelled")}>취소</Button>}
-                  <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
-                  <button onClick={() => handleDelete(s)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
+                  {s.status === "requested" && <Button size="sm" variant="ghost" className="text-xs h-7 text-red-400" onClick={() => updateStatus(s.id, "cancelled")}>취소</Button>}
+                  {!["completed", "cancelled", "expired"].includes(s.status) && (
+                    <>
+                      <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
+                      <button onClick={() => handleDelete(s)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
