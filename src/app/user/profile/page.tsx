@@ -129,6 +129,13 @@ export default function ProfilePage() {
             <span className="text-sm">{profile.email}</span>
           </div>
           <div className="flex items-center justify-between">
+            <span className="text-sm text-gray-500">{"회원 유형"}</span>
+            <span className="text-sm font-medium">
+              {(profile as unknown as Record<string, unknown>).user_type === "agency" ? "식자재대리점" :
+               (profile as unknown as Record<string, unknown>).user_type === "business" ? "사업자" : "개인"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
             <span className="text-sm text-gray-500">{"회원 등급"}</span>
             <RoleBadge role={profile.role} />
           </div>

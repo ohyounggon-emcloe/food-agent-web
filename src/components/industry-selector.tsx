@@ -83,6 +83,24 @@ export function IndustrySelector({ value, onChange }: IndustrySelectorProps) {
         </div>
       )}
 
+      {/* 전체 선택/해제 */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(categories.map((c) => ({ category: c, sub_type: null })))}
+          className="text-xs px-3 py-1 rounded-md bg-emerald-50 text-emerald-600 border border-emerald-200 hover:bg-emerald-100"
+        >
+          전체 선택
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange([])}
+          className="text-xs px-3 py-1 rounded-md bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100"
+        >
+          전체 해제
+        </button>
+      </div>
+
       {/* 업태 체크박스 */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
         {categories.map((category) => {

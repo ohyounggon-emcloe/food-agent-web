@@ -212,6 +212,7 @@ export default function UserLayout({
                 {section.title}
               </p>
               {showSelector && section.agencyOnly && <AdminAgencySelector />}
+              {showSelector && section.storeOnly && <AdminStoreSelector />}
               {section.items.map((item) => {
                 const isActive =
                   pathname === item.href || pathname.startsWith(item.href + "/");
@@ -283,24 +284,81 @@ export default function UserLayout({
   );
 }
 
-function AdminAgencySelector() {
-  const { agencies, selectedAgencyId, setSelectedAgencyId } = useAgencyContext();
+function AdminSearchSelector({ items, selectedId, onSelect, placeholder }: {
+  items: { id: number; name: string; sub?: string }[];
+  selectedId: number | null;
+  onSelect: (id: number | null) => void;
+  placeholder: string;
+}) {
+  const [search, setSearch] = useState("");
+  const [open, setOpen] = useState(false);
 
-  if (agencies.length === 0) return null;
+  const filtered = items.filter((i) =>
+    !search || i.name.toLowerCase().includes(search.toLowerCase()) ||
+    (i.sub || "").toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedName = items.find((i) => i.id === selectedId)?.name || placeholder;
 
   return (
-    <div className="mb-3 px-3">
-      <p className="text-[10px] text-amber-400 font-bold mb-1">관리자 모드</p>
-      <select
-        value={selectedAgencyId || ""}
-        onChange={(e) => setSelectedAgencyId(Number(e.target.value) || null)}
-        className="w-full bg-slate-800 text-slate-200 text-xs rounded-md border border-slate-700 px-2 py-1.5 focus:border-amber-500 focus:outline-none"
+    <div className="mb-3 px-3 relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full bg-slate-800 text-slate-200 text-xs rounded-md border border-amber-600/50 px-2 py-1.5 text-left truncate flex items-center justify-between"
       >
-        <option value="">대리점 선택</option>
-        {agencies.map((a) => (
-          <option key={a.id} value={a.id}>{a.agency_name}</option>
-        ))}
-      </select>
+        <span className="truncate">{selectedName}</span>
+        <span className="text-amber-400 ml-1">{open ? "▲" : "▼"}</span>
+      </button>
+      {open && (
+        <div className="absolute left-3 right-3 top-full mt-1 bg-slate-800 border border-slate-600 rounded-md shadow-xl z-50 max-h-60 overflow-hidden flex flex-col">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="검색..."
+            autoFocus
+            className="w-full bg-slate-700 text-slate-200 text-xs px-2 py-1.5 border-b border-slate-600 outline-none placeholder:text-slate-500"
+          />
+          <div className="overflow-y-auto max-h-48">
+            {filtered.length === 0 ? (
+              <p className="text-xs text-slate-500 p-2 text-center">결과 없음</p>
+            ) : (
+              filtered.map((i) => (
+                <button key={i.id}
+                  onClick={() => { onSelect(i.id); setOpen(false); setSearch(""); }}
+                  className={cn(
+                    "w-full text-left px-2 py-1.5 text-xs hover:bg-slate-700 transition-colors",
+                    i.id === selectedId ? "text-amber-400 bg-slate-700/50" : "text-slate-300"
+                  )}
+                >
+                  <span className="block truncate">{i.name}</span>
+                  {i.sub && <span className="block text-[10px] text-slate-500 truncate">{i.sub}</span>}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+function AdminAgencySelector() {
+  const { agencies, selectedAgencyId, setSelectedAgencyId } = useAgencyContext();
+  if (agencies.length === 0) return null;
+
+  const items = agencies.map((a) => ({ id: a.id, name: a.agency_name, sub: a.representative || "" }));
+  return (
+    <AdminSearchSelector items={items} selectedId={selectedAgencyId} onSelect={setSelectedAgencyId} placeholder="대리점 선택" />
+  );
+}
+
+function AdminStoreSelector() {
+  const { stores, selectedStoreId, setSelectedStoreId } = useAgencyContext();
+  if (stores.length === 0) return null;
+
+  const items = stores.map((s) => ({ id: s.id, name: s.store_name, sub: s.store_type || "" }));
+  return (
+    <AdminSearchSelector items={items} selectedId={selectedStoreId} onSelect={setSelectedStoreId} placeholder="가게 선택" />
   );
 }
