@@ -18,7 +18,6 @@ export async function GET(request: NextRequest) {
   const userId = searchParams.get("user_id") || authResult.user.id;
 
   try {
-    // 사용자 프로필 조회
     const profile = await queryOne<{ user_type: string; role: string }>(
       "SELECT user_type, role FROM user_profiles WHERE id = $1",
       [userId]
@@ -28,25 +27,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ permissions: [], has_custom: false });
     }
 
-    const userType = profile.user_type || "personal";
     const role = profile.role || "regular";
 
-    // 모든 관련 권한을 한번에 조회 (user_type, role, user)
+    // admin/super_admin은 모든 메뉴 접근 → 권한 체크 불필요
+    if (["admin", "super_admin"].includes(role)) {
+      return NextResponse.json({ permissions: [], has_custom: false });
+    }
+
+    const userType = profile.user_type || "personal";
+
+    // 우선순위: user_type(2순위) → user(1순위, 나중에 덮어씀)
     const rows = await query<PermissionRow>(
       `SELECT target_type, menu_href, granted FROM menu_permissions
        WHERE (target_type = 'user_type' AND target_value = $1)
-          OR (target_type = 'role' AND target_value = $2)
-          OR (target_type = 'user' AND target_value = $3)
+          OR (target_type = 'user' AND target_value = $2)
        ORDER BY
-         CASE target_type WHEN 'user_type' THEN 1 WHEN 'role' THEN 2 WHEN 'user' THEN 3 END`,
-      [userType, role, userId]
+         CASE target_type WHEN 'user_type' THEN 1 WHEN 'user' THEN 2 END`,
+      [userType, userId]
     );
 
     if (rows.length === 0) {
       return NextResponse.json({ permissions: [], has_custom: false });
     }
 
-    // 우선순위 병합: user_type → role → user (나중 것이 덮어씀)
+    // 우선순위 병합: user_type → user (개별 설정이 덮어씀)
     const merged = new Map<string, boolean>();
     for (const row of rows) {
       merged.set(row.menu_href, row.granted);

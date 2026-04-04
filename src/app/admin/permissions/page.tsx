@@ -62,7 +62,6 @@ const sections = [...new Set(allMenus.map((m) => m.section))];
 
 const targetTypeOptions = [
   { value: "user_type", label: "회원 유형별" },
-  { value: "role", label: "역할별" },
   { value: "user", label: "개별 회원" },
 ];
 
@@ -70,12 +69,6 @@ const userTypeValues = [
   { value: "personal", label: "개인" },
   { value: "business", label: "사업자" },
   { value: "agency", label: "대리점" },
-];
-
-const roleValues = [
-  { value: "regular", label: "일반" },
-  { value: "premium", label: "PRO" },
-  { value: "admin", label: "관리자" },
 ];
 
 export default function PermissionsPage() {
@@ -156,7 +149,6 @@ export default function PermissionsPage() {
     setSelectedUser(null);
     setUserSearch("");
     if (type === "user_type") setTargetValue("personal");
-    else if (type === "role") setTargetValue("regular");
     else setTargetValue("");
   };
 
@@ -202,23 +194,7 @@ export default function PermissionsPage() {
           </div>
         )}
 
-        {targetType === "role" && (
-          <div className="flex gap-2">
-            {roleValues.map((v) => (
-              <button
-                key={v.value}
-                onClick={() => setTargetValue(v.value)}
-                className={`px-3 py-1.5 rounded-lg text-sm ${
-                  targetValue === v.value
-                    ? "bg-emerald-100 text-emerald-700 border border-emerald-300"
-                    : "bg-slate-50 text-slate-500 border border-slate-200"
-                }`}
-              >
-                {v.label}
-              </button>
-            ))}
-          </div>
-        )}
+
 
         {targetType === "user" && (
           <div className="relative">
@@ -316,7 +292,6 @@ export default function PermissionsPage() {
             </h2>
             <p className="text-xs text-slate-400 mt-1">
               {targetType === "user_type" && `회원 유형: ${userTypeValues.find((v) => v.value === targetValue)?.label}`}
-              {targetType === "role" && `역할: ${roleValues.find((v) => v.value === targetValue)?.label}`}
               {targetType === "user" && selectedUser && `${selectedUser.nickname || selectedUser.email}`}
             </p>
           </div>
