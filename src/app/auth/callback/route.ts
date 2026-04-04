@@ -33,19 +33,19 @@ export async function GET(request: Request) {
       const nickname = meta.nickname || null;
       const userType = meta.user_type || "personal";
 
-      // NCloud DB에 프로필 upsert (user_type 포함)
-      await execute(
-        `INSERT INTO user_profiles (id, email, nickname, role, user_type)
-         VALUES ($1, $2, $3, 'regular', $4)
-         ON CONFLICT (id) DO UPDATE SET
-           nickname = COALESCE(EXCLUDED.nickname, user_profiles.nickname),
-           user_type = EXCLUDED.user_type`,
-        [data.user.id, data.user.email || "", nickname, userType]
-      );
+      try {
+        // NCloud DB에 프로필 upsert (user_type 포함)
+        await execute(
+          `INSERT INTO user_profiles (id, email, nickname, role, user_type)
+           VALUES ($1, $2, $3, 'regular', $4)
+           ON CONFLICT (id) DO UPDATE SET
+             nickname = COALESCE(EXCLUDED.nickname, user_profiles.nickname),
+             user_type = EXCLUDED.user_type`,
+          [data.user.id, data.user.email || "", nickname, userType]
+        );
 
-      // 대리점 유형이면 agencies 자동 생성 + user_profiles.agency_id 연결
-      if (userType === "agency" && meta.agency_name) {
-        try {
+        // 대리점 유형이면 agencies 자동 생성 + user_profiles.agency_id 연결
+        if (userType === "agency" && meta.agency_name) {
           const existing = await queryOne<{ agency_id: number }>(
             "SELECT agency_id FROM user_profiles WHERE id = $1",
             [data.user.id]
@@ -77,9 +77,9 @@ export async function GET(request: Request) {
               );
             }
           }
-        } catch (err) {
-          console.error("Agency registration error:", err);
         }
+      } catch (err) {
+        console.error("Callback profile/agency error:", err);
       }
 
       return NextResponse.redirect(`${siteUrl}/user/dashboard`);
