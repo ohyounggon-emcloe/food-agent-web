@@ -46,8 +46,16 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
   const isAdmin = ["admin", "super_admin"].includes(role);
   const [agencies, setAgencies] = useState<Agency[]>([]);
   const [stores, setStores] = useState<StoreItem[]>([]);
-  const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(null);
-  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(null);
+  const [selectedAgencyId, setSelectedAgencyId] = useState<number | null>(() => {
+    if (typeof window === "undefined") return null;
+    const saved = localStorage.getItem("admin_agency_id");
+    return saved ? Number(saved) : null;
+  });
+  const [selectedStoreId, setSelectedStoreId] = useState<number | null>(() => {
+    if (typeof window === "undefined") return null;
+    const saved = localStorage.getItem("admin_store_id");
+    return saved ? Number(saved) : null;
+  });
 
   // 관리자면 대리점 + 가게 목록 로드
   useEffect(() => {
@@ -96,6 +104,18 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
     return () => { window.fetch = originalFetch; };
   }, [isAdmin, selectedAgencyId, selectedStoreId]);
 
+  const updateAgencyId = (id: number | null) => {
+    setSelectedAgencyId(id);
+    if (id) localStorage.setItem("admin_agency_id", String(id));
+    else localStorage.removeItem("admin_agency_id");
+  };
+
+  const updateStoreId = (id: number | null) => {
+    setSelectedStoreId(id);
+    if (id) localStorage.setItem("admin_store_id", String(id));
+    else localStorage.removeItem("admin_store_id");
+  };
+
   const agencyFetch = (url: string, options?: RequestInit): Promise<Response> => {
     const headers = new Headers(options?.headers);
     if (isAdmin && selectedAgencyId) {
@@ -107,7 +127,8 @@ export function AgencyProvider({ children }: { children: React.ReactNode }) {
   return (
     <AgencyContext.Provider value={{
       agencies, stores, selectedAgencyId, selectedStoreId,
-      setSelectedAgencyId, setSelectedStoreId, isAdmin, agencyFetch,
+      setSelectedAgencyId: updateAgencyId, setSelectedStoreId: updateStoreId,
+      isAdmin, agencyFetch,
     }}>
       {children}
     </AgencyContext.Provider>

@@ -338,7 +338,13 @@ function AdminSearchSelector({ items, selectedId, onSelect, placeholder, icon }:
               ) : (
                 filtered.map((i) => (
                   <button key={i.id}
-                    onClick={() => { onSelect(i.id); setOpen(false); setSearch(""); }}
+                    onClick={() => {
+                      const changed = i.id !== selectedId;
+                      onSelect(i.id);
+                      setOpen(false);
+                      setSearch("");
+                      if (changed) setTimeout(() => window.location.reload(), 100);
+                    }}
                     className={cn(
                       "w-full text-left px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors",
                       i.id === selectedId ? "bg-emerald-50" : ""
