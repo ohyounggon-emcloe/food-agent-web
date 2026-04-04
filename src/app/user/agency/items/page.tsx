@@ -9,9 +9,9 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useCodes } from "@/hooks/use-codes";
 
-interface Item { id: number; item_name: string; category: string; total_quantity: number; unit_cost: number; vendor_name: string; in_use: string; is_active: boolean; description: string; }
+interface Item { id: number; item_name: string; category: string; total_quantity: number; unit_cost: number; vendor_name: string; in_use: string; is_active: boolean; description: string; min_revenue: number; annual_limit: number; support_rate: number; }
 
-const EMPTY = { category: "", item_name: "", total_quantity: "1", unit_cost: "0", description: "" };
+const EMPTY = { category: "", item_name: "", total_quantity: "1", unit_cost: "0", description: "", min_revenue: "0", annual_limit: "0", support_rate: "0" };
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
 
@@ -28,10 +28,10 @@ export default function AgencyItems() {
   const handleSubmit = async () => {
     if (!form.item_name) { toast.error("품목명 입력"); return; }
     if (editItem) {
-      await fetch(`/api/agency/items/${editItem.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, total_quantity: Number(form.total_quantity), unit_cost: Number(form.unit_cost) }) });
+      await fetch(`/api/agency/items/${editItem.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, total_quantity: Number(form.total_quantity), unit_cost: Number(form.unit_cost), min_revenue: Number(form.min_revenue), annual_limit: Number(form.annual_limit), support_rate: Number(form.support_rate) }) });
       toast.success("품목 수정 완료");
     } else {
-      await fetch("/api/agency/items", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, total_quantity: Number(form.total_quantity), unit_cost: Number(form.unit_cost) }) });
+      await fetch("/api/agency/items", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form, total_quantity: Number(form.total_quantity), unit_cost: Number(form.unit_cost), min_revenue: Number(form.min_revenue), annual_limit: Number(form.annual_limit), support_rate: Number(form.support_rate) }) });
       toast.success("품목 등록 완료");
     }
     closeDialog(); fetch_();
@@ -45,7 +45,7 @@ export default function AgencyItems() {
 
   const openEdit = (item: Item) => {
     setEditItem(item);
-    setForm({ category: item.category, item_name: item.item_name, total_quantity: String(item.total_quantity), unit_cost: String(item.unit_cost), description: item.description || "" });
+    setForm({ category: item.category, item_name: item.item_name, total_quantity: String(item.total_quantity), unit_cost: String(item.unit_cost), description: item.description || "", min_revenue: String(item.min_revenue || 0), annual_limit: String(item.annual_limit || 0), support_rate: String(item.support_rate || 0) });
     setDialogOpen(true);
   };
 
@@ -80,6 +80,23 @@ export default function AgencyItems() {
                 <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
               </div>
               <div>
+                <label className="text-xs text-gray-500 block mb-1">최소매출금액 (만원)</label>
+                <Input type="number" min="0" value={form.min_revenue} onChange={e => setForm(p => ({...p, min_revenue: e.target.value.replace(/-/g, "")}))} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">년지원 횟수</label>
+                  <select value={form.annual_limit} onChange={e => setForm(p => ({...p, annual_limit: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                    <option value="0">제한없음</option>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map(n => <option key={n} value={String(n)}>{n}회</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500 block mb-1">지원금액 (%)</label>
+                  <Input type="number" min="0" max="100" value={form.support_rate} onChange={e => setForm(p => ({...p, support_rate: e.target.value.replace(/-/g, "")}))} />
+                </div>
+              </div>
+              <div>
                 <label className="text-xs text-gray-500 block mb-1">설명</label>
                 <Input value={form.description} onChange={e => setForm(p => ({...p, description: e.target.value}))} />
               </div>
@@ -99,6 +116,9 @@ export default function AgencyItems() {
                 <tr className="border-b bg-gray-50 text-gray-500 text-xs">
                   <th className="text-left py-2 px-3">품목명</th>
                   <th className="text-right py-2 px-3 w-24">단가</th>
+                  <th className="text-right py-2 px-3 w-24">최소매출</th>
+                  <th className="text-center py-2 px-3 w-20">년횟수</th>
+                  <th className="text-right py-2 px-3 w-20">지원%</th>
                   <th className="text-center py-2 px-3 w-16">관리</th>
                 </tr>
               </thead>
@@ -111,6 +131,15 @@ export default function AgencyItems() {
                       </td>
                       <td className="py-2.5 px-3 text-right text-gray-600">
                         {item.unit_cost > 0 ? `${fmt(item.unit_cost)}원` : <span className="text-gray-300">-</span>}
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-gray-600">
+                        {item.min_revenue > 0 ? `${fmt(item.min_revenue)}만원` : <span className="text-gray-300">-</span>}
+                      </td>
+                      <td className="py-2.5 px-3 text-center text-gray-600">
+                        {item.annual_limit > 0 ? `${item.annual_limit}회` : <span className="text-gray-300">무제한</span>}
+                      </td>
+                      <td className="py-2.5 px-3 text-right text-gray-600">
+                        {item.support_rate > 0 ? `${item.support_rate}%` : <span className="text-gray-300">-</span>}
                       </td>
                       <td className="py-2.5 px-3 text-center">
                         <div className="flex justify-center gap-1">

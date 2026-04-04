@@ -27,9 +27,9 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   await execute(
-    `INSERT INTO service_items (agency_id, category, item_name, total_quantity, unit_cost, vendor_id, description)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [auth.agencyId, body.category, body.item_name, body.total_quantity || 1, body.unit_cost || 0, body.vendor_id, body.description]
+    `INSERT INTO service_items (agency_id, category, item_name, total_quantity, unit_cost, vendor_id, description, min_revenue, annual_limit, support_rate)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+    [auth.agencyId, body.category, body.item_name, body.total_quantity || 1, body.unit_cost || 0, body.vendor_id, body.description, body.min_revenue || 0, body.annual_limit || 0, body.support_rate || 0]
   );
   return NextResponse.json({ success: true });
 }
