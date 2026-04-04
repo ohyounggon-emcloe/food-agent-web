@@ -47,6 +47,19 @@ const navSections: NavSection[] = [
     ],
   },
   {
+    title: "📦 부가서비스 관리",
+    items: [
+      { href: "/user/agency/dashboard", label: "대리점 현황", icon: Store, businessOnly: true },
+      { href: "/user/agency/clients", label: "고객사 관리", icon: UserCircle, businessOnly: true },
+      { href: "/user/agency/services", label: "서비스 관리", icon: ClipboardCheck, businessOnly: true },
+      { href: "/user/agency/calendar", label: "행사 달력", icon: LayoutDashboard, businessOnly: true },
+      { href: "/user/agency/staff", label: "인력 관리", icon: Heart, businessOnly: true },
+      { href: "/user/agency/items", label: "품목/기물 관리", icon: Receipt, businessOnly: true },
+      { href: "/user/agency/vendors", label: "공급사 관리", icon: ShieldCheck, businessOnly: true },
+      { href: "/user/agency/reports", label: "정산 리포트", icon: FileText, businessOnly: true },
+    ],
+  },
+  {
     title: "🏠 우리가게 위생관리",
     items: [
       { href: "/user/store/dashboard", label: "가게 현황", icon: Store, businessOnly: true },
@@ -118,9 +131,9 @@ export default function UserLayout({
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
           {navSections.map((section, sIdx) => {
-            // 우리가게 위생관리는 관리자 또는 사업자만 표시
+            // 사업자/대리점 전용 섹션은 해당 유형 또는 관리자만 표시
             const isStoreSection = section.items.some((i) => i.businessOnly);
-            const showSection = !isStoreSection || userType === "business" || ["admin", "super_admin"].includes(role);
+            const showSection = !isStoreSection || userType === "business" || userType === "agency" || ["admin", "super_admin"].includes(role);
             if (!showSection) return null;
 
             return (
