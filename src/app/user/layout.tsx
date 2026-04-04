@@ -92,35 +92,7 @@ export default function UserLayout({
   const isAdmin = ["admin", "super_admin"].includes(role);
   const isAgency = userType === "agency";
 
-  // agency 유형이 /user/dashboard에 접근하면 /user/agency/dashboard로 리다이렉트
-  useEffect(() => {
-    if (!loading && user && isAgency && pathname === "/user/dashboard") {
-      router.replace("/user/agency/dashboard");
-    }
-  }, [loading, user, isAgency, pathname, router]);
-
-  // 로딩 중이면 빈 화면 (깜빡임 방지)
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-sm text-gray-400">로딩 중...</div>
-      </div>
-    );
-  }
-
-  // 로딩 완료 후 user가 없으면 로그인으로
-  if (!user) {
-    if (typeof window !== "undefined") {
-      window.location.href = "/auth/login?expired=true";
-    }
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-50">
-        <div className="text-sm text-gray-400">로그인 페이지로 이동 중...</div>
-      </div>
-    );
-  }
-
-  // 메뉴 권한 체크
+  // 메뉴 권한 체크 (hooks는 early return 전에 선언)
   const [allowedMenus, setAllowedMenus] = useState<Set<string> | null>(null);
 
   const fetchMenuPermissions = useCallback(async () => {
@@ -144,6 +116,30 @@ export default function UserLayout({
   useEffect(() => {
     fetchMenuPermissions();
   }, [fetchMenuPermissions]);
+
+  // agency 유형이 /user/dashboard에 접근하면 /user/agency/dashboard로 리다이렉트
+  useEffect(() => {
+    if (!loading && user && isAgency && pathname === "/user/dashboard") {
+      router.replace("/user/agency/dashboard");
+    }
+  }, [loading, user, isAgency, pathname, router]);
+
+  // 로딩 중이면 빈 화면 (깜빡임 방지)
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-sm text-gray-400">로딩 중...</div>
+      </div>
+    );
+  }
+
+  // 로딩 완료 후 user가 없으면 로그인으로
+  if (!user) {
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/login";
+    }
+    return null;
+  }
 
   // agency 유형: 부가서비스 섹션만 표시
   const baseSections = navSections.filter((section) => {
