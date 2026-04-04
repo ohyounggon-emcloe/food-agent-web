@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 
 const FullCalendarWrapper = dynamic(() => import("./calendar-wrapper"), { ssr: false });
@@ -17,6 +20,7 @@ interface CalendarEvent {
 }
 
 export default function AgencyCalendar() {
+  const router = useRouter();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [selected, setSelected] = useState<CalendarEvent | null>(null);
 
@@ -81,6 +85,14 @@ export default function AgencyCalendar() {
                   {selected.extendedProps.staff_name ? <p>인력: {String(selected.extendedProps.staff_name)}</p> : null}
                   {selected.extendedProps.item_name ? <p>품목: {String(selected.extendedProps.item_name)}</p> : null}
                   {selected.extendedProps.remarks ? <p className="text-gray-400">{String(selected.extendedProps.remarks)}</p> : null}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="mt-3 w-full text-xs"
+                    onClick={() => router.push(`/user/agency/services?highlight=${selected.id}`)}
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 mr-1" />서비스 상세 보기
+                  </Button>
                 </div>
               ) : (
                 <p className="text-xs text-gray-400">일정을 클릭하면 상세 정보가 표시됩니다</p>

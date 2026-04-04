@@ -3,7 +3,6 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ReportRow { group_name: string; service_type: string; count: string; total_cost: string; }
 
@@ -40,13 +39,14 @@ export default function AgencyReports() {
           <label className="text-xs text-gray-500 block mb-1">종료일</label>
           <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="w-40" />
         </div>
-        <Select value={groupBy} onValueChange={(v) => setGroupBy(v || "client")}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="client">고객사별</SelectItem>
-            <SelectItem value="vendor">공급사별</SelectItem>
-          </SelectContent>
-        </Select>
+        <select
+          value={groupBy}
+          onChange={e => setGroupBy(e.target.value)}
+          className="h-9 w-32 rounded-lg border border-input bg-background px-3 text-sm"
+        >
+          <option value="client">고객사별</option>
+          <option value="vendor">공급사별</option>
+        </select>
         <Button onClick={fetchReport}>조회</Button>
       </div>
 
