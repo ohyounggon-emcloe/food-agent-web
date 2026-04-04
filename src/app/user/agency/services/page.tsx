@@ -240,11 +240,11 @@ export default function AgencyServices() {
                   {s.status === "requested" && <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => updateStatus(s.id, "confirmed")}>확정</Button>}
                   {s.status === "confirmed" && <Button size="sm" variant="outline" className="text-xs h-7 text-green-600" onClick={() => updateStatus(s.id, "completed")}>완료</Button>}
                   {s.status === "requested" && <Button size="sm" variant="ghost" className="text-xs h-7 text-red-400" onClick={() => updateStatus(s.id, "cancelled")}>취소</Button>}
+                  {!["cancelled", "expired"].includes(s.status) && (
+                    <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
+                  )}
                   {!["completed", "cancelled", "expired"].includes(s.status) && (
-                    <>
-                      <button onClick={() => openEdit(s)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>
-                      <button onClick={() => handleDelete(s)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
-                    </>
+                    <button onClick={() => handleDelete(s)} className="p-1 rounded hover:bg-slate-100"><Trash2 className="w-3.5 h-3.5 text-red-400" /></button>
                   )}
                 </div>
               </CardContent>
