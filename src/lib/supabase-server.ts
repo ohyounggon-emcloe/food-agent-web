@@ -3,11 +3,22 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies, headers } from "next/headers";
 
 /**
+ * JWT payload에서 user 정보를 추출 (base64 디코딩)
+ */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3) return null;
+    const payload = Buffer.from(parts[1], "base64url").toString("utf-8");
+    return JSON.parse(payload);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Cookie 기반 Supabase 클라이언트 (웹 브라우저용)
- * Bearer 토큰이 있으면 토큰 기반으로 전환 (앱용)
- *
- * Bearer 토큰 사용 시 getSession()이 동작하도록
- * 가짜 세션을 주입하는 래퍼 클라이언트를 반환
+ * Bearer 토큰이 있으면 JWT 디코딩으로 세션 구성 (앱용)
  */
 export async function createClient() {
   const headerStore = await headers();
@@ -15,40 +26,47 @@ export async function createClient() {
 
   if (authHeader?.startsWith("Bearer ")) {
     const token = authHeader.slice(7);
-    const client = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      }
-    );
+    const payload = decodeJwtPayload(token);
 
-    // getUser()로 토큰 검증 → getSession()도 동작하도록 프록시
-    const original = client.auth.getSession.bind(client.auth);
-    client.auth.getSession = async () => {
-      const { data: userData, error } = await client.auth.getUser(token);
-      if (error || !userData.user) {
-        return original();
-      }
-      return {
-        data: {
-          session: {
-            access_token: token,
-            refresh_token: "",
-            expires_in: 3600,
-            expires_at: Math.floor(Date.now() / 1000) + 3600,
-            token_type: "bearer",
-            user: userData.user,
+    if (payload?.sub) {
+      const client = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          global: {
+            headers: { Authorization: `Bearer ${token}` },
           },
-        },
-        error: null,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any;
-    };
+        }
+      );
 
-    return client;
+      // JWT에서 추출한 user 정보로 세션 구성
+      client.auth.getSession = async () => {
+        return {
+          data: {
+            session: {
+              access_token: token,
+              refresh_token: "",
+              expires_in: 3600,
+              expires_at: Number(payload.exp) || Math.floor(Date.now() / 1000) + 3600,
+              token_type: "bearer",
+              user: {
+                id: payload.sub as string,
+                email: (payload.email as string) || "",
+                aud: (payload.aud as string) || "authenticated",
+                role: (payload.role as string) || "authenticated",
+                app_metadata: {},
+                user_metadata: payload.user_metadata || {},
+                created_at: "",
+              },
+            },
+          },
+          error: null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any;
+      };
+
+      return client;
+    }
   }
 
   // Cookie 기반 (웹 브라우저용)
