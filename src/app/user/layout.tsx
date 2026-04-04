@@ -109,9 +109,15 @@ export default function UserLayout({
   }
 
   // 로딩 완료 후 user가 없으면 로그인으로
-  // (미들웨어가 쿠키 기반으로 리다이렉트하므로, 여기서는 쿠키 건드리지 않음)
   if (!user) {
-    return null;
+    if (typeof window !== "undefined") {
+      window.location.href = "/auth/login?expired=true";
+    }
+    return (
+      <div className="flex h-screen items-center justify-center bg-slate-50">
+        <div className="text-sm text-gray-400">로그인 페이지로 이동 중...</div>
+      </div>
+    );
   }
 
   // 메뉴 권한 체크
