@@ -65,9 +65,8 @@ function LoginForm() {
         return;
       }
 
-      // 로그인 성공 → 사용자 대시보드로 이동
-      router.push("/user/dashboard");
-      router.refresh();
+      // 로그인 성공 → full reload로 이동 (쿠키가 미들웨어에 반영되도록)
+      window.location.href = "/user/dashboard";
     } catch {
       setError("로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
       setLoading(false);

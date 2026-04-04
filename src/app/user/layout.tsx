@@ -136,7 +136,7 @@ export default function UserLayout({
   // 로딩 완료 후 user가 없으면 로그인으로
   if (!user) {
     if (typeof window !== "undefined") {
-      window.location.href = "/auth/login";
+      window.location.href = "/auth/login?expired=true";
     }
     return null;
   }
