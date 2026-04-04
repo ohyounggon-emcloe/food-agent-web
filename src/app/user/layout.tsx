@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
@@ -109,33 +109,56 @@ export default function UserLayout({
   }
 
   // 로딩 완료 후 user가 없으면 로그인으로
+  // (미들웨어가 쿠키 기반으로 리다이렉트하므로, 여기서는 쿠키 건드리지 않음)
   if (!user) {
-    if (typeof window !== "undefined") {
-      // sb- 쿠키 삭제 후 리다이렉트 (미들웨어 리다이렉트 루프 방지)
-      document.cookie.split(";").forEach((c) => {
-        const name = c.trim().split("=")[0];
-        if (name.startsWith("sb-")) {
-          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=${window.location.hostname}`;
-          document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
-        }
-      });
-      window.location.href = "/auth/login";
-    }
     return null;
   }
 
+  // 메뉴 권한 체크
+  const [allowedMenus, setAllowedMenus] = useState<Set<string> | null>(null);
+
+  const fetchMenuPermissions = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`/api/permissions/check?user_id=${user.id}`);
+      const data = await res.json();
+      if (data.has_custom && data.permissions?.length > 0) {
+        const granted = new Set<string>(
+          data.permissions
+            .filter((p: { granted: boolean }) => p.granted)
+            .map((p: { menu_href: string }) => p.menu_href)
+        );
+        setAllowedMenus(granted);
+      }
+    } catch {
+      // 권한 조회 실패 시 기본 로직 사용
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchMenuPermissions();
+  }, [fetchMenuPermissions]);
+
   // agency 유형: 부가서비스 섹션만 표시
-  const visibleSections = navSections.filter((section) => {
+  const baseSections = navSections.filter((section) => {
     if (isAdmin) return true;
     if (isAgency) {
-      // agency 유형은 부가서비스 관리 섹션만
       return !!section.agencyOnly;
     }
-    // 일반/사업자: AI-FX 정보서비스 + 해당 유형 섹션
     if (section.agencyOnly) return false;
     if (section.storeOnly) return userType === "business";
     return true;
   });
+
+  // 개별 권한이 설정되어 있으면 메뉴 항목 필터링
+  const visibleSections = allowedMenus
+    ? baseSections
+        .map((section) => ({
+          ...section,
+          items: section.items.filter((item) => allowedMenus.has(item.href)),
+        }))
+        .filter((section) => section.items.length > 0)
+    : baseSections;
 
   return (
     <div className="flex h-screen">
