@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { useCodes } from "@/hooks/use-codes";
 
@@ -17,8 +17,11 @@ interface ServiceRequest {
   cost: number; remarks: string; quantity: number;
 }
 interface Client { id: number; client_name: string; }
-interface Item { id: number; item_name: string; category: string; }
-interface Staff { id: number; name: string; job_type: string; }
+interface Item { id: number; item_name: string; category: string; unit_cost: number; }
+interface Staff { id: number; name: string; job_type: string; unit_cost: number; }
+
+interface SelectedItem { item_id: number; item_name: string; quantity: number; unit_cost: number; }
+interface SelectedStaff { staff_id: number; name: string; unit_cost: number; }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   requested: { label: "요청", color: "bg-amber-100 text-amber-700" },
@@ -28,9 +31,12 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
   expired: { label: "미진행", color: "bg-red-100 text-red-600" },
 };
 
-const EMPTY_FORM = {
-  client_id: "", service_type: "", title: "", requested_date: "",
-  service_item_id: "", assigned_staff_id: "", quantity: "1", cost: "0", remarks: "",
+// 서비스 유형별 선택 가능 항목
+const TYPE_CONFIG: Record<string, { showItems: boolean; showStaff: boolean }> = {
+  "기물대여": { showItems: true, showStaff: false },
+  "행사": { showItems: true, showStaff: true },
+  "인력": { showItems: false, showStaff: true },
+  "현물": { showItems: true, showStaff: false },
 };
 
 function formatDateTime(dateStr: string) {
@@ -53,9 +59,26 @@ export default function AgencyServices() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editService, setEditService] = useState<ServiceRequest | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
   const { codes: serviceCategories } = useCodes("service_category");
   const { codes: serviceStatuses } = useCodes("service_status");
+
+  // 폼 기본 필드
+  const [formClientId, setFormClientId] = useState("");
+  const [formServiceType, setFormServiceType] = useState("");
+  const [formTitle, setFormTitle] = useState("");
+  const [formDate, setFormDate] = useState("");
+  const [formRemarks, setFormRemarks] = useState("");
+
+  // 선택된 품목/인원 리스트
+  const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<SelectedStaff[]>([]);
+
+  const config = TYPE_CONFIG[formServiceType] || { showItems: false, showStaff: false };
+
+  // 총 비용 계산
+  const itemsCost = selectedItems.reduce((s, i) => s + i.unit_cost * i.quantity, 0);
+  const staffCost = selectedStaff.reduce((s, st) => s + st.unit_cost, 0);
+  const totalCost = itemsCost + staffCost;
 
   const fetchAll = () => {
     const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
@@ -70,32 +93,38 @@ export default function AgencyServices() {
 
   useEffect(() => { fetchAll(); }, [statusFilter]);
 
+  const resetForm = () => {
+    setFormClientId(""); setFormServiceType(""); setFormTitle("");
+    setFormDate(""); setFormRemarks("");
+    setSelectedItems([]); setSelectedStaff([]);
+  };
+
   const handleSubmit = async () => {
-    if (!form.title || !form.requested_date) { toast.error("제목과 날짜를 입력하세요"); return; }
+    if (!formTitle || !formDate) { toast.error("제목과 날짜를 입력하세요"); return; }
+
+    const payload = {
+      client_id: formClientId || null,
+      service_type: formServiceType,
+      title: formTitle,
+      requested_date: formDate,
+      remarks: formRemarks,
+      cost: totalCost,
+      // 첫 번째 품목/인원을 메인으로 저장 (호환성)
+      service_item_id: selectedItems[0]?.item_id || null,
+      assigned_staff_id: selectedStaff[0]?.staff_id || null,
+      quantity: selectedItems[0]?.quantity || 1,
+    };
 
     if (editService) {
       await fetch(`/api/agency/services/${editService.id}`, {
         method: "PATCH", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form, client_id: form.client_id || null, service_item_id: form.service_item_id || null,
-          assigned_staff_id: form.assigned_staff_id || null, quantity: Number(form.quantity), cost: Number(form.cost),
-        }),
+        body: JSON.stringify(payload),
       });
       toast.success("서비스 수정 완료");
     } else {
-      const checkRes = await fetch("/api/agency/calendar/check", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ requested_date: form.requested_date, service_item_id: form.service_item_id || null, assigned_staff_id: form.assigned_staff_id || null }),
-      });
-      const checkData = await checkRes.json();
-      if (checkData.hasConflict) { toast.error(`중복 경고: ${checkData.conflicts.join(", ")}`); return; }
-
       await fetch("/api/agency/services", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form, client_id: form.client_id || null, service_item_id: form.service_item_id || null,
-          assigned_staff_id: form.assigned_staff_id || null, quantity: Number(form.quantity), cost: Number(form.cost),
-        }),
+        body: JSON.stringify(payload),
       });
       toast.success("서비스 등록 완료");
     }
@@ -110,21 +139,29 @@ export default function AgencyServices() {
 
   const openEdit = (s: ServiceRequest) => {
     setEditService(s);
-    setForm({
-      client_id: s.client_id ? String(s.client_id) : "",
-      service_type: s.service_type || "",
-      title: s.title,
-      requested_date: s.requested_date ? s.requested_date.slice(0, 16) : "",
-      service_item_id: s.service_item_id ? String(s.service_item_id) : "",
-      assigned_staff_id: s.assigned_staff_id ? String(s.assigned_staff_id) : "",
-      quantity: String(s.quantity || 1),
-      cost: String(s.cost || 0),
-      remarks: s.remarks || "",
-    });
+    setFormClientId(s.client_id ? String(s.client_id) : "");
+    setFormServiceType(s.service_type || "");
+    setFormTitle(s.title);
+    setFormDate(s.requested_date ? s.requested_date.slice(0, 16) : "");
+    setFormRemarks(s.remarks || "");
+
+    // 기존 품목/인원 복원
+    if (s.service_item_id) {
+      const item = items.find(i => i.id === s.service_item_id);
+      if (item) setSelectedItems([{ item_id: item.id, item_name: item.item_name, quantity: s.quantity || 1, unit_cost: item.unit_cost || 0 }]);
+    } else {
+      setSelectedItems([]);
+    }
+    if (s.assigned_staff_id) {
+      const staff = staffList.find(st => st.id === s.assigned_staff_id);
+      if (staff) setSelectedStaff([{ staff_id: staff.id, name: staff.name, unit_cost: staff.unit_cost || 0 }]);
+    } else {
+      setSelectedStaff([]);
+    }
     setDialogOpen(true);
   };
 
-  const closeDialog = () => { setDialogOpen(false); setEditService(null); setForm(EMPTY_FORM); };
+  const closeDialog = () => { setDialogOpen(false); setEditService(null); resetForm(); };
 
   const updateStatus = async (id: number, status: string) => {
     const body: Record<string, unknown> = { status };
@@ -134,10 +171,36 @@ export default function AgencyServices() {
     fetchAll();
   };
 
-  // native select용 헬퍼
-  const clientLabel = (id: string) => clients.find(c => String(c.id) === id)?.client_name || "";
-  const itemLabel = (id: string) => items.find(i => String(i.id) === id)?.item_name || "";
-  const staffLabel = (id: string) => staffList.find(s => String(s.id) === id)?.name || "";
+  // 품목 추가
+  const addItem = (itemId: string) => {
+    if (!itemId) return;
+    const item = items.find(i => String(i.id) === itemId);
+    if (!item || selectedItems.some(si => si.item_id === item.id)) return;
+    setSelectedItems(prev => [...prev, { item_id: item.id, item_name: item.item_name, quantity: 1, unit_cost: item.unit_cost || 0 }]);
+  };
+
+  const updateItemQty = (itemId: number, qty: number) => {
+    setSelectedItems(prev => prev.map(i => i.item_id === itemId ? { ...i, quantity: Math.max(1, qty) } : i));
+  };
+
+  const removeItem = (itemId: number) => {
+    setSelectedItems(prev => prev.filter(i => i.item_id !== itemId));
+  };
+
+  // 인원 추가
+  const addStaff = (staffId: string) => {
+    if (!staffId) return;
+    const staff = staffList.find(s => String(s.id) === staffId);
+    if (!staff || selectedStaff.some(ss => ss.staff_id === staff.id)) return;
+    setSelectedStaff(prev => [...prev, { staff_id: staff.id, name: staff.name, unit_cost: staff.unit_cost || 0 }]);
+  };
+
+  const removeStaff = (staffId: number) => {
+    setSelectedStaff(prev => prev.filter(s => s.staff_id !== staffId));
+  };
+
+  // 서비스 유형별 표시할 품목 필터
+  const filteredItems = items.filter(i => !formServiceType || i.category === formServiceType);
 
   return (
     <div className="space-y-6">
@@ -147,72 +210,100 @@ export default function AgencyServices() {
           <p className="text-gray-500 text-sm mt-1">부가서비스 요청 {services.length}건</p>
         </div>
         <div className="flex gap-2">
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="h-9 w-28 rounded-lg border border-input bg-background px-3 text-sm"
-          >
+          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 w-28 rounded-lg border border-input bg-background px-3 text-sm">
             <option value="all">전체</option>
             {serviceStatuses.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
           </select>
-          <Dialog open={dialogOpen} onOpenChange={o => { if (!o) closeDialog(); else { setEditService(null); setForm(EMPTY_FORM); setDialogOpen(true); } }}>
+          <Dialog open={dialogOpen} onOpenChange={o => { if (!o) closeDialog(); else { resetForm(); setEditService(null); setDialogOpen(true); } }}>
             <DialogTrigger>
               <Button size="sm"><Plus className="w-4 h-4 mr-1" />서비스 등록</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>{editService ? "서비스 수정" : "서비스 요청 등록"}</DialogTitle></DialogHeader>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">고객사</label>
-                  <select value={form.client_id} onChange={e => setForm(p => ({...p, client_id: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                  <select value={formClientId} onChange={e => setFormClientId(e.target.value)} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
                     <option value="">고객사 선택</option>
                     {clients.map(c => <option key={c.id} value={String(c.id)}>{c.client_name}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">서비스 유형</label>
-                  <select value={form.service_type} onChange={e => setForm(p => ({...p, service_type: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                  <select value={formServiceType} onChange={e => { setFormServiceType(e.target.value); setSelectedItems([]); setSelectedStaff([]); }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
                     <option value="">서비스 유형 선택</option>
                     {serviceCategories.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
                   </select>
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">서비스 제목 *</label>
-                  <Input placeholder="서비스 제목" value={form.title} onChange={e => setForm(p => ({...p, title: e.target.value}))} />
+                  <Input placeholder="서비스 제목" value={formTitle} onChange={e => setFormTitle(e.target.value)} />
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">행사 일자</label>
-                  <Input type="datetime-local" value={form.requested_date} onChange={e => setForm(p => ({...p, requested_date: e.target.value}))} />
+                  <Input type="datetime-local" value={formDate} onChange={e => setFormDate(e.target.value)} />
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">품목 (선택)</label>
-                  <select value={form.service_item_id} onChange={e => setForm(p => ({...p, service_item_id: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
-                    <option value="">품목 선택</option>
-                    {items.filter(i => !form.service_type || i.category === form.service_type).map(i => <option key={i.id} value={String(i.id)}>{i.item_name}</option>)}
-                  </select>
-                </div>
-                {(form.service_type === "인력" || form.assigned_staff_id) && (
+
+                {/* 품목 선택 (기물대여, 행사, 현물) */}
+                {config.showItems && (
                   <div>
-                    <label className="text-xs text-slate-500 mb-1 block">인력 배정 (선택)</label>
-                    <select value={form.assigned_staff_id} onChange={e => setForm(p => ({...p, assigned_staff_id: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
-                      <option value="">인력 선택</option>
-                      {staffList.map(s => <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type})</option>)}
+                    <label className="text-xs text-slate-500 mb-1 block">품목 선택</label>
+                    <select onChange={e => { addItem(e.target.value); e.target.value = ""; }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
+                      <option value="">품목 추가...</option>
+                      {filteredItems.filter(i => !selectedItems.some(si => si.item_id === i.id)).map(i => (
+                        <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원)</option>
+                      ))}
                     </select>
+                    {selectedItems.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedItems.map(si => (
+                          <div key={si.item_id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                            <span className="text-sm flex-1">{si.item_name}</span>
+                            <Input type="number" min="1" value={si.quantity} onChange={e => updateItemQty(si.item_id, Number(e.target.value))} className="w-16 h-7 text-xs text-center" />
+                            <span className="text-xs text-emerald-600 w-20 text-right">{(si.unit_cost * si.quantity).toLocaleString()}원</span>
+                            <button onClick={() => removeItem(si.item_id)} className="p-0.5 rounded hover:bg-red-100"><X className="w-3.5 h-3.5 text-red-400" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-2">
+
+                {/* 인원 선택 (행사, 인력) */}
+                {config.showStaff && (
                   <div>
-                    <label className="text-xs text-slate-500 mb-1 block">수량</label>
-                    <Input type="number" value={form.quantity} onChange={e => setForm(p => ({...p, quantity: e.target.value}))} />
+                    <label className="text-xs text-slate-500 mb-1 block">인원 선택</label>
+                    <select onChange={e => { addStaff(e.target.value); e.target.value = ""; }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
+                      <option value="">인원 추가...</option>
+                      {staffList.filter(s => !selectedStaff.some(ss => ss.staff_id === s.id)).map(s => (
+                        <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type}) - {s.unit_cost?.toLocaleString() || 0}원</option>
+                      ))}
+                    </select>
+                    {selectedStaff.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {selectedStaff.map(ss => (
+                          <div key={ss.staff_id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
+                            <span className="text-sm flex-1">{ss.name}</span>
+                            <span className="text-xs text-emerald-600 w-20 text-right">{ss.unit_cost.toLocaleString()}원</span>
+                            <button onClick={() => removeStaff(ss.staff_id)} className="p-0.5 rounded hover:bg-red-100"><X className="w-3.5 h-3.5 text-red-400" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="text-xs text-slate-500 mb-1 block">비용 (원)</label>
-                    <Input type="number" value={form.cost} onChange={e => setForm(p => ({...p, cost: e.target.value}))} />
+                )}
+
+                {/* 총 비용 */}
+                {(selectedItems.length > 0 || selectedStaff.length > 0) && (
+                  <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                    <span className="text-sm font-medium text-slate-700">총 비용</span>
+                    <span className="text-lg font-bold text-emerald-600">{totalCost.toLocaleString()}원</span>
                   </div>
-                </div>
+                )}
+
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">비고</label>
-                  <Input placeholder="비고" value={form.remarks} onChange={e => setForm(p => ({...p, remarks: e.target.value}))} />
+                  <Input placeholder="비고" value={formRemarks} onChange={e => setFormRemarks(e.target.value)} />
                 </div>
                 <Button onClick={handleSubmit} className="w-full">{editService ? "수정" : "등록"}</Button>
               </div>
@@ -237,11 +328,7 @@ export default function AgencyServices() {
                   {s.cost > 0 && <span className="text-xs text-emerald-600">{s.cost.toLocaleString()}원</span>}
                 </div>
                 <div className="flex gap-1 items-center shrink-0">
-                  <select
-                    value={s.status}
-                    onChange={e => updateStatus(s.id, e.target.value)}
-                    className="h-7 rounded border border-input bg-background px-2 text-xs"
-                  >
+                  <select value={s.status} onChange={e => updateStatus(s.id, e.target.value)} className="h-7 rounded border border-input bg-background px-2 text-xs">
                     {serviceStatuses.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
                   </select>
                   {s.status !== "cancelled" && (
