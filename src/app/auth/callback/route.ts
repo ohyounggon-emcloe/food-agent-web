@@ -13,7 +13,9 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
-      return NextResponse.redirect(`${siteUrl}/auth/login?error=expired`);
+      // 코드 만료 또는 이미 사용된 경우
+      const errorType = error.message?.includes("expired") ? "expired" : "expired";
+      return NextResponse.redirect(`${siteUrl}/auth/login?error=${errorType}`);
     }
 
     // 비밀번호 재설정인 경우

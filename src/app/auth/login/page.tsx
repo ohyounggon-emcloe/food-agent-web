@@ -22,6 +22,8 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -33,9 +35,11 @@ function LoginForm() {
     } else if (searchParams.get("verified") === "true") {
       setInfo("이메일 인증이 완료되었습니다. 로그인해주세요.");
     } else if (searchParams.get("error") === "expired") {
-      setError("인증 링크가 만료되었습니다. 다시 요청해주세요.");
+      setError("인증 링크가 만료되었습니다. 이메일을 입력 후 인증 메일을 재발송해주세요.");
+      setShowResend(true);
     } else if (searchParams.get("error") === "unverified") {
-      setError("이메일 인증이 필요합니다. 가입 시 입력한 이메일의 메일함을 확인해주세요.");
+      setError("이메일 인증이 필요합니다. 메일함을 확인하거나 인증 메일을 재발송해주세요.");
+      setShowResend(true);
     }
   }, [searchParams]);
 
@@ -57,7 +61,8 @@ function LoginForm() {
         if (signInError.message === "Invalid login credentials") {
           setError("이메일 또는 비밀번호가 잘못되었습니다.");
         } else if (signInError.message === "Email not confirmed") {
-          setError("이메일 인증이 필요합니다. 가입 시 입력한 이메일의 메일함을 확인해주세요.");
+          setError("이메일 인증이 필요합니다. 메일함을 확인하거나 인증 메일을 재발송해주세요.");
+          setShowResend(true);
         } else {
           setError(signInError.message);
         }
@@ -65,6 +70,7 @@ function LoginForm() {
         return;
       }
 
+      setShowResend(false);
       // 로그인 성공 → full reload로 이동 (쿠키가 미들웨어에 반영되도록)
       window.location.href = "/user/dashboard";
     } catch {
@@ -87,7 +93,38 @@ function LoginForm() {
           )}
           {error && (
             <div className="bg-red-50 text-red-600 text-sm p-3 rounded-md">
-              {error}
+              <p>{error}</p>
+              {showResend && (
+                <button
+                  type="button"
+                  disabled={resending || !email}
+                  onClick={async () => {
+                    if (!email) { setError("이메일을 입력해주세요."); return; }
+                    setResending(true);
+                    try {
+                      const res = await fetch("/api/auth/resend", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email }),
+                      });
+                      const data = await res.json();
+                      if (res.ok) {
+                        setError("");
+                        setShowResend(false);
+                        setInfo("인증 메일이 재발송되었습니다. 메일함을 확인해주세요.");
+                      } else {
+                        setError(data.error || "재발송에 실패했습니다.");
+                      }
+                    } catch {
+                      setError("재발송 중 오류가 발생했습니다.");
+                    }
+                    setResending(false);
+                  }}
+                  className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50"
+                >
+                  {resending ? "발송 중..." : "인증 메일 재발송"}
+                </button>
+              )}
             </div>
           )}
           <div>
