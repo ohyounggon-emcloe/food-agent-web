@@ -11,7 +11,7 @@ import { useCodes } from "@/hooks/use-codes";
 
 interface Item { id: number; item_name: string; category: string; total_quantity: number; unit_cost: number; vendor_name: string; in_use: string; is_active: boolean; description: string; min_revenue: number; annual_limit: number; support_rate: number; }
 
-const EMPTY = { category: "", item_name: "", total_quantity: "1", unit_cost: "0", description: "", min_revenue: "0", annual_limit: "0", support_rate: "0" };
+const EMPTY = { category: "", item_name: "", total_quantity: "1", unit_cost: "0", description: "", min_revenue: "0", annual_limit: "0", support_rate: "100" };
 
 const fmt = (n: number) => n.toLocaleString("ko-KR");
 
