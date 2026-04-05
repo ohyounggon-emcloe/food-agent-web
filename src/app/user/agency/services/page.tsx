@@ -257,6 +257,12 @@ export default function AgencyServices() {
                     <option value="">고객사 선택</option>
                     {clients.map(c => <option key={c.id} value={String(c.id)}>{c.client_name}</option>)}
                   </select>
+                  {formClientId && clientUsage && (
+                    <div className="mt-1.5 px-3 py-1.5 bg-slate-50 rounded-lg flex items-center justify-between">
+                      <span className="text-xs text-slate-400">최근 12개월 평균매출</span>
+                      <span className="text-xs font-semibold text-emerald-600">{Math.round(clientUsage.total_revenue / 12).toLocaleString()}만원</span>
+                    </div>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">서비스 유형</label>
