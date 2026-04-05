@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     id: String(r.id),
     title: `${r.client_name || ""} - ${r.title}`,
     start: r.requested_date,
-    end: r.end_date || r.requested_date,
+    allDay: false,
     backgroundColor:
       r.status === "requested" ? "#f59e0b" :
       r.status === "confirmed" ? "#3b82f6" :

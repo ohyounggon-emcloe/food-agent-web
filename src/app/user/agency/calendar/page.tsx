@@ -8,6 +8,26 @@ import { Button } from "@/components/ui/button";
 import { ExternalLink } from "lucide-react";
 import dynamic from "next/dynamic";
 
+const STATUS_MAP: Record<string, { label: string; color: string }> = {
+  requested: { label: "요청", color: "bg-amber-100 text-amber-700" },
+  confirmed: { label: "확정", color: "bg-blue-100 text-blue-700" },
+  completed: { label: "완료", color: "bg-green-100 text-green-700" },
+  cancelled: { label: "취소", color: "bg-gray-100 text-gray-500" },
+  expired: { label: "미진행", color: "bg-red-100 text-red-600" },
+};
+
+function formatDateTime(dateStr: string) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+}
+
 const FullCalendarWrapper = dynamic(() => import("./calendar-wrapper"), { ssr: false });
 
 interface CalendarEvent {
@@ -73,13 +93,9 @@ export default function AgencyCalendar() {
               {selected ? (
                 <div className="space-y-2 text-sm">
                   <p className="font-medium">{selected.title}</p>
-                  <p className="text-xs text-gray-400">{selected.start}</p>
-                  <Badge className={`text-[10px] ${
-                    selected.extendedProps.status === "requested" ? "bg-amber-100 text-amber-700" :
-                    selected.extendedProps.status === "confirmed" ? "bg-blue-100 text-blue-700" :
-                    "bg-green-100 text-green-700"
-                  }`}>
-                    {String(selected.extendedProps.status)}
+                  <p className="text-xs text-gray-400">{formatDateTime(String(selected.start))}</p>
+                  <Badge className={`text-[10px] ${STATUS_MAP[String(selected.extendedProps.status)]?.color || ""}`}>
+                    {STATUS_MAP[String(selected.extendedProps.status)]?.label || String(selected.extendedProps.status)}
                   </Badge>
                   {selected.extendedProps.service_type ? <p>유형: {String(selected.extendedProps.service_type)}</p> : null}
                   {selected.extendedProps.staff_name ? <p>인력: {String(selected.extendedProps.staff_name)}</p> : null}
