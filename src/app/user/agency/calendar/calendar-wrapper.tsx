@@ -43,6 +43,7 @@ export default function CalendarWrapper({ events, onEventClick, onDatesSet }: Pr
       }}
       eventDisplay="block"
       dayMaxEvents={3}
+      eventClassNames="cursor-pointer"
     />
   );
 }

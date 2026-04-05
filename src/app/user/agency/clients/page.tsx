@@ -13,6 +13,7 @@ interface Client {
   id: number;
   client_name: string;
   client_type: string;
+  short_name: string;
   contact_name: string;
   contact_phone: string;
   contact_email: string;
@@ -25,7 +26,7 @@ interface Client {
 interface StaffItem { id: number; name: string; job_type: string; }
 interface ServiceItem { id: number; item_name: string; category: string; }
 
-const EMPTY_FORM = { client_name: "", client_type: "", contact_name: "", contact_phone: "", contact_email: "", address: "", notes: "", excluded_staff_ids: [] as number[], excluded_item_ids: [] as number[] };
+const EMPTY_FORM = { client_name: "", client_type: "", short_name: "", contact_name: "", contact_phone: "", contact_email: "", address: "", notes: "", excluded_staff_ids: [] as number[], excluded_item_ids: [] as number[] };
 
 export default function AgencyClients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -116,6 +117,7 @@ export default function AgencyClients() {
     setForm({
       client_name: client.client_name,
       client_type: client.client_type || "",
+      short_name: client.short_name || "",
       contact_name: client.contact_name || "",
       contact_phone: client.contact_phone || "",
       contact_email: client.contact_email || "",
@@ -153,9 +155,15 @@ export default function AgencyClients() {
               <DialogTitle>{editClient ? "고객사 수정" : "고객사 등록"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <div>
-                <label className="text-xs text-slate-500 mb-1 block">고객사명 *</label>
-                <Input value={form.client_name} onChange={e => setForm(p => ({...p, client_name: e.target.value}))} />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-2">
+                  <label className="text-xs text-slate-500 mb-1 block">고객사명 *</label>
+                  <Input value={form.client_name} onChange={e => setForm(p => ({...p, client_name: e.target.value}))} />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 mb-1 block">달력 약어</label>
+                  <Input value={form.short_name} onChange={e => setForm(p => ({...p, short_name: e.target.value}))} placeholder="예: 행복초" maxLength={10} />
+                </div>
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">업종</label>

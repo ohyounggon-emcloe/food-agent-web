@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   if (isAgencyAuthError(auth)) return auth;
 
   const body = await request.json();
-  const fields = ["client_name", "client_type", "contact_name", "contact_phone", "contact_email", "address", "contract_start", "contract_end", "notes", "status", "excluded_staff_ids", "excluded_item_ids"];
+  const fields = ["client_name", "client_type", "short_name", "contact_name", "contact_phone", "contact_email", "address", "contract_start", "contract_end", "notes", "status", "excluded_staff_ids", "excluded_item_ids"];
   const sets: string[] = [];
   const vals: unknown[] = [];
   let idx = 1;
