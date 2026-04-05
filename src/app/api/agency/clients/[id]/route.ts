@@ -28,10 +28,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   const vals: unknown[] = [];
   let idx = 1;
 
+  const jsonFields = ["excluded_staff_ids", "excluded_item_ids"];
   for (const f of fields) {
     if (body[f] !== undefined) {
       sets.push(`${f} = $${idx}`);
-      vals.push(body[f]);
+      vals.push(jsonFields.includes(f) ? JSON.stringify(body[f]) : body[f]);
       idx++;
     }
   }

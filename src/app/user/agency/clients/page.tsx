@@ -74,20 +74,27 @@ export default function AgencyClients() {
   const handleSubmit = async () => {
     if (!form.client_name) { toast.error("고객사명을 입력하세요"); return; }
 
-    if (editClient) {
-      const res = await fetch(`/api/agency/clients/${editClient.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) { toast.success("고객사 수정 완료"); closeDialog(); fetchClients(); }
-    } else {
-      const res = await fetch("/api/agency/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      if (res.ok) { toast.success("고객사 등록 완료"); closeDialog(); fetchClients(); }
+    try {
+      if (editClient) {
+        const res = await fetch(`/api/agency/clients/${editClient.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (res.ok) { toast.success("고객사 수정 완료"); closeDialog(); fetchClients(); }
+        else { const err = await res.json(); toast.error(err.error || "수정 실패"); }
+      } else {
+        const res = await fetch("/api/agency/clients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+        if (res.ok) { toast.success("고객사 등록 완료"); closeDialog(); fetchClients(); }
+        else { const err = await res.json(); toast.error(err.error || "등록 실패"); }
+      }
+    } catch (e) {
+      console.error("Client save error:", e);
+      toast.error("저장 중 오류가 발생했습니다");
     }
   };
 
