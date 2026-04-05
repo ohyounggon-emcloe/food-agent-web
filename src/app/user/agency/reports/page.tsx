@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,13 @@ export default function AgencyReports() {
   const [startDate, setStartDate] = useState(monthAgo.toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState(today.toISOString().split("T")[0]);
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     const res = await fetch(`/api/agency/reports?start=${startDate}&end=${endDate}&group=${groupBy}`);
     const data = await res.json();
     setRows(Array.isArray(data) ? data : []);
-  };
+  }, [startDate, endDate, groupBy]);
+
+  useEffect(() => { fetchReport(); }, [fetchReport]);
 
   const totalCost = rows.reduce((s, r) => s + Number(r.total_cost || 0), 0);
   const totalCount = rows.reduce((s, r) => s + Number(r.count || 0), 0);
