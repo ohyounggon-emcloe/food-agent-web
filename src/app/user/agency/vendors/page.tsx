@@ -179,7 +179,7 @@ export default function AgencyVendors() {
                       <option value="">품목 선택</option>
                       {serviceItems.filter(i => !vendorItems.some(vi => vi.item_name === i.item_name)).map(i => <option key={i.id} value={i.item_name}>{i.item_name} ({i.category})</option>)}
                     </select>
-                    <Input type="number" placeholder="단가" value={itemForm.unit_cost} onChange={e => setItemForm(p => ({...p, unit_cost: e.target.value}))} className="text-xs h-8 w-24 shrink-0" />
+                    <Input type="number" min="0" placeholder="단가" value={itemForm.unit_cost} onChange={e => { const v = e.target.value.replace(/-/g, ""); setItemForm(p => ({...p, unit_cost: v})); }} className="text-xs h-8 w-24 shrink-0" />
                     <Input placeholder="비고" value={itemForm.notes} onChange={e => setItemForm(p => ({...p, notes: e.target.value}))} className="text-xs h-8 flex-1" />
                     <Button size="sm" onClick={addVendorItem} className="h-8 text-xs shrink-0"><Plus className="w-3 h-3 mr-1" />저장</Button>
                   </div>
