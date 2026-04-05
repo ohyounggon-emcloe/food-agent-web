@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Package, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "sonner";
@@ -98,15 +97,33 @@ export default function AgencyVendors() {
           <DialogContent>
             <DialogHeader><DialogTitle>{editVendor ? "공급사 수정" : "공급사 등록"}</DialogTitle></DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="업체명 *" value={form.vendor_name} onChange={e => setForm(p => ({...p, vendor_name: e.target.value}))} />
-              <Input placeholder="담당자명" value={form.contact_name} onChange={e => setForm(p => ({...p, contact_name: e.target.value}))} />
-              <Input placeholder="연락처" value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
-              <Select value={form.service_type} onValueChange={v => setForm(p => ({...p, service_type: v || ""}))}>
-                <SelectTrigger><SelectValue placeholder="서비스 유형 선택" /></SelectTrigger>
-                <SelectContent>{serviceTypes.map(c => <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>)}</SelectContent>
-              </Select>
-              <Input type="number" placeholder="단가 (원)" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
-              <Input placeholder="비고" value={form.notes} onChange={e => setForm(p => ({...p, notes: e.target.value}))} />
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">업체명 *</label>
+                <Input value={form.vendor_name} onChange={e => setForm(p => ({...p, vendor_name: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">담당자명</label>
+                <Input value={form.contact_name} onChange={e => setForm(p => ({...p, contact_name: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">연락처</label>
+                <Input value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">서비스 유형</label>
+                <select value={form.service_type} onChange={e => setForm(p => ({...p, service_type: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                  <option value="">서비스 유형 선택</option>
+                  {serviceTypes.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">단가 (원)</label>
+                <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">비고</label>
+                <Input value={form.notes} onChange={e => setForm(p => ({...p, notes: e.target.value}))} />
+              </div>
               <Button onClick={handleSubmit} className="w-full">{editVendor ? "수정" : "등록"}</Button>
             </div>
           </DialogContent>

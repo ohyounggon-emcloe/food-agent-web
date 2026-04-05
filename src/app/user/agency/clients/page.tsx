@@ -20,9 +20,13 @@ interface Client {
   address: string;
   notes: string;
   status: string;
+  excluded_staff_ids: number[];
+  excluded_item_ids: number[];
 }
+interface StaffItem { id: number; name: string; job_type: string; }
+interface ServiceItem { id: number; item_name: string; category: string; }
 
-const EMPTY_FORM = { client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", notes: "" };
+const EMPTY_FORM = { client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", notes: "", excluded_staff_ids: [] as number[], excluded_item_ids: [] as number[] };
 
 export default function AgencyClients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -35,7 +39,14 @@ export default function AgencyClients() {
   const [editClient, setEditClient] = useState<Client | null>(null);
   const [form, setForm] = useState(EMPTY_FORM);
   const { codes: clientTypes } = useCodes("client_type");
+  const [staffList, setStaffList] = useState<StaffItem[]>([]);
+  const [itemList, setItemList] = useState<ServiceItem[]>([]);
   const limit = 20;
+
+  useEffect(() => {
+    fetch("/api/agency/staff").then(r => r.json()).then(d => setStaffList(Array.isArray(d) ? d : []));
+    fetch("/api/agency/items").then(r => r.json()).then(d => setItemList(Array.isArray(d) ? d : []));
+  }, []);
 
   const fetchClients = useCallback(async () => {
     const params = new URLSearchParams({
@@ -103,6 +114,8 @@ export default function AgencyClients() {
       contact_phone: client.contact_phone || "",
       address: client.address || "",
       notes: client.notes || "",
+      excluded_staff_ids: client.excluded_staff_ids || [],
+      excluded_item_ids: client.excluded_item_ids || [],
     });
     setDialogOpen(true);
   };
@@ -145,6 +158,54 @@ export default function AgencyClients() {
               <Input placeholder="담당자명" value={form.contact_name} onChange={e => setForm(p => ({...p, contact_name: e.target.value}))} />
               <Input placeholder="연락처" value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
               <Input placeholder="주소" value={form.address} onChange={e => setForm(p => ({...p, address: e.target.value}))} />
+              {/* 제외 인력 */}
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">제외 인력</label>
+                <div className="border rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
+                  {staffList.map(s => (
+                    <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 px-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={form.excluded_staff_ids.includes(s.id)}
+                        onChange={e => {
+                          const ids = e.target.checked
+                            ? [...form.excluded_staff_ids, s.id]
+                            : form.excluded_staff_ids.filter(id => id !== s.id);
+                          setForm(p => ({...p, excluded_staff_ids: ids}));
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span>{s.name}</span>
+                      <span className="text-xs text-slate-400">({s.job_type})</span>
+                    </label>
+                  ))}
+                  {staffList.length === 0 && <p className="text-xs text-slate-400">등록된 인력 없음</p>}
+                </div>
+              </div>
+              {/* 제외 품목/기물 */}
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">제외 품목/기물</label>
+                <div className="border rounded-lg p-2 max-h-32 overflow-y-auto space-y-1">
+                  {itemList.map(i => (
+                    <label key={i.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 px-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={form.excluded_item_ids.includes(i.id)}
+                        onChange={e => {
+                          const ids = e.target.checked
+                            ? [...form.excluded_item_ids, i.id]
+                            : form.excluded_item_ids.filter(id => id !== i.id);
+                          setForm(p => ({...p, excluded_item_ids: ids}));
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <span>{i.item_name}</span>
+                      <span className="text-xs text-slate-400">({i.category})</span>
+                    </label>
+                  ))}
+                  {itemList.length === 0 && <p className="text-xs text-slate-400">등록된 품목 없음</p>}
+                </div>
+              </div>
               <Input placeholder="비고" value={form.notes} onChange={e => setForm(p => ({...p, notes: e.target.value}))} />
               <Button onClick={handleSubmit} className="w-full">
                 {editClient ? "수정" : "등록"}
