@@ -117,10 +117,6 @@ export default function AgencyVendors() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-slate-500 mb-1 block">단가 (원)</label>
-                <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
-              </div>
-              <div>
                 <label className="text-xs text-slate-500 mb-1 block">비고</label>
                 <Input value={form.notes} onChange={e => setForm(p => ({...p, notes: e.target.value}))} />
               </div>
@@ -146,7 +142,6 @@ export default function AgencyVendors() {
               </div>
               <div className="text-xs text-gray-500 mt-1 space-y-0.5">
                 {v.contact_name && <p>담당: {v.contact_name} {v.contact_phone && `(${v.contact_phone})`}</p>}
-                {v.unit_cost > 0 && <p>단가: {v.unit_cost.toLocaleString()}원</p>}
                 {v.notes && <p className="text-gray-400">{v.notes}</p>}
               </div>
 
