@@ -76,10 +76,6 @@ export default function AgencyItems() {
                 <Input value={form.item_name} onChange={e => setForm(p => ({...p, item_name: e.target.value}))} />
               </div>
               <div>
-                <label className="text-xs text-gray-500 block mb-1">단가 (원)</label>
-                <Input type="number" value={form.unit_cost} onChange={e => setForm(p => ({...p, unit_cost: e.target.value}))} />
-              </div>
-              <div>
                 <label className="text-xs text-gray-500 block mb-1">최소매출금액 (만원)</label>
                 <Input type="number" min="0" value={form.min_revenue} onChange={e => setForm(p => ({...p, min_revenue: e.target.value.replace(/-/g, "")}))} />
               </div>
@@ -115,7 +111,6 @@ export default function AgencyItems() {
               <thead>
                 <tr className="border-b bg-gray-50 text-gray-500 text-xs">
                   <th className="text-left py-2 px-3">품목명</th>
-                  <th className="text-right py-2 px-3 w-24">단가</th>
                   <th className="text-right py-2 px-3 w-24">최소매출</th>
                   <th className="text-center py-2 px-3 w-20">년횟수</th>
                   <th className="text-right py-2 px-3 w-20">지원%</th>
@@ -128,9 +123,6 @@ export default function AgencyItems() {
                       <td className="py-2.5 px-3">
                         <span className="font-medium text-gray-800">{item.item_name}</span>
                         {item.description && <span className="block text-[11px] text-gray-400 mt-0.5">{item.description}</span>}
-                      </td>
-                      <td className="py-2.5 px-3 text-right text-gray-600">
-                        {item.unit_cost > 0 ? `${fmt(item.unit_cost)}원` : <span className="text-gray-300">-</span>}
                       </td>
                       <td className="py-2.5 px-3 text-right text-gray-600">
                         {item.min_revenue > 0 ? `${fmt(item.min_revenue)}만원` : <span className="text-gray-300">-</span>}
