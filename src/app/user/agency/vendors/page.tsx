@@ -163,7 +163,7 @@ export default function AgencyVendors() {
                     <Input placeholder="품목명" value={itemForm.item_name} onChange={e => setItemForm(p => ({...p, item_name: e.target.value}))} className="text-xs h-8 flex-1" />
                     <Input type="number" placeholder="단가" value={itemForm.unit_cost} onChange={e => setItemForm(p => ({...p, unit_cost: e.target.value}))} className="text-xs h-8 w-24 shrink-0" />
                     <Input placeholder="비고" value={itemForm.notes} onChange={e => setItemForm(p => ({...p, notes: e.target.value}))} className="text-xs h-8 flex-1" />
-                    <Button size="sm" onClick={addVendorItem} className="h-8 text-xs"><Plus className="w-3 h-3" /></Button>
+                    <Button size="sm" onClick={addVendorItem} className="h-8 text-xs shrink-0"><Plus className="w-3 h-3 mr-1" />저장</Button>
                   </div>
                 </div>
               )}
