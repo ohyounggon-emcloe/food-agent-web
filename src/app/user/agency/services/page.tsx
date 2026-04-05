@@ -14,13 +14,15 @@ interface ServiceRequest {
   id: number; title: string; service_type: string; requested_date: string;
   status: string; client_name: string; client_id: number; item_name: string;
   service_item_id: number; staff_name: string; assigned_staff_id: number;
-  cost: number; remarks: string; quantity: number;
+  cost: number; remarks: string; quantity: number; vendor_id: number;
 }
 interface Client { id: number; client_name: string; }
 interface Item { id: number; item_name: string; category: string; unit_cost: number; support_rate: number; min_revenue: number; annual_limit: number; }
 interface Staff { id: number; name: string; job_type: string; unit_cost: number; }
+interface Vendor { id: number; vendor_name: string; }
+interface VendorItem { id: number; vendor_id: number; item_name: string; unit_cost: number; }
 
-interface SelectedItem { item_id: number; item_name: string; quantity: number; unit_cost: number; support_rate: number; }
+interface SelectedItem { item_id: number; item_name: string; quantity: number; unit_cost: number; support_rate: number; vendor_id: number | null; vendor_name: string; }
 interface SelectedStaff { staff_id: number; name: string; unit_cost: number; }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -92,6 +94,9 @@ export default function AgencyServices() {
   const staffCost = selectedStaff.reduce((s, st) => s + st.unit_cost, 0);
   const totalCost = itemsCost + staffCost;
 
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [allVendorItems, setAllVendorItems] = useState<VendorItem[]>([]);
+
   const fetchAll = () => {
     const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
     fetch(`/api/agency/services${params}`).then(r => r.json()).then(d => setServices(Array.isArray(d) ? d : []));
@@ -101,7 +106,22 @@ export default function AgencyServices() {
     });
     fetch("/api/agency/items").then(r => r.json()).then(d => setItems(Array.isArray(d) ? d : []));
     fetch("/api/agency/staff").then(r => r.json()).then(d => setStaffList(Array.isArray(d) ? d : []));
+    fetch("/api/agency/vendors").then(r => r.json()).then(d => setVendors(Array.isArray(d) ? d : []));
   };
+
+  // 전체 공급사 납품품목 로드 (공급사별 품목 매핑용)
+  useEffect(() => {
+    vendors.forEach(v => {
+      fetch(`/api/agency/vendor-items?vendor_id=${v.id}`)
+        .then(r => r.json())
+        .then((items: VendorItem[]) => {
+          setAllVendorItems(prev => {
+            const filtered = prev.filter(vi => vi.vendor_id !== v.id);
+            return [...filtered, ...items];
+          });
+        });
+    });
+  }, [vendors]);
 
   useEffect(() => { fetchAll(); }, [statusFilter]);
 
@@ -124,6 +144,7 @@ export default function AgencyServices() {
       // 첫 번째 품목/인원을 메인으로 저장 (호환성)
       service_item_id: selectedItems[0]?.item_id || null,
       assigned_staff_id: selectedStaff[0]?.staff_id || null,
+      vendor_id: selectedItems[0]?.vendor_id || null,
       quantity: selectedItems[0]?.quantity || 1,
     };
 
@@ -160,7 +181,10 @@ export default function AgencyServices() {
     // 기존 품목/인원 복원
     if (s.service_item_id) {
       const item = items.find(i => i.id === s.service_item_id);
-      if (item) setSelectedItems([{ item_id: item.id, item_name: item.item_name, quantity: s.quantity || 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100 }]);
+      if (item) {
+        const vName = s.vendor_id ? vendors.find(v => v.id === s.vendor_id)?.vendor_name || "" : "";
+        setSelectedItems([{ item_id: item.id, item_name: item.item_name, quantity: s.quantity || 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100, vendor_id: s.vendor_id || null, vendor_name: vName }]);
+      }
     } else {
       setSelectedItems([]);
     }
@@ -207,7 +231,18 @@ export default function AgencyServices() {
       }
     }
 
-    setSelectedItems(prev => [...prev, { item_id: item.id, item_name: item.item_name, quantity: 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100 }]);
+    // 해당 품목을 납품하는 공급사 찾기
+    const matchingVendorItems = allVendorItems.filter(vi => vi.item_name === item.item_name);
+    let vendorId: number | null = null;
+    let vendorName = "";
+
+    if (matchingVendorItems.length === 1) {
+      // 공급사 1개 → 자동 세팅
+      vendorId = matchingVendorItems[0].vendor_id;
+      vendorName = vendors.find(v => v.id === vendorId)?.vendor_name || "";
+    }
+
+    setSelectedItems(prev => [...prev, { item_id: item.id, item_name: item.item_name, quantity: 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100, vendor_id: vendorId, vendor_name: vendorName }]);
   };
 
   const updateItemQty = (itemId: number, qty: number) => {
@@ -321,15 +356,37 @@ export default function AgencyServices() {
                     </select>
                     {selectedItems.length > 0 && (
                       <div className="mt-2 space-y-1.5">
-                        {selectedItems.map(si => (
-                          <div key={si.item_id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
-                            <span className="text-sm flex-1">{si.item_name}</span>
-                            <span className="text-[10px] text-slate-400">{si.support_rate}%</span>
-                            <Input type="number" min="1" value={si.quantity} onChange={e => updateItemQty(si.item_id, Number(e.target.value))} className="w-16 h-7 text-xs text-center" />
-                            <span className="text-xs text-emerald-600 w-20 text-right">{Math.round(si.unit_cost * si.quantity * si.support_rate / 100).toLocaleString()}원</span>
-                            <button onClick={() => removeItem(si.item_id)} className="p-0.5 rounded hover:bg-red-100"><X className="w-3.5 h-3.5 text-red-400" /></button>
-                          </div>
-                        ))}
+                        {selectedItems.map(si => {
+                          const itemVendors = allVendorItems.filter(vi => vi.item_name === si.item_name);
+                          const vendorOptions = itemVendors.map(vi => vendors.find(v => v.id === vi.vendor_id)).filter(Boolean) as Vendor[];
+                          return (
+                            <div key={si.item_id} className="bg-slate-50 rounded-lg px-3 py-2 space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm flex-1">{si.item_name}</span>
+                                <span className="text-[10px] text-slate-400">{si.support_rate}%</span>
+                                <Input type="number" min="1" value={si.quantity} onChange={e => updateItemQty(si.item_id, Number(e.target.value))} className="w-16 h-7 text-xs text-center" />
+                                <span className="text-xs text-emerald-600 w-20 text-right">{Math.round(si.unit_cost * si.quantity * si.support_rate / 100).toLocaleString()}원</span>
+                                <button onClick={() => removeItem(si.item_id)} className="p-0.5 rounded hover:bg-red-100"><X className="w-3.5 h-3.5 text-red-400" /></button>
+                              </div>
+                              {vendorOptions.length > 1 ? (
+                                <select
+                                  value={si.vendor_id || ""}
+                                  onChange={e => {
+                                    const vid = Number(e.target.value) || null;
+                                    const vname = vendors.find(v => v.id === vid)?.vendor_name || "";
+                                    setSelectedItems(prev => prev.map(i => i.item_id === si.item_id ? { ...i, vendor_id: vid, vendor_name: vname } : i));
+                                  }}
+                                  className="w-full h-7 rounded border border-input bg-background px-2 text-xs"
+                                >
+                                  <option value="">공급사 선택</option>
+                                  {vendorOptions.map(v => <option key={v.id} value={v.id}>{v.vendor_name}</option>)}
+                                </select>
+                              ) : si.vendor_name ? (
+                                <span className="text-[10px] text-blue-500">공급: {si.vendor_name}</span>
+                              ) : null}
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
                   </div>
