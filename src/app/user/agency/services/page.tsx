@@ -316,8 +316,7 @@ export default function AgencyServices() {
                       <option value="">인원 추가...</option>
                       {staffList.filter(s => !selectedStaff.some(ss => ss.staff_id === s.id)).map(s => {
                         const used = clientUsage?.staff_usage[s.id] || 0;
-                        const usedLabel = used > 0 ? ` [${used}회 지원]` : "";
-                        return <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type}) - {s.unit_cost?.toLocaleString() || 0}원{usedLabel}</option>;
+                        return <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type}) - {s.unit_cost?.toLocaleString() || 0}원 [{used}회 지원]</option>;
                       })}
                     </select>
                     {selectedStaff.length > 0 && (
