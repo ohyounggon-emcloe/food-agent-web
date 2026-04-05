@@ -286,9 +286,11 @@ export default function AgencyServices() {
                     <label className="text-xs text-slate-500 mb-1 block">품목 선택</label>
                     <select onChange={e => { addItem(e.target.value); e.target.value = ""; }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
                       <option value="">품목 추가...</option>
-                      {filteredItems.filter(i => !selectedItems.some(si => si.item_id === i.id)).map(i => (
-                        <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원, 부담{i.support_rate ?? 100}%)</option>
-                      ))}
+                      {filteredItems.filter(i => !selectedItems.some(si => si.item_id === i.id)).map(i => {
+                        const used = clientUsage?.item_usage[i.id] || 0;
+                        const limitLabel = i.annual_limit > 0 ? ` [${used}/${i.annual_limit}회]` : "";
+                        return <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원, 부담{i.support_rate ?? 100}%){limitLabel}</option>;
+                      })}
                     </select>
                     {selectedItems.length > 0 && (
                       <div className="mt-2 space-y-1.5">
@@ -312,9 +314,11 @@ export default function AgencyServices() {
                     <label className="text-xs text-slate-500 mb-1 block">인원 선택</label>
                     <select onChange={e => { addStaff(e.target.value); e.target.value = ""; }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
                       <option value="">인원 추가...</option>
-                      {staffList.filter(s => !selectedStaff.some(ss => ss.staff_id === s.id)).map(s => (
-                        <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type}) - {s.unit_cost?.toLocaleString() || 0}원</option>
-                      ))}
+                      {staffList.filter(s => !selectedStaff.some(ss => ss.staff_id === s.id)).map(s => {
+                        const used = clientUsage?.staff_usage[s.id] || 0;
+                        const usedLabel = used > 0 ? ` [${used}회 지원]` : "";
+                        return <option key={s.id} value={String(s.id)}>{s.name} ({s.job_type}) - {s.unit_cost?.toLocaleString() || 0}원{usedLabel}</option>;
+                      })}
                     </select>
                     {selectedStaff.length > 0 && (
                       <div className="mt-2 space-y-1.5">
