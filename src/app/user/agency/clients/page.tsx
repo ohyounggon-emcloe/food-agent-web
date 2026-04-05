@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Pencil, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
@@ -153,18 +152,29 @@ export default function AgencyClients() {
               <DialogTitle>{editClient ? "고객사 수정" : "고객사 등록"}</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
-              <Input placeholder="고객사명 *" value={form.client_name} onChange={e => setForm(p => ({...p, client_name: e.target.value}))} />
-              <Select value={form.client_type} onValueChange={v => setForm(p => ({...p, client_type: v || ""}))}>
-                <SelectTrigger><SelectValue placeholder="업종 선택" /></SelectTrigger>
-                <SelectContent>
-                  {clientTypes.map(c => (
-                    <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input placeholder="담당자명" value={form.contact_name} onChange={e => setForm(p => ({...p, contact_name: e.target.value}))} />
-              <Input placeholder="연락처" value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
-              <Input placeholder="주소" value={form.address} onChange={e => setForm(p => ({...p, address: e.target.value}))} />
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">고객사명 *</label>
+                <Input value={form.client_name} onChange={e => setForm(p => ({...p, client_name: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">업종</label>
+                <select value={form.client_type} onChange={e => setForm(p => ({...p, client_type: e.target.value}))} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                  <option value="">업종 선택</option>
+                  {clientTypes.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">담당자명</label>
+                <Input value={form.contact_name} onChange={e => setForm(p => ({...p, contact_name: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">연락처</label>
+                <Input value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">주소</label>
+                <Input value={form.address} onChange={e => setForm(p => ({...p, address: e.target.value}))} />
+              </div>
               {/* 제외 인력 */}
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">제외 인력</label>
@@ -224,23 +234,15 @@ export default function AgencyClients() {
 
       {/* 조회 조건 */}
       <div className="flex flex-wrap gap-2 items-center">
-        <Select value={statusFilter} onValueChange={v => setStatusFilter(v || "active")}>
-          <SelectTrigger className="w-28"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="active">거래중</SelectItem>
-            <SelectItem value="inactive">거래중단</SelectItem>
-            <SelectItem value="all">전체</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={typeFilter} onValueChange={v => setTypeFilter(v || "all")}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체 업종</SelectItem>
-            {clientTypes.map(c => (
-              <SelectItem key={c.code_value} value={c.code_value}>{c.code_label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="h-9 w-28 rounded-lg border border-input bg-background px-3 text-sm">
+          <option value="active">거래중</option>
+          <option value="inactive">거래중단</option>
+          <option value="all">전체</option>
+        </select>
+        <select value={typeFilter} onChange={e => setTypeFilter(e.target.value)} className="h-9 w-32 rounded-lg border border-input bg-background px-3 text-sm">
+          <option value="all">전체 업종</option>
+          {clientTypes.map(c => <option key={c.code_value} value={c.code_value}>{c.code_label}</option>)}
+        </select>
         <Input
           placeholder="고객사명 또는 담당자 검색..."
           value={search}
