@@ -45,11 +45,17 @@ export default function AgencyRevenue() {
     // 전체 매출 조회 (고객사 리스트 평균 표시용)
     const res = await fetch(`/api/agency/revenue?${params}`);
     const data = await res.json();
-    setClients(data.clients || []);
+    const clientList = data.clients || [];
+    setClients(clientList);
     setAllRevenue(data.revenue || []);
-    // 선택된 고객사 매출만 필터
-    if (selectedClient) {
-      setRevenue((data.revenue || []).filter((r: Revenue) => r.client_id === selectedClient.id));
+    // 첫 조회 시 첫 번째 고객사 자동 선택
+    const target = selectedClient || (clientList.length > 0 ? clientList[0] : null);
+    if (target && !selectedClient) {
+      setSelectedClient(target);
+      setEditValues({});
+    }
+    if (target) {
+      setRevenue((data.revenue || []).filter((r: Revenue) => r.client_id === target.id));
     } else {
       setRevenue(data.revenue || []);
     }
