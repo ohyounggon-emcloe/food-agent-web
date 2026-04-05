@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -251,38 +250,54 @@ export default function AgencyClients() {
         />
       </div>
 
-      {/* 고객사 목록 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {clients.map(c => (
-          <Card key={c.id} className={`hover:shadow-md transition-shadow ${c.status === "inactive" ? "opacity-60" : ""}`}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  {c.client_name}
-                  {c.status === "inactive" && (
-                    <Badge variant="outline" className="text-[10px] text-red-500 border-red-200">거래중단</Badge>
-                  )}
-                </span>
-                <div className="flex items-center gap-1">
-                  {c.client_type && <Badge variant="outline" className="text-[10px]">{c.client_type}</Badge>}
-                  <button onClick={() => openEdit(c)} className="p-1 rounded hover:bg-slate-100">
-                    <Pencil className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
-                  <button onClick={() => handleDelete(c)} className="p-1 rounded hover:bg-slate-100">
-                    <X className="w-3.5 h-3.5 text-slate-400" />
-                  </button>
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-1 text-gray-600">
-              {c.contact_name && <p>담당: {c.contact_name} {c.contact_phone && `(${c.contact_phone})`}</p>}
-              {c.address && <p>주소: {c.address}</p>}
-              {c.notes && <p className="text-gray-400">{c.notes}</p>}
-            </CardContent>
-          </Card>
-        ))}
+      {/* 고객사 목록 - 리스트형 */}
+      <div className="bg-white rounded-lg border overflow-hidden">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b bg-gray-50 text-gray-500 text-xs">
+              <th className="text-left py-2 px-3">고객사명</th>
+              <th className="text-left py-2 px-3 w-24">업종</th>
+              <th className="text-left py-2 px-3 w-28">담당자</th>
+              <th className="text-left py-2 px-3 w-32">연락처</th>
+              <th className="text-left py-2 px-3 hidden md:table-cell">주소</th>
+              <th className="text-center py-2 px-3 w-16">상태</th>
+              <th className="text-center py-2 px-3 w-16">관리</th>
+            </tr>
+          </thead>
+          <tbody>
+            {clients.map(c => (
+              <tr key={c.id} className={`border-b last:border-0 hover:bg-gray-50 ${c.status === "inactive" ? "opacity-50" : ""}`}>
+                <td className="py-2.5 px-3">
+                  <span className="font-medium text-gray-800">{c.client_name}</span>
+                  {c.notes && <span className="block text-[11px] text-gray-400 mt-0.5 truncate max-w-[200px]">{c.notes}</span>}
+                </td>
+                <td className="py-2.5 px-3">
+                  {c.client_type ? <Badge variant="outline" className="text-[10px]">{c.client_type}</Badge> : <span className="text-gray-300">-</span>}
+                </td>
+                <td className="py-2.5 px-3 text-gray-600">{c.contact_name || <span className="text-gray-300">-</span>}</td>
+                <td className="py-2.5 px-3 text-gray-600">{c.contact_phone || <span className="text-gray-300">-</span>}</td>
+                <td className="py-2.5 px-3 text-gray-500 text-xs hidden md:table-cell truncate max-w-[200px]">{c.address || <span className="text-gray-300">-</span>}</td>
+                <td className="py-2.5 px-3 text-center">
+                  {c.status === "inactive"
+                    ? <Badge variant="outline" className="text-[10px] text-red-500 border-red-200">중단</Badge>
+                    : <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-200">거래중</Badge>}
+                </td>
+                <td className="py-2.5 px-3 text-center">
+                  <div className="flex justify-center gap-1">
+                    <button onClick={() => openEdit(c)} className="p-1 rounded hover:bg-slate-100" title="수정">
+                      <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                    <button onClick={() => handleDelete(c)} className="p-1 rounded hover:bg-slate-100" title={c.status === "active" ? "거래중단" : "거래재개"}>
+                      <X className="w-3.5 h-3.5 text-slate-400" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
         {clients.length === 0 && (
-          <div className="col-span-2 text-center py-12 text-sm text-slate-400">
+          <div className="text-center py-12 text-sm text-slate-400">
             조회된 고객사가 없습니다
           </div>
         )}
