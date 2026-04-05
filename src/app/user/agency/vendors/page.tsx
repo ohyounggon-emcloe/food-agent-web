@@ -9,7 +9,7 @@ import { Plus, Pencil, Trash2, Package, ChevronDown, ChevronUp } from "lucide-re
 import { toast } from "sonner";
 import { useCodes } from "@/hooks/use-codes";
 
-interface Vendor { id: number; vendor_name: string; contact_name: string; contact_phone: string; service_type: string; unit_cost: number; notes: string; }
+interface Vendor { id: number; vendor_name: string; contact_name: string; contact_phone: string; service_type: string; unit_cost: number; notes: string; item_count: string; }
 interface VendorItem { id: number; item_name: string; unit_cost: number; notes: string; }
 interface ServiceItem { id: number; item_name: string; category: string; }
 
@@ -150,6 +150,7 @@ export default function AgencyVendors() {
                 {v.service_type && <Badge variant="outline" className="text-[10px]">{v.service_type}</Badge>}
                 <button onClick={() => toggleVendorItems(v.id)} className="p-1 rounded hover:bg-slate-100 flex items-center gap-1 text-xs text-slate-500">
                   <Package className="w-3.5 h-3.5" />납품품목
+                  {Number(v.item_count) > 0 && <Badge className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0">{v.item_count}</Badge>}
                   {expandedVendor === v.id ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                 </button>
                 <button onClick={() => openEdit(v)} className="p-1 rounded hover:bg-slate-100"><Pencil className="w-3.5 h-3.5 text-slate-400" /></button>

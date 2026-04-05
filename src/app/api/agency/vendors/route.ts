@@ -9,7 +9,8 @@ export async function GET() {
   if (isAgencyAuthError(auth)) return auth;
 
   const data = await query(
-    "SELECT * FROM service_vendors WHERE agency_id = $1 ORDER BY vendor_name",
+    `SELECT sv.*, (SELECT count(*) FROM vendor_items vi WHERE vi.vendor_id = sv.id) as item_count
+     FROM service_vendors sv WHERE sv.agency_id = $1 ORDER BY sv.vendor_name`,
     [auth.agencyId]
   );
   return NextResponse.json(data);
