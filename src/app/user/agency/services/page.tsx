@@ -311,7 +311,14 @@ export default function AgencyServices() {
                 {/* 인원 선택 (행사, 인력) */}
                 {config.showStaff && (
                   <div>
-                    <label className="text-xs text-slate-500 mb-1 block">인원 선택</label>
+                    <label className="text-xs text-slate-500 mb-1 block">
+                      인원 선택
+                      {clientUsage && (
+                        <span className="ml-2 text-emerald-600 font-medium">
+                          (최근 1년 인력지원 {Object.values(clientUsage.staff_usage).reduce((a, b) => a + b, 0)}회)
+                        </span>
+                      )}
+                    </label>
                     <select onChange={e => { addStaff(e.target.value); e.target.value = ""; }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
                       <option value="">인원 추가...</option>
                       {staffList.filter(s => !selectedStaff.some(ss => ss.staff_id === s.id)).map(s => {
