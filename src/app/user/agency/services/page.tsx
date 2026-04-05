@@ -269,9 +269,9 @@ export default function AgencyServices() {
             <DialogTrigger>
               <Button size="sm"><Plus className="w-4 h-4 mr-1" />서비스 등록</Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-lg max-h-[90vh] flex flex-col overflow-hidden">
               <DialogHeader><DialogTitle>{editService ? "서비스 수정" : "서비스 요청 등록"}</DialogTitle></DialogHeader>
-              <div className="space-y-3">
+              <div className="space-y-3 overflow-y-auto flex-1 pr-1">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">고객사</label>
                   <select value={formClientId} onChange={e => setFormClientId(e.target.value)} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
@@ -379,6 +379,8 @@ export default function AgencyServices() {
                   <label className="text-xs text-slate-500 mb-1 block">비고</label>
                   <Input placeholder="비고" value={formRemarks} onChange={e => setFormRemarks(e.target.value)} />
                 </div>
+              </div>
+              <div className="pt-3 border-t shrink-0">
                 <Button onClick={handleSubmit} className="w-full">{editService ? "수정" : "등록"}</Button>
               </div>
             </DialogContent>
