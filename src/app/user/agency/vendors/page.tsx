@@ -72,20 +72,29 @@ export default function AgencyVendors() {
 
   const addVendorItem = async () => {
     if (!itemForm.item_name || !expandedVendor) return;
-    await fetch("/api/agency/vendor-items", {
+    const res = await fetch("/api/agency/vendor-items", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ vendor_id: expandedVendor, item_name: itemForm.item_name, unit_cost: Number(itemForm.unit_cost), notes: itemForm.notes }),
     });
-    toast.success("납품품목 추가");
-    setItemForm(EMPTY_ITEM);
-    toggleVendorItems(expandedVendor);
+    if (res.ok) {
+      // 로컬 상태에 직접 추가 (재조회 없음)
+      const newItem: VendorItem = {
+        id: Date.now(), // 임시 ID
+        item_name: itemForm.item_name,
+        unit_cost: Number(itemForm.unit_cost),
+        notes: itemForm.notes,
+      };
+      setVendorItems(prev => [...prev, newItem]);
+      toast.success("납품품목 추가");
+      setItemForm(EMPTY_ITEM);
+    }
   };
 
   const deleteVendorItem = async (itemId: number) => {
     if (!expandedVendor) return;
     await fetch(`/api/agency/vendor-items?id=${itemId}`, { method: "DELETE" });
+    setVendorItems(prev => prev.filter(i => i.id !== itemId));
     toast.success("삭제 완료");
-    toggleVendorItems(expandedVendor);
   };
 
   return (
