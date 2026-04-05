@@ -150,11 +150,11 @@ export default function AgencyClients() {
               <Plus className="w-4 h-4 mr-1" />고객사 등록
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-h-[90vh] flex flex-col overflow-hidden">
             <DialogHeader>
               <DialogTitle>{editClient ? "고객사 수정" : "고객사 등록"}</DialogTitle>
             </DialogHeader>
-            <div className="space-y-3">
+            <div className="space-y-3 overflow-y-auto flex-1 pr-1">
               <div className="grid grid-cols-3 gap-2">
                 <div className="col-span-2">
                   <label className="text-xs text-slate-500 mb-1 block">고객사명 *</label>
@@ -237,6 +237,8 @@ export default function AgencyClients() {
                 </div>
               </div>
               <Input placeholder="비고" value={form.notes} onChange={e => setForm(p => ({...p, notes: e.target.value}))} />
+            </div>
+            <div className="pt-3 border-t shrink-0">
               <Button onClick={handleSubmit} className="w-full">
                 {editClient ? "수정" : "등록"}
               </Button>
