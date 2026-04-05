@@ -274,7 +274,7 @@ export default function AgencyServices() {
               <div className="space-y-3 overflow-y-auto flex-1 pr-1">
                 <div>
                   <label className="text-xs text-slate-500 mb-1 block">고객사</label>
-                  <select value={formClientId} onChange={e => setFormClientId(e.target.value)} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                  <select value={formClientId} onChange={e => setFormClientId(e.target.value)} disabled={!!editService} className={`w-full h-9 rounded-lg border border-input bg-background px-3 text-sm ${editService ? "opacity-60 cursor-not-allowed" : ""}`}>
                     <option value="">고객사 선택</option>
                     {clients.map(c => <option key={c.id} value={String(c.id)}>{c.client_name}</option>)}
                   </select>
