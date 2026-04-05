@@ -189,10 +189,11 @@ export default function AgencyServices() {
     const item = items.find(i => String(i.id) === itemId);
     if (!item || selectedItems.some(si => si.item_id === item.id)) return;
 
-    // 최소매출 체크 (만원 단위 비교)
+    // 최소매출 체크 (월평균 만원 단위 비교)
     if (item.min_revenue > 0 && clientUsage) {
-      if (clientUsage.total_revenue < item.min_revenue) {
-        toast.error(`최소매출 기준이 안됩니다. (기준: ${item.min_revenue.toLocaleString()}만원, 현재: ${clientUsage.total_revenue.toLocaleString()}만원)`);
+      const avgRevenue = Math.round(clientUsage.total_revenue / 12);
+      if (avgRevenue < item.min_revenue) {
+        toast.error(`최소매출 기준이 안됩니다. (기준: ${item.min_revenue.toLocaleString()}만원, 월평균: ${avgRevenue.toLocaleString()}만원)`);
         return;
       }
     }
@@ -217,11 +218,23 @@ export default function AgencyServices() {
     setSelectedItems(prev => prev.filter(i => i.item_id !== itemId));
   };
 
-  // 인원 추가
+  // 인원 추가 (최소매출 체크)
   const addStaff = (staffId: string) => {
     if (!staffId) return;
     const staff = staffList.find(s => String(s.id) === staffId);
     if (!staff || selectedStaff.some(ss => ss.staff_id === staff.id)) return;
+
+    // 해당 서비스 유형의 품목 중 최소매출 기준 체크 (월평균)
+    if (clientUsage && formServiceType) {
+      const typeItems = items.filter(i => i.category === formServiceType && i.min_revenue > 0);
+      const maxMinRevenue = typeItems.reduce((max, i) => Math.max(max, i.min_revenue), 0);
+      const avgRevenue = Math.round(clientUsage.total_revenue / 12);
+      if (maxMinRevenue > 0 && avgRevenue < maxMinRevenue) {
+        toast.error(`최소매출 기준이 안됩니다. (기준: ${maxMinRevenue.toLocaleString()}만원, 월평균: ${avgRevenue.toLocaleString()}만원)`);
+        return;
+      }
+    }
+
     setSelectedStaff(prev => [...prev, { staff_id: staff.id, name: staff.name, unit_cost: staff.unit_cost || 0 }]);
   };
 
