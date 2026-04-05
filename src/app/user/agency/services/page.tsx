@@ -17,7 +17,7 @@ interface ServiceRequest {
   cost: number; remarks: string; quantity: number;
 }
 interface Client { id: number; client_name: string; }
-interface Item { id: number; item_name: string; category: string; unit_cost: number; support_rate: number; }
+interface Item { id: number; item_name: string; category: string; unit_cost: number; support_rate: number; min_revenue: number; annual_limit: number; }
 interface Staff { id: number; name: string; job_type: string; unit_cost: number; }
 
 interface SelectedItem { item_id: number; item_name: string; quantity: number; unit_cost: number; support_rate: number; }
@@ -72,6 +72,18 @@ export default function AgencyServices() {
   // 선택된 품목/인원 리스트
   const [selectedItems, setSelectedItems] = useState<SelectedItem[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<SelectedStaff[]>([]);
+
+  // 고객사별 사용 현황
+  const [clientUsage, setClientUsage] = useState<{ item_usage: Record<number, number>; staff_usage: Record<number, number>; total_revenue: number } | null>(null);
+
+  // 고객사 선택 시 사용 현황 조회
+  useEffect(() => {
+    if (!formClientId) { setClientUsage(null); return; }
+    fetch(`/api/agency/usage?client_id=${formClientId}`)
+      .then(r => r.json())
+      .then(setClientUsage)
+      .catch(() => setClientUsage(null));
+  }, [formClientId]);
 
   const config = TYPE_CONFIG[formServiceType] || { showItems: false, showStaff: false };
 
@@ -171,11 +183,29 @@ export default function AgencyServices() {
     fetchAll();
   };
 
-  // 품목 추가
+  // 품목 추가 (최소매출 + 횟수 체크)
   const addItem = (itemId: string) => {
     if (!itemId) return;
     const item = items.find(i => String(i.id) === itemId);
     if (!item || selectedItems.some(si => si.item_id === item.id)) return;
+
+    // 최소매출 체크 (만원 단위 비교)
+    if (item.min_revenue > 0 && clientUsage) {
+      if (clientUsage.total_revenue < item.min_revenue) {
+        toast.error(`최소매출 기준이 안됩니다. (기준: ${item.min_revenue.toLocaleString()}만원, 현재: ${clientUsage.total_revenue.toLocaleString()}만원)`);
+        return;
+      }
+    }
+
+    // 년지원 횟수 체크
+    if (item.annual_limit > 0 && clientUsage) {
+      const used = clientUsage.item_usage[item.id] || 0;
+      if (used >= item.annual_limit) {
+        toast.error(`서비스 횟수 초과입니다. (연간 ${item.annual_limit}회 제한, 사용 ${used}회)`);
+        return;
+      }
+    }
+
     setSelectedItems(prev => [...prev, { item_id: item.id, item_name: item.item_name, quantity: 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100 }]);
   };
 
