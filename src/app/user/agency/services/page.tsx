@@ -35,7 +35,7 @@ const STATUS_LABEL: Record<string, { label: string; color: string }> = {
 const TYPE_CONFIG: Record<string, { showItems: boolean; showStaff: boolean }> = {
   "기물대여": { showItems: true, showStaff: false },
   "행사": { showItems: true, showStaff: true },
-  "인력": { showItems: false, showStaff: true },
+  "인력": { showItems: true, showStaff: true },
   "현물": { showItems: true, showStaff: false },
 };
 
@@ -218,19 +218,27 @@ export default function AgencyServices() {
     setSelectedItems(prev => prev.filter(i => i.item_id !== itemId));
   };
 
-  // 인원 추가 (최소매출 체크)
+  // 인원 추가 (선택된 품목의 최소매출 기준 체크)
   const addStaff = (staffId: string) => {
     if (!staffId) return;
     const staff = staffList.find(s => String(s.id) === staffId);
     if (!staff || selectedStaff.some(ss => ss.staff_id === staff.id)) return;
 
-    // 해당 서비스 유형의 품목 중 최소매출 기준 체크 (월평균)
-    if (clientUsage && formServiceType) {
-      const typeItems = items.filter(i => i.category === formServiceType && i.min_revenue > 0);
-      const maxMinRevenue = typeItems.reduce((max, i) => Math.max(max, i.min_revenue), 0);
+    // 선택된 품목이 있으면 해당 품목의 min_revenue, 없으면 서비스 유형 품목의 max min_revenue
+    if (clientUsage) {
+      let checkMinRevenue = 0;
+      if (selectedItems.length > 0) {
+        checkMinRevenue = selectedItems.reduce((max, si) => {
+          const item = items.find(i => i.id === si.item_id);
+          return Math.max(max, item?.min_revenue || 0);
+        }, 0);
+      } else if (formServiceType) {
+        const typeItems = items.filter(i => i.category === formServiceType && i.min_revenue > 0);
+        checkMinRevenue = typeItems.reduce((max, i) => Math.max(max, i.min_revenue), 0);
+      }
       const avgRevenue = Math.round(clientUsage.total_revenue / 12);
-      if (maxMinRevenue > 0 && avgRevenue < maxMinRevenue) {
-        toast.error(`최소매출 기준이 안됩니다. (기준: ${maxMinRevenue.toLocaleString()}만원, 월평균: ${avgRevenue.toLocaleString()}만원)`);
+      if (checkMinRevenue > 0 && avgRevenue < checkMinRevenue) {
+        toast.error(`최소매출 기준이 안됩니다. (기준: ${checkMinRevenue.toLocaleString()}만원, 월평균: ${avgRevenue.toLocaleString()}만원)`);
         return;
       }
     }
