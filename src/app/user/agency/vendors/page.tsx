@@ -11,6 +11,7 @@ import { useCodes } from "@/hooks/use-codes";
 
 interface Vendor { id: number; vendor_name: string; contact_name: string; contact_phone: string; service_type: string; unit_cost: number; notes: string; }
 interface VendorItem { id: number; item_name: string; unit_cost: number; notes: string; }
+interface ServiceItem { id: number; item_name: string; category: string; }
 
 const EMPTY = { vendor_name: "", contact_name: "", contact_phone: "", service_type: "", unit_cost: "0", notes: "" };
 const EMPTY_ITEM = { item_name: "", unit_cost: "0", notes: "" };
@@ -27,8 +28,13 @@ export default function AgencyVendors() {
   const [vendorItems, setVendorItems] = useState<VendorItem[]>([]);
   const [itemForm, setItemForm] = useState(EMPTY_ITEM);
 
+  const [serviceItems, setServiceItems] = useState<ServiceItem[]>([]);
+
   const fetch_ = () => { fetch("/api/agency/vendors").then(r => r.json()).then(d => setVendors(Array.isArray(d) ? d : [])); };
-  useEffect(() => { fetch_(); }, []);
+  useEffect(() => {
+    fetch_();
+    fetch("/api/agency/items").then(r => r.json()).then(d => setServiceItems(Array.isArray(d) ? d : []));
+  }, []);
 
   const handleSubmit = async () => {
     if (!form.vendor_name) { toast.error("업체명 입력"); return; }
@@ -169,7 +175,10 @@ export default function AgencyVendors() {
                   ))}
                   {/* 품목 추가 폼 */}
                   <div className="flex gap-2 items-end">
-                    <Input placeholder="품목명" value={itemForm.item_name} onChange={e => setItemForm(p => ({...p, item_name: e.target.value}))} className="text-xs h-8 flex-1" />
+                    <select value={itemForm.item_name} onChange={e => setItemForm(p => ({...p, item_name: e.target.value}))} className="text-xs h-8 flex-1 rounded border border-input bg-background px-2">
+                      <option value="">품목 선택</option>
+                      {serviceItems.map(i => <option key={i.id} value={i.item_name}>{i.item_name} ({i.category})</option>)}
+                    </select>
                     <Input type="number" placeholder="단가" value={itemForm.unit_cost} onChange={e => setItemForm(p => ({...p, unit_cost: e.target.value}))} className="text-xs h-8 w-24 shrink-0" />
                     <Input placeholder="비고" value={itemForm.notes} onChange={e => setItemForm(p => ({...p, notes: e.target.value}))} className="text-xs h-8 flex-1" />
                     <Button size="sm" onClick={addVendorItem} className="h-8 text-xs shrink-0"><Plus className="w-3 h-3 mr-1" />저장</Button>
