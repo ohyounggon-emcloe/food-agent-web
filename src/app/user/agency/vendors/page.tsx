@@ -177,7 +177,7 @@ export default function AgencyVendors() {
                   <div className="flex gap-2 items-end">
                     <select value={itemForm.item_name} onChange={e => setItemForm(p => ({...p, item_name: e.target.value}))} className="text-xs h-8 flex-1 rounded border border-input bg-background px-2">
                       <option value="">품목 선택</option>
-                      {serviceItems.map(i => <option key={i.id} value={i.item_name}>{i.item_name} ({i.category})</option>)}
+                      {serviceItems.filter(i => !vendorItems.some(vi => vi.item_name === i.item_name)).map(i => <option key={i.id} value={i.item_name}>{i.item_name} ({i.category})</option>)}
                     </select>
                     <Input type="number" placeholder="단가" value={itemForm.unit_cost} onChange={e => setItemForm(p => ({...p, unit_cost: e.target.value}))} className="text-xs h-8 w-24 shrink-0" />
                     <Input placeholder="비고" value={itemForm.notes} onChange={e => setItemForm(p => ({...p, notes: e.target.value}))} className="text-xs h-8 flex-1" />
