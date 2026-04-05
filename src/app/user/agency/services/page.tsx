@@ -17,10 +17,10 @@ interface ServiceRequest {
   cost: number; remarks: string; quantity: number;
 }
 interface Client { id: number; client_name: string; }
-interface Item { id: number; item_name: string; category: string; unit_cost: number; }
+interface Item { id: number; item_name: string; category: string; unit_cost: number; support_rate: number; }
 interface Staff { id: number; name: string; job_type: string; unit_cost: number; }
 
-interface SelectedItem { item_id: number; item_name: string; quantity: number; unit_cost: number; }
+interface SelectedItem { item_id: number; item_name: string; quantity: number; unit_cost: number; support_rate: number; }
 interface SelectedStaff { staff_id: number; name: string; unit_cost: number; }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
@@ -76,7 +76,7 @@ export default function AgencyServices() {
   const config = TYPE_CONFIG[formServiceType] || { showItems: false, showStaff: false };
 
   // 총 비용 계산
-  const itemsCost = selectedItems.reduce((s, i) => s + i.unit_cost * i.quantity, 0);
+  const itemsCost = selectedItems.reduce((s, i) => s + Math.round(i.unit_cost * i.quantity * (i.support_rate || 100) / 100), 0);
   const staffCost = selectedStaff.reduce((s, st) => s + st.unit_cost, 0);
   const totalCost = itemsCost + staffCost;
 
@@ -148,7 +148,7 @@ export default function AgencyServices() {
     // 기존 품목/인원 복원
     if (s.service_item_id) {
       const item = items.find(i => i.id === s.service_item_id);
-      if (item) setSelectedItems([{ item_id: item.id, item_name: item.item_name, quantity: s.quantity || 1, unit_cost: item.unit_cost || 0 }]);
+      if (item) setSelectedItems([{ item_id: item.id, item_name: item.item_name, quantity: s.quantity || 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100 }]);
     } else {
       setSelectedItems([]);
     }
@@ -176,7 +176,7 @@ export default function AgencyServices() {
     if (!itemId) return;
     const item = items.find(i => String(i.id) === itemId);
     if (!item || selectedItems.some(si => si.item_id === item.id)) return;
-    setSelectedItems(prev => [...prev, { item_id: item.id, item_name: item.item_name, quantity: 1, unit_cost: item.unit_cost || 0 }]);
+    setSelectedItems(prev => [...prev, { item_id: item.id, item_name: item.item_name, quantity: 1, unit_cost: item.unit_cost || 0, support_rate: item.support_rate ?? 100 }]);
   };
 
   const updateItemQty = (itemId: number, qty: number) => {
@@ -264,7 +264,7 @@ export default function AgencyServices() {
                       <select onChange={e => { addItem(e.target.value); e.target.value = ""; }} className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
                         <option value="">품목 추가...</option>
                         {filteredItems.filter(i => !selectedItems.some(si => si.item_id === i.id)).map(i => (
-                          <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원)</option>
+                          <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원, 부담{i.support_rate ?? 100}%)</option>
                         ))}
                       </select>
                     </div>
@@ -273,8 +273,9 @@ export default function AgencyServices() {
                         {selectedItems.map(si => (
                           <div key={si.item_id} className="flex items-center gap-2 bg-slate-50 rounded-lg px-3 py-2">
                             <span className="text-sm flex-1">{si.item_name}</span>
+                            <span className="text-[10px] text-slate-400">{si.support_rate}%</span>
                             <Input type="number" min="1" value={si.quantity} onChange={e => updateItemQty(si.item_id, Number(e.target.value))} className="w-16 h-7 text-xs text-center" />
-                            <span className="text-xs text-emerald-600 w-20 text-right">{(si.unit_cost * si.quantity).toLocaleString()}원</span>
+                            <span className="text-xs text-emerald-600 w-20 text-right">{Math.round(si.unit_cost * si.quantity * si.support_rate / 100).toLocaleString()}원</span>
                             <button onClick={() => removeItem(si.item_id)} className="p-0.5 rounded hover:bg-red-100"><X className="w-3.5 h-3.5 text-red-400" /></button>
                           </div>
                         ))}
