@@ -96,7 +96,7 @@ export default function AgencyServices() {
   const resetForm = () => {
     setFormClientId(""); setFormServiceType(""); setFormTitle("");
     setFormDate(""); setFormRemarks("");
-    setSelectedItems([]); setSelectedStaff([]);
+    setSelectedItems([]); setSelectedStaff([]); setItemCategory("");
   };
 
   const handleSubmit = async () => {
@@ -199,8 +199,10 @@ export default function AgencyServices() {
     setSelectedStaff(prev => prev.filter(s => s.staff_id !== staffId));
   };
 
-  // 서비스 유형별 표시할 품목 필터
-  const filteredItems = items.filter(i => !formServiceType || i.category === formServiceType);
+  // 품목 카테고리 선택용
+  const [itemCategory, setItemCategory] = useState("");
+  const itemCategories = [...new Set(items.map(i => i.category))];
+  const filteredItems = itemCategory ? items.filter(i => i.category === itemCategory) : items;
 
   return (
     <div className="space-y-6">
@@ -254,12 +256,18 @@ export default function AgencyServices() {
                 {config.showItems && (
                   <div>
                     <label className="text-xs text-slate-500 mb-1 block">품목 선택</label>
-                    <select onChange={e => { addItem(e.target.value); e.target.value = ""; }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
-                      <option value="">품목 추가...</option>
-                      {filteredItems.filter(i => !selectedItems.some(si => si.item_id === i.id)).map(i => (
-                        <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원)</option>
-                      ))}
-                    </select>
+                    <div className="flex gap-2">
+                      <select value={itemCategory} onChange={e => setItemCategory(e.target.value)} className="w-1/3 h-9 rounded-lg border border-input bg-background px-3 text-sm">
+                        <option value="">카테고리</option>
+                        {itemCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                      <select onChange={e => { addItem(e.target.value); e.target.value = ""; }} className="flex-1 h-9 rounded-lg border border-input bg-background px-3 text-sm" defaultValue="">
+                        <option value="">품목 추가...</option>
+                        {filteredItems.filter(i => !selectedItems.some(si => si.item_id === i.id)).map(i => (
+                          <option key={i.id} value={String(i.id)}>{i.item_name} ({i.unit_cost?.toLocaleString() || 0}원)</option>
+                        ))}
+                      </select>
+                    </div>
                     {selectedItems.length > 0 && (
                       <div className="mt-2 space-y-1.5">
                         {selectedItems.map(si => (
