@@ -15,6 +15,7 @@ interface Client {
   client_type: string;
   contact_name: string;
   contact_phone: string;
+  contact_email: string;
   address: string;
   notes: string;
   status: string;
@@ -24,7 +25,7 @@ interface Client {
 interface StaffItem { id: number; name: string; job_type: string; }
 interface ServiceItem { id: number; item_name: string; category: string; }
 
-const EMPTY_FORM = { client_name: "", client_type: "", contact_name: "", contact_phone: "", address: "", notes: "", excluded_staff_ids: [] as number[], excluded_item_ids: [] as number[] };
+const EMPTY_FORM = { client_name: "", client_type: "", contact_name: "", contact_phone: "", contact_email: "", address: "", notes: "", excluded_staff_ids: [] as number[], excluded_item_ids: [] as number[] };
 
 export default function AgencyClients() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -117,6 +118,7 @@ export default function AgencyClients() {
       client_type: client.client_type || "",
       contact_name: client.contact_name || "",
       contact_phone: client.contact_phone || "",
+      contact_email: client.contact_email || "",
       address: client.address || "",
       notes: client.notes || "",
       excluded_staff_ids: client.excluded_staff_ids || [],
@@ -169,6 +171,10 @@ export default function AgencyClients() {
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">연락처</label>
                 <Input value={form.contact_phone} onChange={e => setForm(p => ({...p, contact_phone: e.target.value}))} />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">이메일</label>
+                <Input type="email" value={form.contact_email} onChange={e => setForm(p => ({...p, contact_email: e.target.value}))} />
               </div>
               <div>
                 <label className="text-xs text-slate-500 mb-1 block">주소</label>
@@ -259,7 +265,8 @@ export default function AgencyClients() {
               <th className="text-left py-2 px-3 w-24">업종</th>
               <th className="text-left py-2 px-3 w-28">담당자</th>
               <th className="text-left py-2 px-3 w-32">연락처</th>
-              <th className="text-left py-2 px-3 hidden md:table-cell">주소</th>
+              <th className="text-left py-2 px-3 w-40 hidden md:table-cell">이메일</th>
+              <th className="text-left py-2 px-3 hidden lg:table-cell">주소</th>
               <th className="text-center py-2 px-3 w-16">상태</th>
               <th className="text-center py-2 px-3 w-16">관리</th>
             </tr>
@@ -276,7 +283,8 @@ export default function AgencyClients() {
                 </td>
                 <td className="py-2.5 px-3 text-gray-600">{c.contact_name || <span className="text-gray-300">-</span>}</td>
                 <td className="py-2.5 px-3 text-gray-600">{c.contact_phone || <span className="text-gray-300">-</span>}</td>
-                <td className="py-2.5 px-3 text-gray-500 text-xs hidden md:table-cell truncate max-w-[200px]">{c.address || <span className="text-gray-300">-</span>}</td>
+                <td className="py-2.5 px-3 text-gray-500 text-xs hidden md:table-cell">{c.contact_email || <span className="text-gray-300">-</span>}</td>
+                <td className="py-2.5 px-3 text-gray-500 text-xs hidden lg:table-cell truncate max-w-[200px]">{c.address || <span className="text-gray-300">-</span>}</td>
                 <td className="py-2.5 px-3 text-center">
                   {c.status === "inactive"
                     ? <Badge variant="outline" className="text-[10px] text-red-500 border-red-200">중단</Badge>

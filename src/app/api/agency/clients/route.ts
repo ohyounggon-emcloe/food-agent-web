@@ -63,16 +63,16 @@ export async function POST(request: NextRequest) {
   if (isAgencyAuthError(auth)) return auth;
 
   const body = await request.json();
-  const { client_name, client_type, contact_name, contact_phone, address, notes, excluded_staff_ids = [], excluded_item_ids = [] } = body;
+  const { client_name, client_type, contact_name, contact_phone, contact_email, address, notes, excluded_staff_ids = [], excluded_item_ids = [] } = body;
 
   if (!client_name) {
     return NextResponse.json({ error: "client_name required" }, { status: 400 });
   }
 
   await execute(
-    `INSERT INTO agency_clients (agency_id, client_name, client_type, contact_name, contact_phone, address, notes, status, excluded_staff_ids, excluded_item_ids)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8, $9)`,
-    [auth.agencyId, client_name, client_type, contact_name, contact_phone, address, notes, JSON.stringify(excluded_staff_ids), JSON.stringify(excluded_item_ids)]
+    `INSERT INTO agency_clients (agency_id, client_name, client_type, contact_name, contact_phone, contact_email, address, notes, status, excluded_staff_ids, excluded_item_ids)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10)`,
+    [auth.agencyId, client_name, client_type, contact_name, contact_phone, contact_email, address, notes, JSON.stringify(excluded_staff_ids), JSON.stringify(excluded_item_ids)]
   );
   return NextResponse.json({ success: true });
 }

@@ -239,9 +239,15 @@ export default function AgencyServices() {
                   <label className="text-xs text-slate-500 mb-1 block">서비스 제목 *</label>
                   <Input placeholder="서비스 제목" value={formTitle} onChange={e => setFormTitle(e.target.value)} />
                 </div>
-                <div>
-                  <label className="text-xs text-slate-500 mb-1 block">행사 일자</label>
-                  <Input type="datetime-local" value={formDate} onChange={e => setFormDate(e.target.value)} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">행사 날짜</label>
+                    <input type="date" value={formDate.split("T")[0] || ""} onChange={e => { const time = formDate.split("T")[1] || "09:00"; setFormDate(`${e.target.value}T${time}`); }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">시간</label>
+                    <input type="time" value={formDate.split("T")[1] || ""} onChange={e => { const date = formDate.split("T")[0] || ""; setFormDate(`${date}T${e.target.value}`); }} className="w-full h-9 rounded-lg border border-input bg-background px-3 text-sm" />
+                  </div>
                 </div>
 
                 {/* 품목 선택 (기물대여, 행사, 현물) */}
